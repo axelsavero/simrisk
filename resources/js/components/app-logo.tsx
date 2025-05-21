@@ -3,12 +3,20 @@ import AppLogoIcon from './app-logo-icon';
 export default function AppLogo() {
     return (
         <>
+        <div className="flex items-center w-auto max-w-full">
             <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-md">
-                <AppLogoIcon className="size-5 fill-current text-white dark:text-black" />
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Lambang_baru_UNJ.png/500px-Lambang_baru_UNJ.png" alt="" />
             </div>
             <div className="ml-1 grid flex-1 text-left text-sm">
-                <span className="mb-0.5 truncate leading-none font-semibold">Laravel Starter Kit</span>
+                <span className="mb-0.5 truncate leading-none font-semibold">
+                    SISTEM INFORMASI <br />
+                    MANAJEMEN RISIKO
+                </span>
+                <span className="mb-0.5 truncate leading-none font-semibold">
+                    Universitas Negeri Jakarta
+                </span>
             </div>
+        </div>
         </>
     );
 }
