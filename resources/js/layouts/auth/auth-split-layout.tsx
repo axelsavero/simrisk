@@ -1,6 +1,5 @@
 import AppLogoIcon from '@/components/app-logo-icon';
-import { type SharedData } from '@/types';
-import { Link, usePage } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { type PropsWithChildren } from 'react';
 
 interface AuthLayoutProps {
@@ -8,35 +7,44 @@ interface AuthLayoutProps {
     description?: string;
 }
 
-export default function AuthSplitLayout({ children, title, description }: PropsWithChildren<AuthLayoutProps>) {
-    const { name, quote } = usePage<SharedData>().props;
-
+export default function AuthSplitLayout({ children }: PropsWithChildren<AuthLayoutProps>) {
     return (
         <div className="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0">
-            <div className="bg-muted relative hidden h-full flex-col p-10 text-white lg:flex dark:border-r">
-                <div className="absolute inset-0 bg-zinc-900" />
-                <Link href={route('home')} className="relative z-20 flex items-center text-lg font-medium">
-                    <AppLogoIcon className="mr-2 size-8 fill-current text-white" />
-                    {name}
-                </Link>
-                {quote && (
-                    <div className="relative z-20 mt-auto">
-                        <blockquote className="space-y-2">
-                            <p className="text-lg">&ldquo;{quote.message}&rdquo;</p>
-                            <footer className="text-sm text-neutral-300">{quote.author}</footer>
-                        </blockquote>
-                    </div>
-                )}
+            {/* Kiri */}
+            <div className="bg-gradient-to-br from-green-700 to-teal-500 relative hidden h-full flex-col p-10 text-white lg:flex dark:border-r">
+                {/* Logo UNJ */}
+                <div className="flex items-center mr-10">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Lambang_baru_UNJ.png/500px-Lambang_baru_UNJ.png" alt="Logo UNJ" className="mr-4 mx-20 my-15 w-30 h-30" />
+                    <span className="text-3xl font-[1000]">Universitas Negeri Jakarta</span>
+                </div>
+                {/* Judul */}
+                <h1 className="text-5xl font-extrabold leading-tight mb-4 ml-10">
+                    SISTEM INFORMASI<br />
+                    MANAJEMEN RISIKO<br />
+                    (SIMRISK)
+                </h1>
+                {/* Deskripsi */}
+                <p className="mb-8 ml-10 font-[370] text-xl">
+                    Tingkatkan kinerja Manajemen Risiko menjadi lebih cepat, efektif dan efisien. 
+                    Aplikasi ManRisk mendukung Anda untuk mengidentifikasi, menganalisis, mengevaluasi, 
+                    menindak lanjuti dan memonitoring risiko dimanapun dan kapanpun.
+                </p>
+                {/* Tombol Tanya */}
+                <div>
+                    <a
+                        href="#"
+                        className="inline-block bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-4xl text-base transition ml-10 w-auto"
+                    >
+                        TANYA LEBIH DETAIL
+                    </a>
+                </div>
             </div>
+            {/* Kanan */}
             <div className="w-full lg:p-8">
                 <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
                     <Link href={route('home')} className="relative z-20 flex items-center justify-center lg:hidden">
                         <AppLogoIcon className="h-10 fill-current text-black sm:h-12" />
                     </Link>
-                    <div className="flex flex-col items-start gap-2 text-left sm:items-center sm:text-center">
-                        <h1 className="text-xl font-medium">{title}</h1>
-                        <p className="text-muted-foreground text-sm text-balance">{description}</p>
-                    </div>
                     {children}
                 </div>
             </div>
