@@ -4,7 +4,7 @@ export default function AppLogo() {
     return (
         <>
         <div className="flex items-center w-auto max-w-full">
-            <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-md">
+            <div className="text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-md">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Lambang_baru_UNJ.png/500px-Lambang_baru_UNJ.png" alt="" />
             </div>
             <div className="ml-1 grid flex-1 text-left text-sm">
