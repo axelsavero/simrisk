@@ -44,8 +44,14 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
-                'user' => $request->user(),
-            ],
+            'user' => $request->user() ? [ // Mulai kondisional di sini
+                // Jika user login, buat array berisi data ini
+                'id' => $request->user()->id,
+                'name' => $request->user()->name,
+                'email' => $request->user()->email,
+                'roles' => $request->user()->roles->pluck('name'),
+            ] : null, // Jika tidak ada user (guest), kirim null
+        ],
             'ziggy' => fn (): array => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
