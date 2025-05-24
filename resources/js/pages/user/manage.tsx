@@ -27,7 +27,7 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
                     <div className="col-md-10">
 
                         {/* Tampilkan flash message jika ada */}
-                        // Gunakan optional chaining `?.` untuk keamanan
+                        {/* // Gunakan optional chaining `?.` untuk keamanan */}
                         {flash?.success && (
                             <div className="alert alert-success">{flash.success}</div>
                         )}

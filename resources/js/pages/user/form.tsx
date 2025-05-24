@@ -21,7 +21,6 @@ export default function Form({ allRoles, user = null }: FormProps) {
         name: user?.name || '',
         email: user?.email || '',
         password: '',
-        // Perbaikan ada di baris ini:
         roles: user?.roles?.map(role => role.name) || [],
     });
 
@@ -51,10 +50,27 @@ export default function Form({ allRoles, user = null }: FormProps) {
                     <div className="col-md-6">
                         <h3>{user ? 'Edit User' : 'Tambah User Baru'}</h3>
                         <form onSubmit={submit}>
-                            {/* ... sisa form Anda ... */}
-                             <div className="mb-3">
+                            <div className="mb-3">
+                                <label className="form-label">Nama</label>
+                                <input type="text" value={data.name} onChange={e => setData('name', e.target.value)} className="form-control" />
+                                {errors.name && <div className="text-danger mt-1">{errors.name}</div>}
+                            </div>
+                            <div className="mb-3">
+                                <label className="form-label">Email</label>
+                                <input type="email" value={data.email} onChange={e => setData('email', e.target.value)} className="form-control" />
+                                {errors.email && <div className="text-danger mt-1">{errors.email}</div>}
+                            </div>
+                            <div className="mb-3">
+                                <label className="form-label">Password</label>
+                                <input type="password" value={data.password} onChange={e => setData('password', e.target.value)} className="form-control" />
+                                <small className="form-text text-muted">
+                                    {user ? 'Kosongkan jika tidak ingin mengubah password.' : 'Minimal 8 karakter.'}
+                                </small>
+                                {errors.password && <div className="text-danger mt-1">{errors.password}</div>}
+                            </div>
+                            <div className="mb-3">
                                 <label className="form-label">Roles</label>
-                                {allRoles.map(role => (
+                                {allRoles.map(role => ( // <-- INI YANG ERROR DI TEMPAT ANDA
                                     <div className="form-check" key={role}>
                                         <input 
                                             type="checkbox" 
@@ -68,7 +84,6 @@ export default function Form({ allRoles, user = null }: FormProps) {
                                 ))}
                                 {errors.roles && <div className="text-danger mt-1">{errors.roles}</div>}
                             </div>
-                            
                             <div className="d-flex gap-2">
                                 <button type="submit" className="btn btn-primary" disabled={processing}>
                                     {processing ? 'Menyimpan...' : 'Simpan'}
