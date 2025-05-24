@@ -42,3 +42,22 @@ export interface User {
     updated_at: string;
     [key: string]: unknown; // This allows for additional properties...
 }
+
+export interface User {
+    id: number;
+    name: string;
+    email: string;
+    roles: string[]; // Kita tahu dari backend ini adalah array of strings
+}
+
+export type PageProps<T extends Record<string, unknown> = Record<string, unknown>> = T & {
+    auth: {
+        user: User | null; // User bisa ada atau null (jika guest)
+    };
+    // Tambahkan properti lain yang Anda bagikan secara global di sini
+    // contohnya flash messages
+    flash: {
+        success?: string;
+        error?: string;
+    };
+};

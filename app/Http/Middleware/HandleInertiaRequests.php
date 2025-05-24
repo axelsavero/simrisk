@@ -52,6 +52,12 @@ class HandleInertiaRequests extends Middleware
                 'roles' => $request->user()->roles->pluck('name'),
             ] : null, // Jika tidak ada user (guest), kirim null
         ],
+
+        'flash' => [
+            'success' => fn () => $request->session()->get('success'),
+            'error' => fn () => $request->session()->get('error'),
+        ],
+        
             'ziggy' => fn (): array => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),

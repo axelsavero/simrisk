@@ -18,8 +18,10 @@ class User extends Authenticatable
      */
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(Role::class, 'hak_akses', 'user_id', 'role_id');
-    }
+        return $this->belongsToMany(Role::class, 'hak_akses', 'user_id', 'role_id')
+                    ->withTimestamps();
+    }       
+    
 
     /**
      * Method bantuan untuk mengecek apakah user memiliki peran tertentu.
