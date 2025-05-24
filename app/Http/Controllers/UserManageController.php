@@ -5,6 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth; // <-- Wajib untuk mengecek user yang login
 use App\Models\User; // <-- Import model User untuk mengambil data
+use Illuminate\Support\Facades\Hash; // <-- Import Hash
+use Illuminate\Support\Facades\Redirect; // <-- Import Redirect
+use Inertia\Inertia; // <-- Import Inertia
+use App\Models\Role; // <-- Import Role
+use Illuminate\Validation\Rule;
 
 class UserManageController extends Controller
 {
@@ -17,13 +22,21 @@ class UserManageController extends Controller
     {
         // === LAPIS KEAMANAN KEDUA: CEK ROLE ===
         // Setelah lolos middleware 'auth', kita cek rolenya secara spesifik.
-        if (!Auth::user()->hasRole('super admin')) {
+        if (!Auth::user()->hasRole('super-admin')) {
             // Jika bukan super admin, langsung hentikan dengan error 403 (Akses Dilarang)
             abort(403, 'ANDA TIDAK MEMILIKI HAK AKSES UNTUK MELIHAT HALAMAN INI.');
         }
         
         // === JIKA LOLOS, LANJUTKAN PROSES ===
+        $users = User::with('roles')->get()->map(function ($user) {
+            $user->roles = $user->roles->pluck('name');
+            return $user;
+        });
 
+        return Inertia::render('user/manage', [
+            'users' => $users,
+        ]);
+    
         // Ambil semua data user beserta relasi rolenya.
         // Menggunakan with('roles') agar lebih efisien (menghindari N+1 problem)
         $users = User::with('roles')->get();
@@ -33,5 +46,115 @@ class UserManageController extends Controller
             'users' => $users
         ]);
     }
+
+
+
+    public function create()
+    {
+        if (!Auth::user()->hasRole('super-admin')) {
+            abort(403);
+        }
+
+        return Inertia::render('user/form', [
+            'allRoles' => Role::all()->pluck('name'), // Kirim semua role yang ada
+        ]);
+    }
+
+// Method untuk menyimpan data
+    public function store(Request $request)
+    {
+        if (!Auth::user()->hasRole('super-admin')) {
+            abort(403);
+        }
+
+        // Validasi data
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8',
+            'roles' => 'required|array',
+        ]);
+
+        // Buat user baru
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        // Ambil ID dari nama role
+        $roleIds = Role::whereIn('name', $validated['roles'])->pluck('id');
+
+        // Pasang role ke user
+        $user->roles()->sync($roleIds);
+
+        return Redirect::route('user.manage.index')->with('success', 'User berhasil dibuat.');
+    }
+
+    public function edit(User $user)
+    {
+        if (!Auth::user()->hasRole('super-admin')) {
+            abort(403);
+        }
+
+        // Muat role yang dimiliki user ini
+        $user->load('roles');
+
+        return Inertia::render('user/form', [
+            'user' => $user, // Kirim data user yang akan diedit
+            'allRoles' => Role::all()->pluck('name'),
+        ]);
+    }
+
+    // Method untuk menyimpan perubahan
+    public function update(Request $request, User $user)
+    {
+        if (!Auth::user()->hasRole('super-admin')) {
+            abort(403);
+        }
+
+        // Validasi, email harus unik kecuali untuk user ini sendiri
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'password' => 'nullable|string|min:8', // Password boleh kosong
+            'roles' => 'required|array',
+        ]);
+
+        // Update data user
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        if ($validated['password']) {
+            $user->password = Hash::make($validated['password']);
+        }
+        $user->save();
+
+        // Update roles
+        $roleIds = Role::whereIn('name', $validated['roles'])->pluck('id');
+        $user->roles()->sync($roleIds);
+
+        return Redirect::route('user.manage.index')->with('success', 'User berhasil diperbarui.');
+    }
+
+    public function destroy(User $user)
+    {
+        if (!Auth::user()->hasRole('super-admin')) {
+            abort(403);
+        }
+
+        // Jangan biarkan user menghapus dirinya sendiri
+        if (Auth::id() === $user->id) {
+            return Redirect::route('user.manage.index')->with('error', 'Anda tidak bisa menghapus diri sendiri.');
+        }
+
+        $user->delete();
+
+        return Redirect::route('user.manage.index')->with('success', 'User berhasil dihapus.');
+    }
+
 }
+
+
+    
+
 
