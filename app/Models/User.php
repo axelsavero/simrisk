@@ -23,7 +23,7 @@ class User extends Authenticatable
     }       
     
 
-    /**
+  /**
      * Method bantuan untuk mengecek apakah user memiliki peran tertentu.
      * @param string $roleName
      * @return bool

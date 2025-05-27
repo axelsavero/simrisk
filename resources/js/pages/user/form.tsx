@@ -1,8 +1,8 @@
 // resources/js/Pages/User/Form.tsx
 
-import { useForm, Head, Link } from '@inertiajs/react';
+import { useForm, Head, Link } from '@inertiajs/react'; 
 import { User } from '@/types';
-import React from 'react';
+import React from 'react'; 
 
 interface FormProps {
     allRoles: string[];

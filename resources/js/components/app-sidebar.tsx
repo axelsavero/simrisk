@@ -21,7 +21,7 @@ export function AppSidebar() {
         },
         {
             title: 'User Admin',
-            href: '/useradmin',
+            href: '/user/manage',
             icon: User,
             role: 'super-admin', // <-- Item ini hanya untuk peran 'super admin'
         },

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth; // <-- Wajib untuk mengecek user yang login
+use Illuminate\Support\Facades\Auth; // <-- mengecek user yang login
 use App\Models\User; // <-- Import model User untuk mengambil data
 use Illuminate\Support\Facades\Hash; // <-- Import Hash
 use Illuminate\Support\Facades\Redirect; // <-- Import Redirect
@@ -20,30 +20,28 @@ class UserManageController extends Controller
      */
     public function index()
     {
-        // === LAPIS KEAMANAN KEDUA: CEK ROLE ===
-        // Setelah lolos middleware 'auth', kita cek rolenya secara spesifik.
-        if (!Auth::user()->hasRole('super-admin')) {
-            // Jika bukan super admin, langsung hentikan dengan error 403 (Akses Dilarang)
+        if (!Auth::user()->hasRole('super-admin')) { // Cek apakah user yang login memiliki role 'super-admin'
+            // Jika tidak, tampilkan pesan error 403 Forbidden
             abort(403, 'ANDA TIDAK MEMILIKI HAK AKSES UNTUK MELIHAT HALAMAN INI.');
         }
         
-        // === JIKA LOLOS, LANJUTKAN PROSES ===
+        // Ambil data user beserta relasi rolenya
         $users = User::with('roles')->get()->map(function ($user) {
-            $user->roles = $user->roles->pluck('name');
-            return $user;
+            // return sebuah array 
+            // Ambil ID, nama, email, dan roles dari user
+          
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                
+                'roles' => $user->roles->pluck('name')->toArray(), // <-- Ambil nama role sebagai array
+            ];
         });
 
+        // Kirim data yang sudah di-transformasi ke komponen Inertia
         return Inertia::render('user/manage', [
             'users' => $users,
-        ]);
-    
-        // Ambil semua data user beserta relasi rolenya.
-        // Menggunakan with('roles') agar lebih efisien (menghindari N+1 problem)
-        $users = User::with('roles')->get();
-
-        // Kirim data users ke view 'user.manage' dan tampilkan halamannya
-        return view('user.manage', [
-            'users' => $users
         ]);
     }
 
