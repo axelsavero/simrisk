@@ -3,8 +3,8 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 // 1. Import hook usePage dari Inertia
-import { Link, usePage } from '@inertiajs/react'; 
-import { BookOpen, Folder, LayoutGrid, User, Target, ShieldCheck } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { BookOpen, LayoutGrid, ShieldCheck, Target, User } from 'lucide-react';
 import AppLogo from './app-logo';
 
 export function AppSidebar() {
@@ -30,6 +30,14 @@ export function AppSidebar() {
             href: '/sasaran',
             icon: Target,
         },
+
+        {
+            title: 'Identifikasi Risiko',
+            href: '/identity-risk', // Menggunakan nama route
+            icon: ShieldCheck,
+            role: 'owner-risk', // Hanya untuk peran 'operator'
+        },
+
         {
             title: 'Validasi',
             href: '/validasi',
@@ -53,7 +61,7 @@ export function AppSidebar() {
     ];
 
     // 4. Saring (filter) daftar menu berdasarkan peran user
-    const mainNavItems = allNavItems.filter(item => {
+    const mainNavItems = allNavItems.filter((item) => {
         // Jika sebuah item tidak memiliki properti 'role', selalu tampilkan
         if (!item.role) {
             return true;
@@ -66,7 +74,7 @@ export function AppSidebar() {
 
     return (
         <Sidebar collapsible="icon" variant="inset">
-            <SidebarHeader className='mb-6'>
+            <SidebarHeader className="mb-6">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>

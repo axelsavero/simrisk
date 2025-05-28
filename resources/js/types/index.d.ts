@@ -20,7 +20,7 @@ export interface NavItem {
     href: string;
     icon?: LucideIcon | null;
     isActive?: boolean;
-    children?: NavItem[]
+    children?: NavItem[];
 }
 
 export interface SharedData {
@@ -60,4 +60,54 @@ export type PageProps<T extends Record<string, unknown> = Record<string, unknown
         success?: string;
         error?: string;
     };
+};
+
+export interface IdentityRisk {
+    id: number;
+    id_identity: string;
+    status: boolean;
+    risk_category: string;
+    identification_date_start: string; // format YYYY-MM-DD
+    identification_date_end: string; // format YYYY-MM-DD
+    description: string;
+    probability: number;
+    impact: number;
+    level: number;
+    created_at?: string;
+    updated_at?: string;
+    // Nanti bisa ditambahkan relasi, contoh:
+    // penyebab?: Array<{ id: number; description: string }>;
+}
+
+// Tipe untuk data paginasi
+export interface PaginatedData<T> {
+    current_page: number;
+    data: T[];
+    first_page_url: string;
+    from: number;
+    last_page: number;
+    last_page_url: string;
+    links: Array<{ url: string | null; label: string; active: boolean }>;
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+    total: number;
+}
+
+// Tipe untuk props global Inertia
+export type PageProps<T extends Record<string, unknown> = Record<string, unknown>> = T & {
+    auth: {
+        user: User | null;
+    };
+    flash: {
+        success?: string;
+        error?: string;
+    };
+    ziggy: Config & { location: string }; // Jika menggunakan Ziggy
+    // Tambahkan props spesifik halaman jika diperlukan
+    identityRisks?: PaginatedData<IdentityRisk>;
+    identityRisk?: IdentityRisk; // Untuk form edit/create
+    allRoles?: string[]; // Dari User Management
 };
