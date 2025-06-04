@@ -49,7 +49,7 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xl font-semibold">User Management</h3>
                     {isSuperAdmin && (
-                    <div className="border rounded-lg p-2 bg-green-500 dark:bg-white shadow-sm">
+                    <div className="border rounded-lg p-2 bg-green-500 dark:bg-white dark:text-black ">
                      <Link
                           href="/user/manage/create"
                             className="btn btn-primary"
