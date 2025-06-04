@@ -1,88 +1,111 @@
 // resources/js/Pages/User/Manage.tsx
 
 import { Link, Head, usePage } from '@inertiajs/react';
-import { PageProps, User } from '@/types'; // <-- Import tipe kita
-import { router } from '@inertiajs/react'; // <-- Import router untuk delete
+import { PageProps, User, BreadcrumbItem } from '@/types';
+import { router } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
+import Swal from 'sweetalert2';
 
-// Terapkan tipe pada props yang diterima oleh halaman ini
+
 export default function Manage({ users }: PageProps<{ users: User[] }>) {
-    
-    // Gunakan PageProps di usePage untuk mendapatkan auth yang type-safe
     const { auth, flash } = usePage<PageProps>().props;
-
     const isSuperAdmin = auth.user?.roles?.includes('super-admin');
 
-    function deleteUser(user: User) { // <-- Beri tipe pada parameter user
-        if (confirm(`Apakah Anda yakin ingin menghapus user ${user.name}?`)) {
-            // Gunakan `route()` helper jika ada, atau path manual
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Dashboard', href: '/dashboard' },
+        { title: 'Manajemen User', href: '/user/manage' },
+    ];
+
+    function deleteUser(user: User) {
+    Swal.fire({
+        title: 'Yakin ingin menghapus?',
+        text: `User "${user.name}" akan dihapus secara permanen.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Ya, hapus!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
             router.delete(`/user/manage/${user.id}`);
         }
-    }
+    });
+}
+
 
     return (
-        <>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="User Management" />
-            <div className="container py-4">
-                <div className="row justify-content-center">
-                    <div className="col-md-10">
+            <div className="flex flex-col gap-4 p-4">
+                {/* Flash Message */}
+                {flash?.success && (
+                    <div className="alert alert-success">{flash.success}</div>
+                )}
+                {flash?.error && (
+                    <div className="alert alert-danger">{flash.error}</div>
+                )}
 
-                        {/* Tampilkan flash message jika ada */}
-                        {/* // Gunakan optional chaining `?.` untuk keamanan */}
-                        {flash?.success && (
-                            <div className="alert alert-success">{flash.success}</div>
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-semibold">User Management</h3>
+                    {isSuperAdmin && (
+                    <div className="border rounded-lg p-2 bg-green-500 dark:bg-white shadow-sm">
+                     <Link
+                          href="/user/manage/create"
+                            className="btn btn-primary"
+                      >
+                          Tambah User Baru
+                       </Link>
+                      </div>
                         )}
-                        {flash?.error && (
-                            <div className="alert alert-danger">{flash.error}</div>
-                        )}
-                        
 
-                        <div className="d-flex justify-content-between align-items-center mb-3">
-                            <h3>User Management</h3>
-                            {isSuperAdmin && (
-                                <Link href="/user/manage/create" className="btn btn-primary">
-                                    Tambah User Baru
-                                </Link>
-                            )}
-                        </div>
+                </div>
 
-                        <div className="card">
-                            <div className="card-body">
-                                <table className="table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Name</th>
-                                            <th>Email</th>
-                                            <th>Roles</th>
-                                            {isSuperAdmin && <th>Aksi</th>}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {users.map((user: User) => ( // <-- Beri tipe pada user di dalam map
-                                            <tr key={user.id}>
-                                                <td>{user.id}</td>
-                                                <td>{user.name}</td>
-                                                <td>{user.email}</td>
-                                                <td>{user.roles.join(', ')}</td>
-                                                {isSuperAdmin && (
-                                                    <td>
-                                                        <Link href={`/user/manage/${user.id}/edit`} className="btn btn-sm btn-info me-2">
-                                                            Edit
-                                                        </Link>
-                                                        <button onClick={() => deleteUser(user)} className="btn btn-sm btn-danger">
-                                                            Hapus
-                                                        </button>
-                                                    </td>
-                                                )}
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                <div className="rounded-xl border border-sidebar-border overflow-hidden shadow-sm bg-white dark:bg-neutral-900">
+                    <div className="p-4 overflow-x-auto">
+                       <table className="min-w-full border border-gray-300 text-sm text-left">
+                        <thead className="bg-gray-100 dark:bg-neutral-800">
+                            <tr>
+                                <th className="border px-4 py-2">ID</th>
+                                <th className="border px-4 py-2">Name</th>
+                                <th className="border px-4 py-2">Email</th>
+                                <th className="border px-4 py-2">Roles</th>
+                                {isSuperAdmin && <th className="border px-4 py-2">Aksi</th>}
+                            </tr>
+                        </thead>
+
+                            <tbody>
+                                {users.map((user: User) => (
+                                    <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-neutral-800">
+                                        <td className="border px-4 py-2">{user.id}</td>
+                                        <td className="border px-4 py-2">{user.name}</td>
+                                        <td className="border px-4 py-2">{user.email}</td>
+                                        <td className="border px-4 py-2">{user.roles.join(', ')}</td>
+                                        {isSuperAdmin && (
+                                            <td className="border px-4 py-2 flex flex-wrap gap-2">
+                                                <Link
+                                                    href={`/user/manage/${user.id}/edit`}
+                                                    className="px-4 py-1 border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition text-sm"
+                                                >
+                                                    Edit
+                                                </Link>
+                                                <button
+                                                    onClick={() => deleteUser(user)}
+                                                    className="px-4 py-1 border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition text-sm"
+                                                >
+                                                    Hapus
+                                                </button>
+                                            </td>
+                                        )}
+                                    </tr>
+                                ))}
+                            </tbody>
+
+
+                        </table>
                     </div>
                 </div>
             </div>
-        </>
+        </AppLayout>
     );
 }
