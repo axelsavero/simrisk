@@ -84,6 +84,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Named Route: identity-risk.destroy
     Route::delete('/identity-risk/{identityRisk}', [IdentityRiskController::class, 'destroy'])
          ->name('identity-risk.destroy');
+
+
+    Route::post('/identity-risk/{identityRisk}/approve', [IdentityRiskController::class, 'approve'])
+    ->name('identity-risk.approve');
+    // ->middleware('can:approve,identityRisk');
+
+    Route::post('/identity-risk/{identityRisk}/reject', [IdentityRiskController::class, 'reject'])
+         ->name('identity-risk.reject');
+
 });
 
 

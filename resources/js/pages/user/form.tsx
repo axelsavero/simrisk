@@ -1,7 +1,7 @@
-import { useForm, Head, Link } from '@inertiajs/react';
-import { User, BreadcrumbItem } from '@/types';
-import React from 'react';
 import AppLayout from '@/layouts/app-layout';
+import { BreadcrumbItem, User } from '@/types';
+import { Head, Link, useForm } from '@inertiajs/react';
+import React from 'react';
 
 interface FormProps {
     allRoles: string[];
@@ -20,7 +20,7 @@ export default function Form({ allRoles, user = null }: FormProps) {
         name: user?.name || '',
         email: user?.email || '',
         password: '',
-        roles: user?.roles?.map(role => role.name) || [],
+        roles: user?.roles?.map((role) => role.name) || [],
     });
 
     function handleCheckboxChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -28,7 +28,10 @@ export default function Form({ allRoles, user = null }: FormProps) {
         if (checked) {
             setData('roles', [...data.roles, value]);
         } else {
-            setData('roles', data.roles.filter((role) => role !== value));
+            setData(
+                'roles',
+                data.roles.filter((role) => role !== value),
+            );
         }
     }
 
@@ -51,54 +54,52 @@ export default function Form({ allRoles, user = null }: FormProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={user ? 'Edit User' : 'Tambah User Baru'} />
             <div className="w-full px-6 py-8">
-                <h2 className="text-2xl font-semibold mb-6">
-                    {user ? 'Edit User' : 'Tambah User Baru'}
-                </h2>
+                <h2 className="mb-6 text-2xl font-semibold">{user ? 'Edit User' : 'Tambah User Baru'}</h2>
 
                 <form
                     onSubmit={submit}
-                    className="w-full border-2 border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-6 rounded-xl shadow-md space-y-6"
+                    className="w-full space-y-6 rounded-xl border-2 border-gray-300 bg-white p-6 shadow-md dark:border-neutral-700 dark:bg-neutral-900"
                 >
                     <div>
-                        <label className="block mb-1 font-medium">Nama</label>
+                        <label className="mb-1 block font-medium">Nama</label>
                         <input
                             type="text"
                             value={data.name}
-                            onChange={e => setData('name', e.target.value)}
-                            className="w-full border border-gray-300 dark:border-neutral-700 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            onChange={(e) => setData('name', e.target.value)}
+                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
                         />
-                        {errors.name && <div className="text-red-500 text-sm mt-1">{errors.name}</div>}
+                        {errors.name && <div className="mt-1 text-sm text-red-500">{errors.name}</div>}
                     </div>
 
                     <div>
-                        <label className="block mb-1 font-medium">Email</label>
+                        <label className="mb-1 block font-medium">Email</label>
                         <input
                             type="email"
                             value={data.email}
-                            onChange={e => setData('email', e.target.value)}
-                            className="w-full border border-gray-300 dark:border-neutral-700 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            onChange={(e) => setData('email', e.target.value)}
+                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
                         />
-                        {errors.email && <div className="text-red-500 text-sm mt-1">{errors.email}</div>}
+                        {errors.email && <div className="mt-1 text-sm text-red-500">{errors.email}</div>}
                     </div>
 
                     <div>
-                        <label className="block mb-1 font-medium">Password</label>
+                        <label className="mb-1 block font-medium">Password</label>
                         <input
                             type="password"
                             value={data.password}
-                            onChange={e => setData('password', e.target.value)}
-                            className="w-full border border-gray-300 dark:border-neutral-700 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            onChange={(e) => setData('password', e.target.value)}
+                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
                         />
                         <small className="text-gray-500 dark:text-gray-400">
                             {user ? 'Kosongkan jika tidak ingin mengubah password.' : 'Minimal 8 karakter.'}
                         </small>
-                        {errors.password && <div className="text-red-500 text-sm mt-1">{errors.password}</div>}
+                        {errors.password && <div className="mt-1 text-sm text-red-500">{errors.password}</div>}
                     </div>
 
                     <div>
-                        <label className="block mb-2 font-medium">Roles</label>
+                        <label className="mb-2 block font-medium">Roles</label>
                         <div className="space-y-1">
-                            {allRoles.map(role => (
+                            {allRoles.map((role) => (
                                 <label className="flex items-center gap-2" key={role}>
                                     <input
                                         type="checkbox"
@@ -111,20 +112,20 @@ export default function Form({ allRoles, user = null }: FormProps) {
                                 </label>
                             ))}
                         </div>
-                        {errors.roles && <div className="text-red-500 text-sm mt-1">{errors.roles}</div>}
+                        {errors.roles && <div className="mt-1 text-sm text-red-500">{errors.roles}</div>}
                     </div>
 
-                    <div className="flex justify-between mt-6">
+                    <div className="mt-6 flex justify-between">
                         <button
                             type="submit"
                             disabled={processing}
-                            className="px-6 py-2 border border-green-600 text-green-600 rounded-md hover:bg-green-600 hover:text-white transition"
+                            className="rounded-md border border-green-600 px-6 py-2 text-green-600 transition hover:bg-green-600 hover:text-white"
                         >
                             {processing ? 'Menyimpan...' : 'Simpan'}
                         </button>
                         <Link
                             href="/user/manage"
-                            className="px-6 py-2 border border-red-500 text-red-500 rounded-md hover:bg-red-500 hover:text-white transition"
+                            className="rounded-md border border-red-500 px-6 py-2 text-red-500 transition hover:bg-red-500 hover:text-white"
                         >
                             Batal
                         </Link>

@@ -1,4 +1,5 @@
 <?php
+// database/migrations/xxxx_xx_xx_create_penanganan_risikos_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -6,25 +7,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('dampak_kualitatifs', function (Blueprint $table) {
+        Schema::create('penanganan_risikos', function (Blueprint $table) {
             $table->id();
-            // Ini adalah Foreign Key yang menghubungkan ke tabel identity_risks
             $table->foreignId('identity_risk_id')->constrained('identity_risks')->onDelete('cascade');
-            $table->text('description'); // Kolom untuk deskripsi penyebab
+            $table->text('description');
             $table->timestamps();
+            
+            // Index untuk performa
+            $table->index('identity_risk_id');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('dampak_kualitatifs');
+        Schema::dropIfExists('penanganan_risikos');
     }
 };
