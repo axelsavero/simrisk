@@ -1,21 +1,24 @@
 <?php
+// app/Models/Role.php
 
 namespace App\Models;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Role extends Model
 {
-     use HasFactory;
+    use HasFactory;
+
+    protected $fillable = [
+        'name',
+        'guard_name',
+        'description'
+    ];
 
     /**
-     * Kolom yang boleh diisi secara massal.
-     */
-    protected $fillable = ['name'];
-
-    /**
-     * Relasi yang mendefinisikan user yang memiliki peran ini.
+     * Relasi many-to-many ke User melalui tabel hak_akses
      */
     public function users(): BelongsToMany
     {

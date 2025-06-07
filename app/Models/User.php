@@ -16,11 +16,6 @@ class User extends Authenticatable
     /**
      * Relasi yang mendefinisikan peran yang dimiliki user.
      */
-    public function roles(): BelongsToMany
-    {
-        return $this->belongsToMany(Role::class, 'hak_akses', 'user_id', 'role_id')
-                    ->withTimestamps();
-    }       
     
 
   /**
@@ -28,12 +23,6 @@ class User extends Authenticatable
      * @param string $roleName
      * @return bool
      */
-    public function hasRole(string $roleName): bool
-    {
-        // Cek di dalam koleksi 'roles' yang dimiliki user,
-        // apakah ada yang namanya cocok dengan $roleName.
-        return $this->roles->contains('name', $roleName);
-    }
 
 
 
@@ -71,4 +60,61 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, 'hak_akses', 'user_id', 'role_id')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Cek apakah user memiliki role tertentu
+     */
+    public function hasRole(string $roleName): bool
+    {
+        return $this->roles()->where('name', $roleName)->exists();
+    }
+
+    /**
+     * Cek apakah user memiliki salah satu role dalam array
+     */
+    public function hasAnyRole(array $roleNames): bool
+    {
+        return $this->roles()->whereIn('name', $roleNames)->exists();
+    }
+
+    /**
+     * Cek apakah user dapat mengelola risiko
+     */
+    
+
+    /**
+     * Cek apakah user dapat memvalidasi risiko
+     */
+    public function canValidateRisks(): bool
+    {
+        return $this->hasRole('super-admin');
+    }
+
+    /**
+     * Get semua nama role user sebagai array
+     */
+    public function getRoleNames(): array
+    {
+        return $this->roles->pluck('name')->toArray();
+    }
+
+    public function canManageRisks(): bool
+    {
+        return $this->hasAnyRole(['super-admin', 'risk-manager', 'owner-risk']);
+    }
+
+    /**
+     * Cek apakah user adalah pimpinan
+     */
+    public function isPimpinan(): bool
+    {
+        return $this->hasRole('pimpinan');
+    }
+
 }

@@ -32,7 +32,19 @@ class IdentityRiskController extends Controller
     {
         $query = IdentityRisk::with(['penyebab', 'dampakKualitatif', 'penangananRisiko'])->latest(); 
 
-        if (!Auth::user()->hasRole('super-admin')) {
+        $user = Auth::user();
+        
+        // 🔥 PERBAIKAN: Gunakan nama role yang konsisten
+        if ($user->hasRole('super-admin')) {
+            // Super admin melihat semua data
+        } elseif ($user->hasAnyRole(['risk-manager', 'owner-risk'])) { // Konsisten dengan seeder
+            // Risk manager/owner melihat data sesuai preferensi status[2]
+            $query = $query->where('status', true);
+        } elseif ($user->hasRole('pimpinan')) {
+            // Pimpinan melihat data yang sudah approved
+            $query = $query->approved()->where('status', true);
+        } else {
+            // User lain hanya melihat yang sudah approved dan aktif
             $query = $query->approved()->where('status', true);
         }
 
@@ -70,9 +82,15 @@ class IdentityRiskController extends Controller
             ])->toArray(),
         ]);
 
+                $canManage = $user->hasRole('super-admin') || 
+                $user->hasRole('risk-manager') || 
+                $user->hasRole('owner-risk');
+
         return Inertia::render('identityrisk/index', [
             'identityRisks' => $identityRisks,
-            'canValidate' => Auth::user()->hasRole('super-admin'),
+            'canValidate' => $user->canValidateRisks(),
+            'canManage' => $user->canManageRisks(),
+            'userRole' => $user->getRoleNames(),
         ]);
     }
 

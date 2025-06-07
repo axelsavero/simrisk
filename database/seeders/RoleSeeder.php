@@ -11,14 +11,35 @@ class RoleSeeder extends Seeder
     public function run(): void
     {
         $roles = [
-            'super-admin',
-            'admin',
-            'owner-risk',
-            'pimpinan',
+            [
+                'name' => 'super-admin',
+                'guard_name' => 'web',
+                'description' => 'Super Administrator dengan akses penuh ke semua fitur sistem'
+            ],
+            [
+                'name' => 'admin', 
+                'guard_name' => 'web',
+                'description' => 'Administrator yang dapat mengelola sistem'
+            ],
+            [
+                'name' => 'owner-risk', // 🔥 PERBAIKAN: Konsisten dengan controller
+                'guard_name' => 'web',
+                'description' => 'Pemilik risiko yang bertanggung jawab atas identifikasi dan pengelolaan risiko'
+            ],
+           
+            [
+                'name' => 'pimpinan',
+                'guard_name' => 'web',
+                'description' => 'Pimpinan yang dapat melihat laporan dan dashboard risiko'
+            ],
+            
         ];
 
-        foreach ($roles as $role) {
-            Role::firstOrCreate(['name' => $role]);
+        foreach ($roles as $roleData) {
+            Role::firstOrCreate(
+                ['name' => $roleData['name']], // Cari berdasarkan name
+                $roleData // Buat dengan semua data jika belum ada
+            );
         }
     }
 }
