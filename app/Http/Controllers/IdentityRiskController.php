@@ -82,16 +82,22 @@ class IdentityRiskController extends Controller
             ])->toArray(),
         ]);
 
-                $canManage = $user->hasRole('super-admin') || 
+                $canManage = $user->hasRole('super-admin', 'owner-risk') || 
                 $user->hasRole('risk-manager') || 
                 $user->hasRole('owner-risk');
 
         return Inertia::render('identityrisk/index', [
-            'identityRisks' => $identityRisks,
-            'canValidate' => $user->canValidateRisks(),
-            'canManage' => $user->canManageRisks(),
-            'userRole' => $user->getRoleNames(),
-        ]);
+        'identityRisks' => $identityRisks,
+        'permissions' => [
+            'canCreate' => $user->hasRole('super-admin') || $user->hasRole('owner-risk'),
+            'canEdit' => $user->hasRole('super-admin') || $user->hasRole('owner-risk'),
+            'canDelete' => $user->hasRole('super-admin') || $user->hasRole('owner-risk'),
+            'canValidate' => $user->hasRole('super-admin'), // Hanya super-admin
+            'canApprove' => $user->hasRole('super-admin'), // Hanya super-admin
+            'canReject' => $user->hasRole('super-admin'), // Hanya super-admin
+        ],
+        'userRole' => $user->getRoleNames(),
+    ]);
     }
 
     public function create()

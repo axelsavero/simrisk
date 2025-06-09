@@ -28,11 +28,13 @@ const Pagination = ({ links }: { links: Array<{ url: string | null; label: strin
 };
 
 export default function Index() {
-    const { identityRisks, flash, auth, canValidate } = usePage<PageProps>().props;
+    // 🔥 PERBAIKAN: Ambil permissions dari props
+    const { identityRisks, flash, auth, permissions } = usePage<PageProps>().props;
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [searchTerm, setSearchTerm] = useState<string>('');
 
     console.log('Data identityRisks diterima di Index.tsx:', identityRisks);
+    console.log('Permissions:', permissions);
 
     if (!identityRisks) {
         return (
@@ -79,7 +81,9 @@ export default function Index() {
         }
     }
 
-    const showAdminActions = canValidate;
+    // 🔥 PERBAIKAN: Gunakan permissions yang lebih granular
+    const showEditDeleteActions = permissions?.canEdit || permissions?.canDelete;
+    const showValidationActions = permissions?.canValidate;
 
     const getRiskLevelInfo = (probability: number, impact: number) => {
         const risk = probability * impact;
@@ -126,10 +130,13 @@ export default function Index() {
                         </h1>
                         <p className="page-subtitle">Kelola dan pantau identifikasi risiko organisasi Anda</p>
                     </div>
-                    <Link href={route('identity-risk.create')} className="btn btn-primary btn-create">
-                        <span className="btn-icon">➕</span>
-                        Tambah Risiko Baru
-                    </Link>
+                    {/* 🔥 PERBAIKAN: Cek permission untuk create */}
+                    {permissions?.canCreate && (
+                        <Link href={route('identity-risk.create')} className="btn btn-primary btn-create">
+                            <span className="btn-icon">➕</span>
+                            Tambah Risiko Baru
+                        </Link>
+                    )}
                 </div>
             </div>
 
@@ -259,23 +266,35 @@ export default function Index() {
                                     )}
                                 </div>
 
-                                {/* Card Actions */}
-                                {showAdminActions && (
+                                {/* 🔥 PERBAIKAN: Card Actions dengan permission yang berbeda */}
+                                {(showEditDeleteActions || showValidationActions) && (
                                     <div className="card-actions">
-                                        <Link href={route('identity-risk.edit', item.id)} className="action-btn edit-btn" title="Edit">
-                                            ✏️ Edit
-                                        </Link>
-                                        <button onClick={() => deleteItem(item)} className="action-btn delete-btn" title="Hapus">
-                                            🗑️ Hapus
-                                        </button>
-                                        {item.validation_status === 'pending' && (
+                                        {/* Edit & Delete Actions - untuk owner-risk dan super-admin */}
+                                        {permissions?.canEdit && (
+                                            <Link href={route('identity-risk.edit', item.id)} className="action-btn edit-btn" title="Edit">
+                                                ✏️ Edit
+                                            </Link>
+                                        )}
+
+                                        {permissions?.canDelete && (
+                                            <button onClick={() => deleteItem(item)} className="action-btn delete-btn" title="Hapus">
+                                                🗑️ Hapus
+                                            </button>
+                                        )}
+
+                                        {/* Validation Actions - hanya untuk super-admin */}
+                                        {showValidationActions && item.validation_status === 'pending' && (
                                             <>
-                                                <button onClick={() => approveItem(item)} className="action-btn approve-btn" title="Setujui">
-                                                    ✅ Setujui
-                                                </button>
-                                                <button onClick={() => rejectItem(item)} className="action-btn reject-btn" title="Tolak">
-                                                    ❌ Tolak
-                                                </button>
+                                                {permissions?.canApprove && (
+                                                    <button onClick={() => approveItem(item)} className="action-btn approve-btn" title="Setujui">
+                                                        ✅ Setujui
+                                                    </button>
+                                                )}
+                                                {permissions?.canReject && (
+                                                    <button onClick={() => rejectItem(item)} className="action-btn reject-btn" title="Tolak">
+                                                        ❌ Tolak
+                                                    </button>
+                                                )}
                                             </>
                                         )}
                                     </div>
@@ -292,7 +311,7 @@ export default function Index() {
                                 ? 'Tidak ada risiko yang sesuai dengan filter atau pencarian Anda.'
                                 : 'Belum ada risiko yang dibuat. Mulai dengan menambah risiko baru.'}
                         </p>
-                        {!searchTerm && filterStatus === 'all' && (
+                        {!searchTerm && filterStatus === 'all' && permissions?.canCreate && (
                             <Link href={route('identity-risk.create')} className="btn btn-primary">
                                 ➕ Tambah Risiko Pertama
                             </Link>
