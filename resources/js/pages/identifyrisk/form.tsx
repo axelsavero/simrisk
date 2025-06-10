@@ -10,6 +10,7 @@ interface FormProps {
 }
 
 interface FormData {
+    [key: string]: any;
     id_identify: string; // 🔥 PERBAIKAN: Konsisten dengan backend
     status: boolean;
     risk_category: string;

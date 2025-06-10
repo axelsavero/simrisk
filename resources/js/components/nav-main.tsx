@@ -28,7 +28,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                             {expandedItems.includes(item.title) && (
                                 <div className="mt-1 ml-6 space-y-1">
                                     {item.children.map((child) => (
-                                        <Link key={child.href} href={child.href} className="block rounded-md p-2 hover:bg-gray-100">
+                                        <Link key={child.href} href={child.href} className="block rounded-md p-2 hover:bg-teal-900">
                                             {child.title}
                                         </Link>
                                     ))}

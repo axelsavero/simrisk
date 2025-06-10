@@ -6,6 +6,7 @@ import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { BookOpen, Folder, LayoutGrid, User, Target, ShieldCheck } from 'lucide-react';
 import AppLogo from './app-logo';
+import React, { useState } from 'react';
 
 // Define PageProps type if not imported from elsewhere
 type PageProps = {
@@ -21,6 +22,7 @@ type PageProps = {
 export function AppSidebar() {
     // 2. Ambil data 'auth' dari props yang dibagikan Inertia
     const { auth } = usePage<PageProps>().props;
+    const [collapsed, setCollapsed] = useState(false);
 
     // 3. Definisikan SEMUA kemungkinan item navigasi di sini
     // Kita tambahkan properti baru 'role' untuk item yang butuh hak akses khusus
@@ -84,11 +86,14 @@ export function AppSidebar() {
     });
 
     return (
-        <Sidebar collapsible="icon" variant="inset">
+        <Sidebar
+            variant="inset"
+            className={collapsed ? 'w-16' : 'w-64'} // atur lebar sidebar
+        >
             <SidebarHeader className="mb-6">
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
+                        <SidebarMenuButton size="lg" asChild onClick={() => setCollapsed(!collapsed)}>
                             <Link href="/dashboard" prefetch>
                                 <AppLogo />
                             </Link>
@@ -98,7 +103,6 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                {/* 5. Gunakan array 'mainNavItems' yang sudah disaring */}
                 <NavMain items={mainNavItems as NavItem[]} />
             </SidebarContent>
 

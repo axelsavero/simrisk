@@ -1,10 +1,15 @@
 // resources/js/pages/identifyrisk/index.tsx (FULL CODE)
 
 import AppLayout from '@/layouts/app-layout';
-import { IdentifyRisk } from '@/types';
+import { BreadcrumbItem, IdentifyRisk } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
 import React, { useState } from 'react';
 import '../../../css/IdentifyRiskIndex.css';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'Manajemen Risiko', href: route('identify-risk.index') },
+];
 
 // Define PageProps type according to your props structure
 type PageProps = {
@@ -396,5 +401,5 @@ export default function Index() {
 }
 
 Index.layout = (page: React.ReactNode) => {
-    return <AppLayout children={page} />;
+    return <AppLayout breadcrumbs={breadcrumbs} children={page} />;
 };
