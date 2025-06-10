@@ -3,7 +3,7 @@
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserManageController;
-use App\Http\Controllers\IdentityRiskController;
+use App\Http\Controllers\IdentifyRiskController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -29,71 +29,74 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
 
-    // --- RUTE MANUAL UNTUK IDENTITY RISK CRUD ---
+    // --- RUTE MANUAL UNTUK IDENTIFY RISK CRUD ---
 
     // 1. Menampilkan daftar semua identifikasi risiko (Index)
-    // URI: GET /identity-risk
-    // Controller Action: IdentityRiskController@index
-    // Named Route: identity-risk.index
-    Route::get('/identity-risk', [IdentityRiskController::class, 'index'])
-         ->name('identity-risk.index');
+    // URI: GET /identify-risk
+    // Controller Action: IdentifyRiskController@index
+    // Named Route: identify-risk.index
+    Route::get('/identify-risk', [IdentifyRiskController::class, 'index'])
+         ->name('identify-risk.index');
 
     // 2. Menampilkan formulir untuk membuat identifikasi risiko baru (Create)
-    // URI: GET /identity-risk/create
-    // Controller Action: IdentityRiskController@create
-    // Named Route: identity-risk.create
-    Route::get('/identity-risk/create', [IdentityRiskController::class, 'create'])
-         ->name('identity-risk.create');
+    // URI: GET /identify-risk/create
+    // Controller Action: IdentifyRiskController@create
+    // Named Route: identify-risk.create
+    Route::get('/identify-risk/create', [IdentifyRiskController::class, 'create'])
+         ->name('identify-risk.create');
 
     // 3. Menyimpan identifikasi risiko baru ke database (Store)
-    // URI: POST /identity-risk
-    // Controller Action: IdentityRiskController@store
-    // Named Route: identity-risk.store
-    Route::post('/identity-risk', [IdentityRiskController::class, 'store'])
-         ->name('identity-risk.store');
+    // URI: POST /identify-risk
+    // Controller Action: IdentifyRiskController@store
+    // Named Route: identify-risk.store
+    Route::post('/identify-risk', [IdentifyRiskController::class, 'store'])
+         ->name('identify-risk.store');
 
     // 4. (Opsional) Menampilkan detail satu identifikasi risiko (Show)
-    // URI: GET /identity-risk/{identityRisk}
-    // Controller Action: IdentityRiskController@show
-    // Named Route: identity-risk.show
+    // URI: GET /identify-risk/{identifyRisk}
+    // Controller Action: IdentifyRiskController@show
+    // Named Route: identify-risk.show
     // Jika Anda membuat method show() di controller.
-    // Route::get('/identity-risk/{identityRisk}', [IdentityRiskController::class, 'show'])
-    //      ->name('identity-risk.show');
+    // Route::get('/identify-risk/{identifyRisk}', [IdentifyRiskController::class, 'show'])
+    //      ->name('identify-risk.show');
 
     // 5. Menampilkan formulir untuk mengedit identifikasi risiko yang ada (Edit)
-    // URI: GET /identity-risk/{identityRisk}/edit
-    // Controller Action: IdentityRiskController@edit
-    // Named Route: identity-risk.edit
-    // Laravel akan otomatis melakukan Route Model Binding untuk {identityRisk}
-    Route::get('/identity-risk/{identityRisk}/edit', [IdentityRiskController::class, 'edit'])
-         ->name('identity-risk.edit');
+    // URI: GET /identify-risk/{identifyRisk}/edit
+    // Controller Action: IdentifyRiskController@edit
+    // Named Route: identify-risk.edit
+    // Laravel akan otomatis melakukan Route Model Binding untuk {identifyRisk}
+    Route::get('/identify-risk/{identifyRisk}/edit', [IdentifyRiskController::class, 'edit'])
+         ->name('identify-risk.edit');
 
     // 6. Memperbarui identifikasi risiko yang ada di database (Update)
-    // URI: PUT /identity-risk/{identityRisk} (atau PATCH)
-    // Controller Action: IdentityRiskController@update
-    // Named Route: identity-risk.update
-    Route::put('/identity-risk/{identityRisk}', [IdentityRiskController::class, 'update'])
-         ->name('identity-risk.update');
+    // URI: PUT /identify-risk/{identifyRisk} (atau PATCH)
+    // Controller Action: IdentifyRiskController@update
+    // Named Route: identify-risk.update
+    Route::put('/identify-risk/{identifyRisk}', [IdentifyRiskController::class, 'update'])
+         ->name('identify-risk.update');
     // Anda bisa juga menggunakan PATCH jika hanya memperbarui sebagian data:
-    // Route::patch('/identity-risk/{identityRisk}', [IdentityRiskController::class, 'update'])
-    //      ->name('identity-risk.update'); // Nama rute bisa sama jika methodnya berbeda
+    // Route::patch('/identify-risk/{identifyRisk}', [IdentifyRiskController::class, 'update'])
+    //      ->name('identify-risk.update'); // Nama rute bisa sama jika methodnya berbeda
 
     // 7. Menghapus identifikasi risiko dari database (Destroy)
-    // URI: DELETE /identity-risk/{identityRisk}
-    // Controller Action: IdentityRiskController@destroy
-    // Named Route: identity-risk.destroy
-    Route::delete('/identity-risk/{identityRisk}', [IdentityRiskController::class, 'destroy'])
-         ->name('identity-risk.destroy');
+    // URI: DELETE /identify-risk/{identifyRisk}
+    // Controller Action: IdentifyRiskController@destroy
+    // Named Route: identify-risk.destroy
+    Route::delete('/identify-risk/{identifyRisk}', [IdentifyRiskController::class, 'destroy'])
+         ->name('identify-risk.destroy');
 
 
-    Route::post('/identity-risk/{identityRisk}/approve', [IdentityRiskController::class, 'approve'])
-    ->name('identity-risk.approve');
-    // ->middleware('can:approve,identityRisk');
+    Route::post('/identify-risk/{identifyRisk}/approve', [IdentifyRiskController::class, 'approve'])
+    ->name('identify-risk.approve');
+    // ->middleware('can:approve,identifyRisk');
 
-    Route::post('/identity-risk/{identityRisk}/reject', [IdentityRiskController::class, 'reject'])
-         ->name('identity-risk.reject');
+    Route::post('/identify-risk/{identifyRisk}/reject', [IdentifyRiskController::class, 'reject'])
+         ->name('identify-risk.reject');
 
-});
+     Route::post('/identify-risk/{identifyRisk}/submit', [IdentifyRiskController::class, 'submit'])->name('identify-risk.submit');
+    });
+
+
 
 
 Route::middleware(['auth', 'verified'])->group(function () {

@@ -11,12 +11,12 @@ return new class extends Migration
     {
         Schema::create('penanganan_risikos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('identity_risk_id')->constrained('identity_risks')->onDelete('cascade');
+            $table->foreignId('identify_risk_id')->constrained('identify_risks')->onDelete('cascade');
             $table->text('description');
             $table->timestamps();
             
             // Index untuk performa
-            $table->index('identity_risk_id');
+            $table->index('identify_risk_id');
         });
     }
 

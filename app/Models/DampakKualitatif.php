@@ -14,15 +14,15 @@ class DampakKualitatif extends Model
     protected $table = 'dampak_kualitatifs';
 
     protected $fillable = [
-        'identity_risk_id',
+        'identify_risk_id',
         'description',
     ];
 
     /**
-     * Get the identity risk that owns the dampak kualitatif.
+     * Get the identify risk that owns the dampak kualitatif.
      */
-    public function identityRisk(): BelongsTo
+    public function identifyRisk(): BelongsTo
     {
-        return $this->belongsTo(IdentityRisk::class);
+        return $this->belongsTo(IdentifyRisk::class);
     }
 }

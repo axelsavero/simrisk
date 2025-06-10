@@ -1,16 +1,16 @@
-// resources/js/pages/identityrisk/form.tsx
+// resources/js/pages/identifyrisk/form.tsx (UPDATED)
 
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem, IdentityRisk } from '@/types';
+import { BreadcrumbItem, IdentifyRisk } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import React from 'react';
 
 interface FormProps {
-    identityRisk?: IdentityRisk | null;
+    identifyRisk?: IdentifyRisk | null;
 }
 
 interface FormData {
-    id_identity: string;
+    id_identify: string; // 🔥 PERBAIKAN: Konsisten dengan backend
     status: boolean;
     risk_category: string;
     identification_date_start: string;
@@ -29,25 +29,26 @@ interface FormData {
     penanganan_risiko: Array<{ description: string }>;
 }
 
-export default function Form({ identityRisk = null }: FormProps) {
+export default function Form({ identifyRisk = null }: FormProps) {
     const { data, setData, post, put, processing, errors } = useForm<FormData>({
-        id_identity: identityRisk?.id_identity || '',
-        status: identityRisk?.status ?? true,
-        risk_category: identityRisk?.risk_category || '',
-        identification_date_start: identityRisk?.identification_date_start || new Date().toISOString().split('T')[0],
-        identification_date_end: identityRisk?.identification_date_end || new Date().toISOString().split('T')[0],
-        description: identityRisk?.description || '',
-        nama_risiko: identityRisk?.nama_risiko || '',
-        jabatan_risiko: identityRisk?.jabatan_risiko || '',
-        no_kontak: identityRisk?.no_kontak || '',
-        strategi: identityRisk?.strategi || '',
-        pengendalian_internal: identityRisk?.pengendalian_internal || '',
-        biaya_penangan: identityRisk?.biaya_penangan?.toString() || '',
-        probability: identityRisk?.probability || 1,
-        impact: identityRisk?.impact || 1,
-        penyebab: identityRisk?.penyebab || [{ description: '' }],
-        dampak_kualitatif: identityRisk?.dampak_kualitatif || [{ description: '' }],
-        penanganan_risiko: identityRisk?.penanganan_risiko || [{ description: '' }],
+        // 🔥 PERBAIKAN: Field names sesuai dengan backend
+        id_identify: identifyRisk?.id_identify || '',
+        status: identifyRisk?.status ?? true,
+        risk_category: identifyRisk?.risk_category || '',
+        identification_date_start: identifyRisk?.identification_date_start || new Date().toISOString().split('T')[0],
+        identification_date_end: identifyRisk?.identification_date_end || new Date().toISOString().split('T')[0],
+        description: identifyRisk?.description || '',
+        nama_risiko: identifyRisk?.nama_risiko || '',
+        jabatan_risiko: identifyRisk?.jabatan_risiko || '',
+        no_kontak: identifyRisk?.no_kontak || '',
+        strategi: identifyRisk?.strategi || '',
+        pengendalian_internal: identifyRisk?.pengendalian_internal || '',
+        biaya_penangan: identifyRisk?.biaya_penangan?.toString() || '',
+        probability: identifyRisk?.probability || 1,
+        impact: identifyRisk?.impact || 1,
+        penyebab: identifyRisk?.penyebab || [{ description: '' }],
+        dampak_kualitatif: identifyRisk?.dampak_kualitatif || [{ description: '' }],
+        penanganan_risiko: identifyRisk?.penanganan_risiko || [{ description: '' }],
     });
 
     // Dynamic field functions for Penyebab
@@ -116,24 +117,24 @@ export default function Form({ identityRisk = null }: FormProps) {
         // Filter empty descriptions
         const submitData = {
             ...data,
-
             penyebab: data.penyebab.filter((p) => p.description.trim() !== ''),
             dampak_kualitatif: data.dampak_kualitatif.filter((d) => d.description.trim() !== ''),
             penanganan_risiko: data.penanganan_risiko.filter((p) => p.description.trim() !== ''),
             biaya_penangan: data.biaya_penangan ? parseFloat(data.biaya_penangan) : null,
         };
 
-        if (identityRisk) {
-            put(`/identity-risk/${identityRisk.id}`, submitData);
+        // 🔥 PERBAIKAN: Route yang benar
+        if (identifyRisk) {
+            put(route('identify-risk.update', identifyRisk.id), submitData);
         } else {
-            post('/identity-risk', submitData);
+            post(route('identify-risk.store'), submitData);
         }
     }
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Manajemen Risiko', href: '/identity-risk' },
-        { title: identityRisk ? 'Edit Risiko' : 'Tambah Risiko', href: '#' },
+        { title: 'Manajemen Risiko', href: route('identify-risk.index') }, // 🔥 PERBAIKAN: Route yang benar
+        { title: identifyRisk ? 'Edit Risiko' : 'Tambah Risiko', href: '#' },
     ];
 
     // Calculate risk level
@@ -152,28 +153,58 @@ export default function Form({ identityRisk = null }: FormProps) {
         return 'text-green-600 bg-green-100';
     };
 
+    // 🔥 TAMBAHAN: Check if editing draft
+    const isEditingDraft = identifyRisk && identifyRisk.validation_status === 'draft';
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={identityRisk ? 'Edit Identifikasi Risiko' : 'Tambah Identifikasi Risiko Baru'} />
+            <Head title={identifyRisk ? 'Edit Identifikasi Risiko' : 'Tambah Identifikasi Risiko Baru'} />
             <div className="w-full px-6 py-8">
-                <h2 className="mb-6 text-2xl font-semibold">{identityRisk ? 'Edit Identifikasi Risiko' : 'Tambah Identifikasi Risiko Baru'}</h2>
+                <div className="mb-6 flex items-center justify-between">
+                    <h2 className="text-2xl font-semibold">{identifyRisk ? 'Edit Identifikasi Risiko' : 'Tambah Identifikasi Risiko Baru'}</h2>
+
+                    {/* 🔥 TAMBAHAN: Draft status indicator */}
+                    {isEditingDraft && (
+                        <div className="flex items-center gap-2 rounded-lg bg-blue-100 px-4 py-2 text-blue-800">
+                            <span className="text-lg">📝</span>
+                            <span className="font-medium">Mode Draft</span>
+                        </div>
+                    )}
+                </div>
+
+                {/* 🔥 TAMBAHAN: Info banner untuk draft workflow */}
+                {!identifyRisk && (
+                    <div className="mb-6 rounded-lg border-l-4 border-yellow-400 bg-yellow-50 p-4">
+                        <div className="flex">
+                            <div className="flex-shrink-0">
+                                <span className="text-lg">💡</span>
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm text-yellow-700">
+                                    <strong>Info:</strong> Risiko yang Anda buat akan disimpan sebagai draft. Gunakan tombol "Kirim" di halaman daftar
+                                    untuk mengirimkannya ke validator.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <form
                     onSubmit={submit}
                     className="w-full space-y-6 rounded-xl border-2 border-gray-300 bg-white p-6 shadow-md dark:border-neutral-700 dark:bg-neutral-900"
                 >
-                    {/* ID Identity */}
+                    {/* ID Identify - FIELD NAME DIPERBAIKI */}
                     <div>
                         <label className="mb-1 block font-medium">Kode Risiko</label>
                         <input
                             type="text"
-                            value={data.id_identity}
-                            onChange={(e) => setData('id_identity', e.target.value)}
+                            value={data.id_identify}
+                            onChange={(e) => setData('id_identify', e.target.value)}
                             className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
                             placeholder="Masukkan kode risiko"
                             required
                         />
-                        {errors.id_identity && <div className="mt-1 text-sm text-red-500">{errors.id_identity}</div>}
+                        {errors.id_identify && <div className="mt-1 text-sm text-red-500">{errors.id_identify}</div>}
                     </div>
 
                     {/* Risk Category */}
@@ -491,7 +522,7 @@ export default function Form({ identityRisk = null }: FormProps) {
                             {processing ? 'Menyimpan...' : 'Simpan'}
                         </button>
                         <Link
-                            href="/identity-risk"
+                            href={route('identify-risk.index')} // 🔥 PERBAIKAN: Route yang benar
                             className="rounded-md border border-red-500 px-6 py-2 text-red-500 transition hover:bg-red-500 hover:text-white"
                         >
                             Batal

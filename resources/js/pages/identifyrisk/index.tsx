@@ -1,10 +1,10 @@
-// resources/js/pages/identityrisk/index.tsx
+// resources/js/pages/identifyrisk/index.tsx (FULL CODE)
 
 import AppLayout from '@/layouts/app-layout';
-import { IdentityRisk, PageProps } from '@/types';
+import { IdentifyRisk, PageProps } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
 import React, { useState } from 'react';
-import '../../../css/IdentityRiskIndex.css';
+import '../../../css/IdentifyRiskIndex.css';
 
 const Pagination = ({ links }: { links: Array<{ url: string | null; label: string; active: boolean }> }) => {
     if (!links || links.length <= 3) {
@@ -28,15 +28,14 @@ const Pagination = ({ links }: { links: Array<{ url: string | null; label: strin
 };
 
 export default function Index() {
-    // 🔥 PERBAIKAN: Ambil permissions dari props
-    const { identityRisks, flash, auth, permissions } = usePage<PageProps>().props;
+    const { identifyRisks, flash, auth, permissions } = usePage<PageProps>().props;
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [searchTerm, setSearchTerm] = useState<string>('');
 
-    console.log('Data identityRisks diterima di Index.tsx:', identityRisks);
+    console.log('Data identifyRisks diterima di Index.tsx:', identifyRisks);
     console.log('Permissions:', permissions);
 
-    if (!identityRisks) {
+    if (!identifyRisks) {
         return (
             <div className="empty-state">
                 <div className="empty-icon">📊</div>
@@ -46,18 +45,18 @@ export default function Index() {
         );
     }
 
-    function deleteItem(item: IdentityRisk) {
-        if (confirm(`Yakin ingin menghapus identifikasi risiko "${item.id_identity}"?`)) {
-            router.delete(route('identity-risk.destroy', item.id), {
+    function deleteItem(item: IdentifyRisk) {
+        if (confirm(`Yakin ingin menghapus identifikasi risiko "${item.id_identify}"?`)) {
+            router.delete(route('identify-risk.destroy', item.id), {
                 preserveScroll: true,
             });
         }
     }
 
-    function approveItem(item: IdentityRisk) {
-        if (confirm(`Yakin ingin menyetujui risiko "${item.id_identity}"?`)) {
+    function approveItem(item: IdentifyRisk) {
+        if (confirm(`Yakin ingin menyetujui risiko "${item.id_identify}"?`)) {
             router.post(
-                route('identity-risk.approve', item.id),
+                route('identify-risk.approve', item.id),
                 {},
                 {
                     preserveScroll: true,
@@ -66,11 +65,11 @@ export default function Index() {
         }
     }
 
-    function rejectItem(item: IdentityRisk) {
-        const reason = prompt(`Masukkan alasan penolakan untuk risiko "${item.id_identity}":`);
+    function rejectItem(item: IdentifyRisk) {
+        const reason = prompt(`Masukkan alasan penolakan untuk risiko "${item.id_identify}":`);
         if (reason !== null) {
             router.post(
-                route('identity-risk.reject', item.id),
+                route('identify-risk.reject', item.id),
                 {
                     rejection_reason: reason,
                 },
@@ -81,7 +80,24 @@ export default function Index() {
         }
     }
 
-    // 🔥 PERBAIKAN: Gunakan permissions yang lebih granular
+    function submitItem(item: IdentifyRisk) {
+        if (confirm(`Yakin ingin mengirim risiko "${item.id_identify}" untuk validasi?`)) {
+            router.post(
+                route('identify-risk.submit', item.id),
+                {},
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        console.log('✅ Risiko berhasil dikirim untuk validasi');
+                    },
+                    onError: (errors) => {
+                        console.error('❌ Gagal mengirim risiko:', errors);
+                    },
+                },
+            );
+        }
+    }
+
     const showEditDeleteActions = permissions?.canEdit || permissions?.canDelete;
     const showValidationActions = permissions?.canValidate;
 
@@ -93,12 +109,16 @@ export default function Index() {
         return { level: 'Rendah', color: 'low', icon: '🟢' };
     };
 
+    // 🔥 OPSI 2: Update function untuk handle 'submitted' sebagai 'pending'
     const getValidationStatusInfo = (status: string) => {
         switch (status) {
+            case 'draft':
+                return { label: 'Draft', color: 'draft', icon: '📝' };
+            case 'submitted': // TREAT submitted sebagai pending
+            case 'pending':
+                return { label: 'Menunggu Validasi', color: 'warning', icon: '⏳' };
             case 'approved':
                 return { label: 'Disetujui', color: 'success', icon: '✅' };
-            case 'pending':
-                return { label: 'Pending', color: 'warning', icon: '⏳' };
             case 'rejected':
                 return { label: 'Ditolak', color: 'danger', icon: '❌' };
             default:
@@ -106,14 +126,18 @@ export default function Index() {
         }
     };
 
-    // Filter dan search logic
-    const filteredRisks = identityRisks.data.filter((item: IdentityRisk) => {
+    // 🔥 OPSI 2: Update filter logic untuk include both submitted dan pending
+    const filteredRisks = identifyRisks.data.filter((item: IdentifyRisk) => {
         const matchesSearch =
-            item.id_identity.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.id_identify.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.risk_category.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.description.toLowerCase().includes(searchTerm.toLowerCase());
 
-        const matchesFilter = filterStatus === 'all' || item.validation_status === filterStatus;
+        // Handle pending filter to include both 'pending' and 'submitted'
+        const matchesFilter =
+            filterStatus === 'all' ||
+            (filterStatus === 'pending' && (item.validation_status === 'pending' || item.validation_status === 'submitted')) ||
+            (filterStatus !== 'pending' && item.validation_status === filterStatus);
 
         return matchesSearch && matchesFilter;
     });
@@ -130,9 +154,8 @@ export default function Index() {
                         </h1>
                         <p className="page-subtitle">Kelola dan pantau identifikasi risiko organisasi Anda</p>
                     </div>
-                    {/* 🔥 PERBAIKAN: Cek permission untuk create */}
                     {permissions?.canCreate && (
-                        <Link href={route('identity-risk.create')} className="btn btn-primary btn-create">
+                        <Link href={route('identify-risk.create')} className="btn btn-primary btn-create">
                             <span className="btn-icon">➕</span>
                             Tambah Risiko Baru
                         </Link>
@@ -140,20 +163,34 @@ export default function Index() {
                 </div>
             </div>
 
-            {/* Stats Cards */}
+            {/* 🔥 OPSI 2: Stats Cards dengan logic submitted = pending */}
             <div className="stats-grid">
                 <div className="stat-card stat-total">
                     <div className="stat-icon">📊</div>
                     <div className="stat-content">
-                        <span className="stat-number">{identityRisks.data.length}</span>
+                        <span className="stat-number">{identifyRisks.data.length}</span>
                         <span className="stat-label">Total Risiko</span>
                     </div>
                 </div>
+                <div className="stat-card stat-draft">
+                    <div className="stat-icon">📝</div>
+                    <div className="stat-content">
+                        <span className="stat-number">
+                            {identifyRisks.data.filter((item: IdentifyRisk) => item.validation_status === 'draft').length}
+                        </span>
+                        <span className="stat-label">Draft</span>
+                    </div>
+                </div>
+                {/* Include both submitted and pending as "Pending" */}
                 <div className="stat-card stat-pending">
                     <div className="stat-icon">⏳</div>
                     <div className="stat-content">
                         <span className="stat-number">
-                            {identityRisks.data.filter((item: IdentityRisk) => item.validation_status === 'pending').length}
+                            {
+                                identifyRisks.data.filter(
+                                    (item: IdentifyRisk) => item.validation_status === 'pending' || item.validation_status === 'submitted',
+                                ).length
+                            }
                         </span>
                         <span className="stat-label">Pending</span>
                     </div>
@@ -162,7 +199,7 @@ export default function Index() {
                     <div className="stat-icon">✅</div>
                     <div className="stat-content">
                         <span className="stat-number">
-                            {identityRisks.data.filter((item: IdentityRisk) => item.validation_status === 'approved').length}
+                            {identifyRisks.data.filter((item: IdentifyRisk) => item.validation_status === 'approved').length}
                         </span>
                         <span className="stat-label">Disetujui</span>
                     </div>
@@ -171,7 +208,7 @@ export default function Index() {
                     <div className="stat-icon">❌</div>
                     <div className="stat-content">
                         <span className="stat-number">
-                            {identityRisks.data.filter((item: IdentityRisk) => item.validation_status === 'rejected').length}
+                            {identifyRisks.data.filter((item: IdentifyRisk) => item.validation_status === 'rejected').length}
                         </span>
                         <span className="stat-label">Ditolak</span>
                     </div>
@@ -194,6 +231,9 @@ export default function Index() {
                     <button className={`filter-tab ${filterStatus === 'all' ? 'active' : ''}`} onClick={() => setFilterStatus('all')}>
                         Semua
                     </button>
+                    <button className={`filter-tab ${filterStatus === 'draft' ? 'active' : ''}`} onClick={() => setFilterStatus('draft')}>
+                        Draft
+                    </button>
                     <button className={`filter-tab ${filterStatus === 'pending' ? 'active' : ''}`} onClick={() => setFilterStatus('pending')}>
                         Pending
                     </button>
@@ -209,17 +249,21 @@ export default function Index() {
             {/* Risk Cards Grid */}
             <div className="risk-cards-grid">
                 {filteredRisks.length > 0 ? (
-                    filteredRisks.map((item: IdentityRisk) => {
+                    filteredRisks.map((item: IdentifyRisk) => {
                         const riskInfo = getRiskLevelInfo(item.probability, item.impact);
                         const validationInfo = getValidationStatusInfo(item.validation_status);
 
                         return (
-                            <div key={item.id} className={`risk-card validation-${item.validation_status}`}>
+                            <div
+                                key={item.id}
+                                className={`risk-card validation-${item.validation_status} ${item.validation_status === 'draft' ? 'draft-mode' : ''}`}
+                            >
                                 {/* Card Header */}
                                 <div className="card-header">
                                     <div className="risk-id">
                                         <span className="id-icon">🆔</span>
-                                        {item.id_identity}
+                                        {item.id_identify}
+                                        {item.validation_status === 'draft' && <span className="draft-badge">DRAFT</span>}
                                     </div>
                                     <div className={`validation-badge ${validationInfo.color}`}>
                                         {validationInfo.icon} {validationInfo.label}
@@ -266,39 +310,45 @@ export default function Index() {
                                     )}
                                 </div>
 
-                                {/* 🔥 PERBAIKAN: Card Actions dengan permission yang berbeda */}
-                                {(showEditDeleteActions || showValidationActions) && (
-                                    <div className="card-actions">
-                                        {/* Edit & Delete Actions - untuk owner-risk dan super-admin */}
-                                        {permissions?.canEdit && (
-                                            <Link href={route('identity-risk.edit', item.id)} className="action-btn edit-btn" title="Edit">
-                                                ✏️ Edit
-                                            </Link>
-                                        )}
+                                {/* Card Actions */}
+                                <div className="card-actions">
+                                    {/* Submit Action untuk draft */}
+                                    {permissions?.canSubmit && item.validation_status === 'draft' && (
+                                        <button onClick={() => submitItem(item)} className="action-btn submit-btn" title="Kirim untuk Validasi">
+                                            📤 Kirim
+                                        </button>
+                                    )}
 
-                                        {permissions?.canDelete && (
-                                            <button onClick={() => deleteItem(item)} className="action-btn delete-btn" title="Hapus">
-                                                🗑️ Hapus
-                                            </button>
-                                        )}
+                                    {/* Edit Actions */}
+                                    {permissions?.canEdit && (item.validation_status === 'draft' || item.validation_status === 'rejected') && (
+                                        <Link href={route('identify-risk.edit', item.id)} className="action-btn edit-btn" title="Edit">
+                                            ✏️ Edit
+                                        </Link>
+                                    )}
 
-                                        {/* Validation Actions - hanya untuk super-admin */}
-                                        {showValidationActions && item.validation_status === 'pending' && (
-                                            <>
-                                                {permissions?.canApprove && (
-                                                    <button onClick={() => approveItem(item)} className="action-btn approve-btn" title="Setujui">
-                                                        ✅ Setujui
-                                                    </button>
-                                                )}
-                                                {permissions?.canReject && (
-                                                    <button onClick={() => rejectItem(item)} className="action-btn reject-btn" title="Tolak">
-                                                        ❌ Tolak
-                                                    </button>
-                                                )}
-                                            </>
-                                        )}
-                                    </div>
-                                )}
+                                    {/* Delete Actions - hanya untuk draft */}
+                                    {permissions?.canDelete && item.validation_status === 'draft' && (
+                                        <button onClick={() => deleteItem(item)} className="action-btn delete-btn" title="Hapus">
+                                            🗑️ Hapus
+                                        </button>
+                                    )}
+
+                                    {/* Validation Actions - untuk submitted dan pending */}
+                                    {showValidationActions && (item.validation_status === 'submitted' || item.validation_status === 'pending') && (
+                                        <>
+                                            {permissions?.canApprove && (
+                                                <button onClick={() => approveItem(item)} className="action-btn approve-btn" title="Setujui">
+                                                    ✅ Setujui
+                                                </button>
+                                            )}
+                                            {permissions?.canReject && (
+                                                <button onClick={() => rejectItem(item)} className="action-btn reject-btn" title="Tolak">
+                                                    ❌ Tolak
+                                                </button>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         );
                     })
@@ -312,7 +362,7 @@ export default function Index() {
                                 : 'Belum ada risiko yang dibuat. Mulai dengan menambah risiko baru.'}
                         </p>
                         {!searchTerm && filterStatus === 'all' && permissions?.canCreate && (
-                            <Link href={route('identity-risk.create')} className="btn btn-primary">
+                            <Link href={route('identify-risk.create')} className="btn btn-primary">
                                 ➕ Tambah Risiko Pertama
                             </Link>
                         )}
@@ -321,7 +371,7 @@ export default function Index() {
             </div>
 
             {/* Pagination */}
-            {identityRisks.links && <Pagination links={identityRisks.links} />}
+            {identifyRisks.links && <Pagination links={identifyRisks.links} />}
         </div>
     );
 }

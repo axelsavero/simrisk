@@ -13,11 +13,11 @@ class Penyebab extends Model
 
     protected $table = 'penyebabs';
 
-    protected $fillable = ['identity_risk_id', 'description'];
+    protected $fillable = ['identify_risk_id', 'description'];
 
     // Relasi 'belongsTo' ke model induknya
-    public function identityRisk(): BelongsTo
+    public function identifyRisk(): BelongsTo
     {
-        return $this->belongsTo(IdentityRisk::class);
+        return $this->belongsTo(IdentifyRisk::class);
     }
 }

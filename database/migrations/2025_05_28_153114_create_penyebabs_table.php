@@ -11,8 +11,8 @@ return new class extends Migration
     {
         Schema::create('penyebabs', function (Blueprint $table) {
             $table->id();
-            // Ini adalah Foreign Key yang menghubungkan ke tabel identity_risks
-            $table->foreignId('identity_risk_id')->constrained('identity_risks')->onDelete('cascade');
+            // Ini adalah Foreign Key yang menghubungkan ke tabel identify_risks
+            $table->foreignId('identify_risk_id')->constrained('identify_risks')->onDelete('cascade');
             $table->text('description'); // Kolom untuk deskripsi penyebab
             $table->timestamps();
         });

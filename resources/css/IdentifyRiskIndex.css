@@ -1,4 +1,4 @@
-/* resources/css/IdentityRiskIndex.css */
+/* resources/css/IdentifyRiskIndex.css */
 
 .risk-index-container {
     max-width: 1400px;
@@ -669,5 +669,82 @@
     .add-input-btn {
         width: 100%;
         justify-content: center;
+    }
+
+    .risk-card.draft-mode {
+        border-left: 4px solid #17a2b8;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+
+    .draft-badge {
+        background: #17a2b8;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: bold;
+        margin-left: 8px;
+    }
+
+    .validation-badge.draft {
+        background: #17a2b8;
+        color: white;
+    }
+
+    .action-btn.submit-btn {
+        background: #28a745;
+        color: white;
+        border: 1px solid #28a745;
+    }
+
+    .action-btn.submit-btn:hover {
+        background: #218838;
+        border-color: #1e7e34;
+    }
+
+    .stat-card.stat-draft {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        color: white;
+    }
+
+    .risk-card.draft-mode {
+        border-left: 4px solid #17a2b8;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+
+    .draft-badge {
+        background: #17a2b8;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: bold;
+        margin-left: 8px;
+    }
+
+    .validation-badge.draft {
+        background: #17a2b8;
+        color: white;
+    }
+
+    .filter-tab {
+        /* existing styles */
+    }
+
+    .filter-tab.active {
+        /* existing styles */
+    }
+
+    .action-btn.submit-btn {
+        background: #28a745;
+        color: white;
+        border: 1px solid #28a745;
+        transition: all 0.3s ease;
+    }
+
+    .action-btn.submit-btn:hover {
+        background: #218838;
+        border-color: #1e7e34;
+        transform: translateY(-1px);
     }
 }

@@ -14,15 +14,15 @@ class PenangananRisiko extends Model
     protected $table = 'penanganan_risikos';
 
     protected $fillable = [
-        'identity_risk_id',
+        'identify_risk_id',
         'description',
     ];
 
     /**
-     * Get the identity risk that owns the penanganan risiko.
+     * Get the identify risk that owns the penanganan risiko.
      */
-    public function identityRisk(): BelongsTo
+    public function identifyRisk(): BelongsTo
     {
-        return $this->belongsTo(IdentityRisk::class);
+        return $this->belongsTo(IdentifyRisk::class);
     }
 }

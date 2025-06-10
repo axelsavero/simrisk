@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('identity_risks', function (Blueprint $table) {
+        Schema::create('identify_risks', function (Blueprint $table) {
             $table->id();
-            $table->string('id_identity')->unique(); // ID unik buatan Anda
+            $table->string('id_identify')->unique(); // ID unik buatan Anda
             $table->boolean('status')->default(true);
             $table->string('risk_category');
             $table->date('identification_date_start');
@@ -34,6 +34,6 @@ return new class extends Migration {
 
     public function down(): void
     {
-        Schema::dropIfExists('identity_risks');
+        Schema::dropIfExists('identify_risks');
     }
 };
