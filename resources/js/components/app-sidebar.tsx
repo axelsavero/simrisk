@@ -44,7 +44,7 @@ export function AppSidebar() {
 
         {
             title: 'Identifikasi Risiko',
-            href: '/identity-risk', // Menggunakan nama route
+            href: '/identify-risk', // Menggunakan nama route
             icon: ShieldCheck,
             role: 'owner-risk', // Hanya untuk peran 'operator'
         },
