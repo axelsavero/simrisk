@@ -11,7 +11,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
     };
 
     return (
-        <nav className="space-y-1">
+        <nav className="space-y-1 text-white">
             {items.map((item) => (
                 <div key={item.title}>
                     {item.children ? (

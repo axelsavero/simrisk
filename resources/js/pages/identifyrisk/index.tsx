@@ -1,10 +1,29 @@
 // resources/js/pages/identifyrisk/index.tsx (FULL CODE)
 
 import AppLayout from '@/layouts/app-layout';
-import { IdentifyRisk, PageProps } from '@/types';
+import { IdentifyRisk } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
 import React, { useState } from 'react';
 import '../../../css/IdentifyRiskIndex.css';
+
+// Define PageProps type according to your props structure
+type PageProps = {
+    identifyRisks: {
+        data: IdentifyRisk[];
+        links?: Array<{ url: string | null; label: string; active: boolean }>;
+    };
+    flash?: any;
+    auth?: any;
+    permissions?: {
+        canCreate?: boolean;
+        canEdit?: boolean;
+        canDelete?: boolean;
+        canSubmit?: boolean;
+        canValidate?: boolean;
+        canApprove?: boolean;
+        canReject?: boolean;
+    };
+};
 
 const Pagination = ({ links }: { links: Array<{ url: string | null; label: string; active: boolean }> }) => {
     if (!links || links.length <= 3) {
@@ -377,5 +396,5 @@ export default function Index() {
 }
 
 Index.layout = (page: React.ReactNode) => {
-    return <AppLayout children={page} title="Daftar Identifikasi Risiko" />;
+    return <AppLayout children={page} />;
 };

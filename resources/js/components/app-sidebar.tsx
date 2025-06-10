@@ -7,6 +7,17 @@ import { Link, usePage } from '@inertiajs/react';
 import { BookOpen, Folder, LayoutGrid, User, Target, ShieldCheck } from 'lucide-react';
 import AppLogo from './app-logo';
 
+// Define PageProps type if not imported from elsewhere
+type PageProps = {
+    auth: {
+        user?: {
+            roles?: string[];
+            // add other user properties if needed
+        };
+        // add other auth properties if needed
+    };
+};
+
 export function AppSidebar() {
     // 2. Ambil data 'auth' dari props yang dibagikan Inertia
     const { auth } = usePage<PageProps>().props;
