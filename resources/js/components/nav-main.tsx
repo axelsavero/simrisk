@@ -16,7 +16,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                 <div key={item.title}>
                     {item.children ? (
                         <>
-                            <button onClick={() => toggleItem(item.title)} className="flex w-full items-center rounded-md p-2 hover:bg-gray-100">
+                            <button onClick={() => toggleItem(item.title)} className="flex w-full items-center rounded-md p-2 hover:bg-teal-900">
                                 {item.icon && <item.icon className="mr-2 h-5 w-5" />}
                                 <span>{item.title}</span>
                                 {expandedItems.includes(item.title) ? (
@@ -36,7 +36,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                             )}
                         </>
                     ) : (
-                        <Link href={item.href} className="flex items-center rounded-md p-2 hover:bg-gray-100">
+                        <Link href={item.href} className="flex items-center rounded-md p-2 hover:bg-teal-900">
                             {item.icon && <item.icon className="mr-2 h-5 w-5" />}
                             <span>{item.title}</span>
                         </Link>
