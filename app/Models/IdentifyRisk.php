@@ -79,7 +79,7 @@ class IdentifyRisk extends Model
         return $this->belongsTo(User::class, 'validation_processed_by');
     }
 
-    // 🔥 OPSI 3: Enhanced Scopes untuk handle submitted = pending
+    //  Enhanced Scopes untuk handle submitted = pending
 
     /**
      * Scope untuk risiko draft
@@ -91,7 +91,7 @@ class IdentifyRisk extends Model
 
     /**
      * Scope untuk risiko yang sudah dikirim (submitted/pending)
-     * 🔥 OPSI 3: Include both submitted dan pending
+     *   Include both submitted dan pending
      */
     public function scopeSubmitted(Builder $query): Builder
     {
@@ -100,7 +100,7 @@ class IdentifyRisk extends Model
 
     /**
      * Scope untuk risiko menunggu validasi
-     * 🔥 OPSI 3: Unified scope untuk pending (include submitted)
+     *   Unified scope untuk pending (include submitted)
      */
     public function scopePendingValidation(Builder $query): Builder
     {
@@ -108,7 +108,7 @@ class IdentifyRisk extends Model
     }
 
     /**
-     * 🔥 OPSI 3: New scope - Awaiting Validation (alias untuk pendingValidation)
+     *   New scope - Awaiting Validation (alias untuk pendingValidation)
      */
     public function scopeAwaitingValidation(Builder $query): Builder
     {
@@ -116,7 +116,7 @@ class IdentifyRisk extends Model
     }
 
     /**
-     * 🔥 OPSI 3: New scope - In Process (for super admin to see all non-draft)
+     *   New scope - In Process (for super admin to see all non-draft)
      */
     public function scopeInProcess(Builder $query): Builder
     {
@@ -153,7 +153,7 @@ class IdentifyRisk extends Model
     }
 
     /**
-     * 🔥 OPSI 3: New scope - By Status (flexible status filtering)
+     *   New scope - By Status (flexible status filtering)
      */
     public function scopeByStatus(Builder $query, string $status): Builder
     {
@@ -166,7 +166,7 @@ class IdentifyRisk extends Model
     }
 
     /**
-     * 🔥 OPSI 3: New scope - For Dashboard Stats
+     *   New scope - For Dashboard Stats
      */
     public function scopeForStats(Builder $query): Builder
     {
@@ -190,7 +190,7 @@ class IdentifyRisk extends Model
     }
 
     /**
-     * 🔥 OPSI 3: Enhanced - Cek apakah risiko sudah dikirim (submitted atau pending)
+     *   Enhanced - Cek apakah risiko sudah dikirim (submitted atau pending)
      */
     public function isSubmitted(): bool
     {
@@ -198,7 +198,7 @@ class IdentifyRisk extends Model
     }
 
     /**
-     * 🔥 OPSI 3: New method - Cek apakah awaiting validation
+     *   New method - Cek apakah awaiting validation
      */
     public function isAwaitingValidation(): bool
     {
@@ -245,7 +245,7 @@ class IdentifyRisk extends Model
         return $this->validation_status === self::STATUS_REJECTED;
     }
 
-    // 🔥 OPSI 3: Enhanced Accessors
+    //   Enhanced Accessors
 
     /**
      * Get validation status label dengan unified pending
@@ -263,7 +263,7 @@ class IdentifyRisk extends Model
     }
 
     /**
-     * 🔥 OPSI 3: Get display status untuk UI (unified pending)
+     *   Get display status untuk UI (unified pending)
      */
     public function getDisplayStatusAttribute(): string
     {
@@ -288,7 +288,7 @@ class IdentifyRisk extends Model
         };
     }
 
-    // 🔥 OPSI 3: Enhanced Static Methods
+    //   Enhanced Static Methods
 
     /**
      * Get count by status dengan unified pending
