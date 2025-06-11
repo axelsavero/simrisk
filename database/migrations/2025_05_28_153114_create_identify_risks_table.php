@@ -29,6 +29,9 @@ return new class extends Migration {
             $table->text('rejection_reason')->nullable()->comment('Alasan jika validasi ditolak');
             $table->timestamps();
             $table->softDeletes(); 
+
+            $table->json('bukti_files')->nullable(); // Menyimpan array file bukti
+
         });
     }
 

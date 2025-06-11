@@ -651,6 +651,59 @@
     background: #fed7d7;
 }
 
+.detail-btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+    color: white;
+    border: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.detail-btn:hover {
+    background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+.detail-btn:active {
+    transform: translateY(0);
+}
+
+/* Update card-actions untuk accommodate tombol detail */
+.card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-top: 1px solid #e5e7eb;
+    background: #f9fafb;
+    border-radius: 0 0 0.5rem 0.5rem;
+}
+
+/* Responsive adjustments untuk Visual Studio Code experience (memory entry [2]) */
+@media (max-width: 768px) {
+    .card-actions {
+        flex-direction: column;
+        gap: 0.375rem;
+    }
+
+    .action-btn,
+    .detail-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
 /* Responsive untuk dynamic inputs */
 @media (max-width: 768px) {
     .input-with-action {

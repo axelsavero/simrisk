@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage; // 🔥 TAMBAHAN: Missing import dari search results [1]
 use Illuminate\Validation\Rule;
 
 class IdentifyRiskController extends Controller
@@ -135,6 +136,9 @@ class IdentifyRiskController extends Controller
             'dampak_kualitatif.*.description' => 'required|string|max:1000',
             'penanganan_risiko' => 'required|array|min:1',
             'penanganan_risiko.*.description' => 'required|string|max:1000',
+            // 🔥 Bukti risiko validation
+            'bukti_risiko_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png|max:10240',
+            'bukti_risiko_nama' => 'nullable|string|max:255',
         ]);
 
         // Calculate risk level
@@ -153,7 +157,10 @@ class IdentifyRiskController extends Controller
         $penangananData = $validated['penanganan_risiko'] ?? [];
 
         // Data untuk tabel utama
-        $identifyRiskData = collect($validated)->except(['penyebab', 'dampak_kualitatif', 'penanganan_risiko'])->toArray();
+        $identifyRiskData = collect($validated)->except([
+            'penyebab', 'dampak_kualitatif', 'penanganan_risiko', 
+            'bukti_risiko_file', 'bukti_risiko_nama'
+        ])->toArray();
 
         // Buat IdentifyRisk
         $identifyRisk = IdentifyRisk::create($identifyRiskData);
@@ -169,6 +176,38 @@ class IdentifyRiskController extends Controller
 
         if (!empty($penangananData)) {
             $identifyRisk->penangananRisiko()->createMany($penangananData);
+        }
+
+        // 🔥 PERBAIKAN: Handle file upload bukti risiko (fixed syntax error dari search results [1])
+        if ($request->hasFile('bukti_risiko_file')) {
+            try {
+                $file = $request->file('bukti_risiko_file');
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $filePath = $file->storeAs('bukti-risiko', $fileName, 'public');
+
+                $buktiFileData = [
+                    'nama_bukti' => $validated['bukti_risiko_nama'] ?? $file->getClientOriginalName(),
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => $filePath,
+                    'file_size' => $file->getSize(),
+                    'file_extension' => strtolower($file->getClientOriginalExtension()),
+                    'uploaded_by' => Auth::user()->name ?? 'System',
+                    'uploaded_at' => now()->toDateTimeString(),
+                ];
+
+                // Update bukti_files JSON column
+                $identifyRisk->update(['bukti_files' => [$buktiFileData]]);
+
+            } catch (\Exception $e) {
+                // Handle error dan cleanup
+                if (isset($filePath) && Storage::disk('public')->exists($filePath)) {
+                    Storage::disk('public')->delete($filePath);
+                }
+                
+                return Redirect::back()
+                    ->withInput()
+                    ->with('error', 'Gagal mengupload bukti: ' . $e->getMessage());
+            }
         }
 
         // Message sesuai role dan status
@@ -207,6 +246,9 @@ class IdentifyRiskController extends Controller
                 'rejection_reason' => $identifyRisk->rejection_reason,
                 'created_at' => $identifyRisk->created_at->format('Y-m-d H:i'),
                 'updated_at' => $identifyRisk->updated_at->format('Y-m-d H:i'),
+                
+                // 🔥 BUKTI FILES dari JSON column
+                'bukti_files' => $identifyRisk->bukti_files ?? [],
                 
                 // Status flags
                 'can_be_submitted' => $identifyRisk->canBeSubmitted(),
@@ -280,6 +322,7 @@ class IdentifyRiskController extends Controller
         ]);
     }
 
+    // 🔥 PERBAIKAN: Update method (fixed syntax error dari search results [1])
     public function update(Request $request, IdentifyRisk $identifyRisk)
     {
         // Validasi untuk update
@@ -304,6 +347,9 @@ class IdentifyRiskController extends Controller
             'dampak_kualitatif.*.description' => 'required|string|max:1000',
             'penanganan_risiko' => 'required|array|min:1',
             'penanganan_risiko.*.description' => 'required|string|max:1000',
+            // 🔥 TAMBAHAN: Validasi untuk file upload di update
+            'bukti_risiko_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png|max:10240',
+            'bukti_risiko_nama' => 'nullable|string|max:255',
         ]);
 
         // Recalculate level
@@ -315,10 +361,42 @@ class IdentifyRiskController extends Controller
         $penangananData = $validated['penanganan_risiko'] ?? [];
 
         // Data untuk update main record
-        $identifyRiskData = collect($validated)->except(['penyebab', 'dampak_kualitatif', 'penanganan_risiko'])->toArray();
+        $identifyRiskData = collect($validated)->except([
+            'penyebab', 'dampak_kualitatif', 'penanganan_risiko',
+            'bukti_risiko_file', 'bukti_risiko_nama'
+        ])->toArray();
 
         // Update main record
         $identifyRisk->update($identifyRiskData);
+
+        // 🔥 TAMBAHAN: Handle file upload di update
+        if ($request->hasFile('bukti_risiko_file')) {
+            try {
+                $file = $request->file('bukti_risiko_file');
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $filePath = $file->storeAs('bukti-risiko', $fileName, 'public');
+
+                $buktiFileData = [
+                    'nama_bukti' => $validated['bukti_risiko_nama'] ?? $file->getClientOriginalName(),
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => $filePath,
+                    'file_size' => $file->getSize(),
+                    'file_extension' => strtolower($file->getClientOriginalExtension()),
+                    'uploaded_by' => Auth::user()->name ?? 'System',
+                    'uploaded_at' => now()->toDateTimeString(),
+                ];
+
+                // Append ke existing bukti files atau buat baru
+                $existingBukti = $identifyRisk->bukti_files ?? [];
+                $existingBukti[] = $buktiFileData;
+                $identifyRisk->update(['bukti_files' => $existingBukti]);
+
+            } catch (\Exception $e) {
+                return Redirect::back()
+                    ->withInput()
+                    ->with('error', 'Gagal mengupload bukti: ' . $e->getMessage());
+            }
+        }
 
         // Update relationships - hapus lama, buat baru
         $identifyRisk->penyebab()->delete();
@@ -348,6 +426,15 @@ class IdentifyRiskController extends Controller
         if (!$identifyRisk->canBeDeleted()) {
             return Redirect::route('identify-risk.index')
                 ->with('error', 'Hanya risiko dengan status draft yang dapat dihapus.');
+        }
+
+        // 🔥 TAMBAHAN: Hapus file bukti jika ada
+        if ($identifyRisk->bukti_files) {
+            foreach ($identifyRisk->bukti_files as $bukti) {
+                if (Storage::disk('public')->exists($bukti['file_path'])) {
+                    Storage::disk('public')->delete($bukti['file_path']);
+                }
+            }
         }
 
         // Soft delete with cascade relationships
@@ -433,6 +520,42 @@ class IdentifyRiskController extends Controller
 
         return Redirect::route('identify-risk.index')
             ->with('success', "Risiko '{$identifyRisk->id_identify}' berhasil ditolak.");
+    }
+
+    // 🔥 PERBAIKAN: Download bukti method (fixed syntax error dari search results [1])
+    public function downloadBukti(IdentifyRisk $identifyRisk)
+    {
+        $buktiFiles = $identifyRisk->bukti_files ?? [];
+        
+        if (empty($buktiFiles)) {
+            abort(404, 'Tidak ada bukti file yang ditemukan');
+        }
+
+        // Jika hanya ada satu file, download langsung
+        if (count($buktiFiles) === 1) {
+            $bukti = $buktiFiles[0];
+            
+            if (!Storage::disk('public')->exists($bukti['file_path'])) {
+                abort(404, 'File tidak ditemukan');
+            }
+
+            return Storage::disk('public')->download(
+                $bukti['file_path'],
+                $bukti['file_name']
+            );
+        }
+
+        // Jika lebih dari satu file, download file pertama saja (untuk sekarang)
+        $bukti = $buktiFiles[0];
+        
+        if (!Storage::disk('public')->exists($bukti['file_path'])) {
+            abort(404, 'File tidak ditemukan');
+        }
+
+        return Storage::disk('public')->download(
+            $bukti['file_path'],
+            $bukti['file_name']
+        ); // 🔥 FIXED: Syntax error dari search results [1] diperbaiki
     }
 
     // Method untuk export/report 

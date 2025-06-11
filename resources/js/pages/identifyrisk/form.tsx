@@ -1,4 +1,4 @@
-// resources/js/pages/identifyrisk/form.tsx (UPDATED)
+// resources/js/pages/identifyrisk/form.tsx (FULL CODE WITH BUKTI UPLOAD)
 
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, IdentifyRisk } from '@/types';
@@ -11,7 +11,7 @@ interface FormProps {
 
 interface FormData {
     [key: string]: any;
-    id_identify: string; // 🔥 PERBAIKAN: Konsisten dengan backend
+    id_identify: string;
     status: boolean;
     risk_category: string;
     identification_date_start: string;
@@ -28,11 +28,14 @@ interface FormData {
     penyebab: Array<{ description: string }>;
     dampak_kualitatif: Array<{ description: string }>;
     penanganan_risiko: Array<{ description: string }>;
+    // 🔥 TAMBAHAN: Bukti risiko fields
+    bukti_risiko_nama: string;
+    bukti_risiko_file: File | null;
 }
 
 export default function Form({ identifyRisk = null }: FormProps) {
     const { data, setData, post, put, processing, errors } = useForm<FormData>({
-        // 🔥 PERBAIKAN: Field names sesuai dengan backend
+        // Existing fields
         id_identify: identifyRisk?.id_identify || '',
         status: identifyRisk?.status ?? true,
         risk_category: identifyRisk?.risk_category || '',
@@ -50,6 +53,10 @@ export default function Form({ identifyRisk = null }: FormProps) {
         penyebab: identifyRisk?.penyebab || [{ description: '' }],
         dampak_kualitatif: identifyRisk?.dampak_kualitatif || [{ description: '' }],
         penanganan_risiko: identifyRisk?.penanganan_risiko || [{ description: '' }],
+
+        // 🔥 TAMBAHAN: Bukti risiko fields
+        bukti_risiko_nama: '',
+        bukti_risiko_file: null,
     });
 
     // Dynamic field functions for Penyebab
@@ -112,6 +119,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
         setData('penanganan_risiko', newPenanganan);
     }
 
+    // 🔥 UPDATED: Submit function dengan file upload support
     function submit(e: React.FormEvent) {
         e.preventDefault();
 
@@ -124,17 +132,20 @@ export default function Form({ identifyRisk = null }: FormProps) {
             biaya_penangan: data.biaya_penangan ? parseFloat(data.biaya_penangan) : null,
         };
 
-        // 🔥 PERBAIKAN: Route yang benar
         if (identifyRisk) {
-            put(route('identify-risk.update', identifyRisk.id), submitData);
+            put(route('identify-risk.update', identifyRisk.id), submitData, {
+                forceFormData: true, // 🔥 Force FormData untuk file upload
+            });
         } else {
-            post(route('identify-risk.store'), submitData);
+            post(route('identify-risk.store'), submitData, {
+                forceFormData: true, // 🔥 Force FormData untuk file upload
+            });
         }
     }
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Manajemen Risiko', href: route('identify-risk.index') }, // 🔥 PERBAIKAN: Route yang benar
+        { title: 'Manajemen Risiko', href: route('identify-risk.index') },
         { title: identifyRisk ? 'Edit Risiko' : 'Tambah Risiko', href: '#' },
     ];
 
@@ -154,7 +165,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
         return 'text-green-600 bg-green-100';
     };
 
-    // 🔥 TAMBAHAN: Check if editing draft
+    // Check if editing draft
     const isEditingDraft = identifyRisk && identifyRisk.validation_status === 'draft';
 
     return (
@@ -164,7 +175,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                 <div className="mb-6 flex items-center justify-between">
                     <h2 className="text-2xl font-semibold">{identifyRisk ? 'Edit Identifikasi Risiko' : 'Tambah Identifikasi Risiko Baru'}</h2>
 
-                    {/* 🔥 TAMBAHAN: Draft status indicator */}
+                    {/* Draft status indicator */}
                     {isEditingDraft && (
                         <div className="flex items-center gap-2 rounded-lg bg-blue-100 px-4 py-2 text-blue-800">
                             <span className="text-lg">📝</span>
@@ -173,7 +184,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                     )}
                 </div>
 
-                {/* 🔥 TAMBAHAN: Info banner untuk draft workflow */}
+                {/* Info banner untuk draft workflow */}
                 {!identifyRisk && (
                     <div className="mb-6 rounded-lg border-l-4 border-yellow-400 bg-yellow-50 p-4">
                         <div className="flex">
@@ -193,8 +204,9 @@ export default function Form({ identifyRisk = null }: FormProps) {
                 <form
                     onSubmit={submit}
                     className="w-full space-y-6 rounded-xl border-2 border-gray-300 bg-white p-6 shadow-md dark:border-neutral-700 dark:bg-neutral-900"
+                    encType="multipart/form-data" // 🔥 TAMBAHAN: Support file upload
                 >
-                    {/* ID Identify - FIELD NAME DIPERBAIKI */}
+                    {/* ID Identify */}
                     <div>
                         <label className="mb-1 block font-medium">Kode Risiko</label>
                         <input
@@ -499,6 +511,58 @@ export default function Form({ identifyRisk = null }: FormProps) {
                         {errors.penanganan_risiko && <div className="mt-1 text-sm text-red-500">{errors.penanganan_risiko}</div>}
                     </div>
 
+                    {/* 🔥 TAMBAHAN: BUKTI RISIKO SECTION */}
+                    <div className="border-t-2 pt-6">
+                        <div className="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6">
+                            <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-700">
+                                <span>📎</span>
+                                Bukti Risiko (Opsional)
+                            </h3>
+                            <p className="mb-4 text-sm text-gray-600">
+                                Upload dokumen pendukung sebagai bukti risiko (PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, PNG)
+                            </p>
+
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div>
+                                    <label className="mb-2 block text-sm font-medium text-gray-700">Nama Bukti</label>
+                                    <input
+                                        type="text"
+                                        value={data.bukti_risiko_nama}
+                                        onChange={(e) => setData('bukti_risiko_nama', e.target.value)}
+                                        className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                                        placeholder="Nama dokumen bukti (akan menggunakan nama file jika kosong)"
+                                    />
+                                    {errors.bukti_risiko_nama && <p className="mt-1 text-sm text-red-600">{errors.bukti_risiko_nama}</p>}
+                                </div>
+
+                                <div>
+                                    <label className="mb-2 block text-sm font-medium text-gray-700">Upload File Bukti</label>
+                                    <input
+                                        type="file"
+                                        onChange={(e) => setData('bukti_risiko_file', e.target.files?.[0] || null)}
+                                        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png"
+                                        className="w-full rounded-md border border-gray-300 px-3 py-2 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                                    />
+                                    {errors.bukti_risiko_file && <p className="mt-1 text-sm text-red-600">{errors.bukti_risiko_file}</p>}
+                                    <p className="mt-1 text-xs text-gray-500">
+                                        Format: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, JPEG, PNG (Maksimal: 10MB)
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* File preview jika ada file yang dipilih */}
+                            {data.bukti_risiko_file && (
+                                <div className="mt-4 rounded-md border border-blue-200 bg-blue-50 p-3">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-blue-600">📄</span>
+                                        <span className="text-sm font-medium text-blue-800">File dipilih: {data.bukti_risiko_file.name}</span>
+                                        <span className="text-xs text-blue-600">({Math.round(data.bukti_risiko_file.size / 1024)} KB)</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
                     {/* Status */}
                     <div>
                         <label className="flex items-center gap-2">
@@ -506,7 +570,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                                 type="checkbox"
                                 checked={data.status}
                                 onChange={(e) => setData('status', e.target.checked)}
-                                className="form-check-input"
+                                className="form-check-input rounded"
                             />
                             <span className="font-medium">Status Aktif</span>
                         </label>
@@ -514,18 +578,30 @@ export default function Form({ identifyRisk = null }: FormProps) {
                     </div>
 
                     {/* Submit Buttons */}
-                    <div className="mt-6 flex justify-between">
+                    <div className="mt-8 flex justify-between border-t pt-4">
                         <button
                             type="submit"
                             disabled={processing}
-                            className="rounded-md border border-green-600 px-6 py-2 text-green-600 transition hover:bg-green-600 hover:text-white disabled:opacity-50"
+                            className="flex items-center gap-2 rounded-md bg-green-600 px-8 py-3 font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                            {processing ? 'Menyimpan...' : 'Simpan'}
+                            {processing ? (
+                                <>
+                                    <span className="animate-spin">⏳</span>
+                                    Menyimpan...
+                                </>
+                            ) : (
+                                <>
+                                    <span>💾</span>
+                                    {identifyRisk ? 'Update Risiko' : 'Simpan Risiko'}
+                                </>
+                            )}
                         </button>
+
                         <Link
-                            href={route('identify-risk.index')} // 🔥 PERBAIKAN: Route yang benar
-                            className="rounded-md border border-red-500 px-6 py-2 text-red-500 transition hover:bg-red-500 hover:text-white"
+                            href={route('identify-risk.index')}
+                            className="flex items-center gap-2 rounded-md border border-gray-300 px-8 py-3 font-medium text-gray-700 transition hover:bg-gray-50"
                         >
+                            <span>❌</span>
                             Batal
                         </Link>
                     </div>

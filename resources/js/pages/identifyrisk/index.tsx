@@ -1,4 +1,4 @@
-// resources/js/pages/identifyrisk/index.tsx (FULL CODE)
+// resources/js/pages/identifyrisk/index.tsx (FULL CODE WITH DETAIL BUTTON)
 
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, IdentifyRisk } from '@/types';
@@ -336,6 +336,11 @@ export default function Index() {
 
                                 {/* Card Actions */}
                                 <div className="card-actions">
+                                    {/* 🔥 TAMBAHAN: Tombol Detail (sesuai memory entry [3] - antarmuka ramah pengguna) */}
+                                    <Link href={route('identify-risk.show', item.id)} className="action-btn detail-btn" title="Lihat Detail Risiko">
+                                        👁️ Detail
+                                    </Link>
+
                                     {/* Submit Action untuk draft */}
                                     {permissions?.canSubmit && item.validation_status === 'draft' && (
                                         <button onClick={() => submitItem(item)} className="action-btn submit-btn" title="Kirim untuk Validasi">

@@ -44,6 +44,7 @@ class IdentifyRisk extends Model
         'validation_processed_by',    
         'validation_processed_at',    
         'rejection_reason', 
+        'bukti_files',
     ];
 
     protected $casts = [
@@ -55,7 +56,8 @@ class IdentifyRisk extends Model
         'level' => 'integer',
         'validation_processed_at' => 'datetime',
         'deleted_at' => 'datetime',
-        'biaya_penangan' => 'decimal:2', 
+        'biaya_penangan' => 'decimal:2',
+        'bukti_files' => 'array', 
     ];
 
     // RELATIONSHIPS
