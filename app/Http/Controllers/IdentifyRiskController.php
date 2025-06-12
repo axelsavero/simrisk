@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage; // 🔥 TAMBAHAN: Missing import dari search results [1]
+use Illuminate\Support\Facades\Storage; 
 use Illuminate\Validation\Rule;
 
 class IdentifyRiskController extends Controller
@@ -136,7 +136,6 @@ class IdentifyRiskController extends Controller
             'dampak_kualitatif.*.description' => 'required|string|max:1000',
             'penanganan_risiko' => 'required|array|min:1',
             'penanganan_risiko.*.description' => 'required|string|max:1000',
-            // 🔥 Bukti risiko validation
             'bukti_risiko_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png|max:10240',
             'bukti_risiko_nama' => 'nullable|string|max:255',
         ]);
@@ -178,7 +177,6 @@ class IdentifyRiskController extends Controller
             $identifyRisk->penangananRisiko()->createMany($penangananData);
         }
 
-        // 🔥 PERBAIKAN: Handle file upload bukti risiko (fixed syntax error dari search results [1])
         if ($request->hasFile('bukti_risiko_file')) {
             try {
                 $file = $request->file('bukti_risiko_file');
@@ -247,7 +245,6 @@ class IdentifyRiskController extends Controller
                 'created_at' => $identifyRisk->created_at->format('Y-m-d H:i'),
                 'updated_at' => $identifyRisk->updated_at->format('Y-m-d H:i'),
                 
-                // 🔥 BUKTI FILES dari JSON column
                 'bukti_files' => $identifyRisk->bukti_files ?? [],
                 
                 // Status flags
@@ -322,7 +319,6 @@ class IdentifyRiskController extends Controller
         ]);
     }
 
-    // 🔥 PERBAIKAN: Update method (fixed syntax error dari search results [1])
     public function update(Request $request, IdentifyRisk $identifyRisk)
     {
         // Validasi untuk update
@@ -347,7 +343,6 @@ class IdentifyRiskController extends Controller
             'dampak_kualitatif.*.description' => 'required|string|max:1000',
             'penanganan_risiko' => 'required|array|min:1',
             'penanganan_risiko.*.description' => 'required|string|max:1000',
-            // 🔥 TAMBAHAN: Validasi untuk file upload di update
             'bukti_risiko_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png|max:10240',
             'bukti_risiko_nama' => 'nullable|string|max:255',
         ]);
@@ -369,7 +364,7 @@ class IdentifyRiskController extends Controller
         // Update main record
         $identifyRisk->update($identifyRiskData);
 
-        // 🔥 TAMBAHAN: Handle file upload di update
+        //  Handle file upload di update
         if ($request->hasFile('bukti_risiko_file')) {
             try {
                 $file = $request->file('bukti_risiko_file');
@@ -428,7 +423,7 @@ class IdentifyRiskController extends Controller
                 ->with('error', 'Hanya risiko dengan status draft yang dapat dihapus.');
         }
 
-        // 🔥 TAMBAHAN: Hapus file bukti jika ada
+        //  Hapus file bukti jika ada
         if ($identifyRisk->bukti_files) {
             foreach ($identifyRisk->bukti_files as $bukti) {
                 if (Storage::disk('public')->exists($bukti['file_path'])) {
@@ -522,7 +517,7 @@ class IdentifyRiskController extends Controller
             ->with('success', "Risiko '{$identifyRisk->id_identify}' berhasil ditolak.");
     }
 
-    // 🔥 PERBAIKAN: Download bukti method (fixed syntax error dari search results [1])
+    //  Download bukti method 
     public function downloadBukti(IdentifyRisk $identifyRisk)
     {
         $buktiFiles = $identifyRisk->bukti_files ?? [];
@@ -555,7 +550,7 @@ class IdentifyRiskController extends Controller
         return Storage::disk('public')->download(
             $bukti['file_path'],
             $bukti['file_name']
-        ); // 🔥 FIXED: Syntax error dari search results [1] diperbaiki
+        ); 
     }
 
     // Method untuk export/report 

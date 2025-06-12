@@ -4,6 +4,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserManageController;
 use App\Http\Controllers\IdentifyRiskController;
+use App\Http\Controllers\SasaranUnivController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -44,6 +45,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('{identifyRisk}/download-bukti', [IdentifyRiskController::class, 'downloadBukti'])
               ->name('download-bukti');
     });
+
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('sasaran-univ', SasaranUnivController::class);
 });
 
 require __DIR__.'/settings.php';
