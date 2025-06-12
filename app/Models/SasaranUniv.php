@@ -30,7 +30,7 @@ class SasaranUniv extends Model
         'target_capaian' => 'decimal:2',
         'bobot_penilaian' => 'decimal:2',
         'periode_tahun' => 'integer',
-        'dokumen_data' => 'array', /
+        'dokumen_data' => 'array', 
         'deleted_at' => 'datetime',
     ];
 
