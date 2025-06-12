@@ -1,116 +1,222 @@
-// resources/js/pages/target/index.tsx
+// resources/js/pages/sasaran/sasaranuniv/index.tsx
 
-import React, { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
-import { Link } from '@inertiajs/react';
+import { BreadcrumbItem } from '@/types';
+import { Head, Link, router } from '@inertiajs/react';
 
-type Sasaran = {
-  id: number;
-  sasaran: string;
-  nama_dokumen: string;
-  nomor_dokumen: string;
-  tanggal_dokumen: string;
-  status: boolean;
-};
+interface SasaranUniv {
+    id_sasaran_univ: number;
+    kategori: string;
+    nama_dokumen?: string;
+    nomor_dokumen?: string;
+    tanggal_dokumen?: string;
+    file_path?: string;
+    created_at: string;
+    updated_at: string;
+}
 
-const dummyData: Sasaran[] = [
-  {
-    id: 1,
-    sasaran: 'Meningkatkan efisiensi operasional',
-    nama_dokumen: 'Dokumen Strategi',
-    nomor_dokumen: 'DOC-001',
-    tanggal_dokumen: '2025-06-01',
-    status: true,
-  },
-  {
-    id: 2,
-    sasaran: 'Meningkatkan kualitas layanan publik',
-    nama_dokumen: 'Rencana Layanan',
-    nomor_dokumen: 'DOC-002',
-    tanggal_dokumen: '2025-05-15',
-    status: false,
-  },
-  {
-    id: 3,
-    sasaran: 'Meningkatkan kepuasan pelanggan',
-    nama_dokumen: 'Customer Feedback',
-    nomor_dokumen: 'DOC-003',
-    tanggal_dokumen: '2025-06-10',
-    status: false,
-  },
-];
+interface IndexProps {
+    sasaranUnivs: {
+        data: SasaranUniv[];
+        links?: any[];
+        meta?: any;
+        total?: number;
+        current_page?: number;
+    };
+    flash?: {
+        success?: string;
+        error?: string;
+    };
+    debug?: {
+        total: number;
+        current_page: number;
+        has_data: boolean;
+    };
+    error?: string;
+}
 
-export default function TargetIndex() {
-  return (
-    <AppLayout
-      breadcrumbs={[
+export default function Index({ sasaranUnivs, flash, debug, error }: IndexProps) {
+    // Debug log
+    console.log('Props received:', { sasaranUnivs, flash, debug, error });
+
+    const handleDelete = (id: number) => {
+        if (confirm('Yakin ingin menghapus data ini?')) {
+            router.delete(route('sasaran-univ.destroy', id));
+        }
+    };
+
+    const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Daftar Sasaran', href: '#' },
-      ]}
-    >
-      <div className="px-6 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-xl font-semibold">Daftar Sasaran</h1>
-          <Link
-            href="/sasaran-univ/create"
-            className="inline-flex items-center rounded-md bg-gray-200 px-3 py-1 text-sm hover:bg-gray-300"
-          >
-            Tambah <span className="ml-1 text-lg">➕</span>
-          </Link>
-        </div>
+        { title: 'Sasaran Universitas', href: '#' },
+    ];
 
-        <div className="overflow-x-auto rounded-lg border border-gray-300 bg-white">
-          <table className="min-w-full text-sm text-left">
-            <thead className="bg-gray-100 text-gray-700">
-              <tr>
-                <th className="px-4 py-2 border">No</th>
-                <th className="px-4 py-2 border">Sasaran</th>
-                <th className="px-4 py-2 border">Nama Dokumen</th>
-                <th className="px-4 py-2 border">Nomor Dokumen</th>
-                <th className="px-4 py-2 border">Tgl / Date</th>
-                <th className="px-4 py-2 border text-center">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dummyData.map((item, index) => (
-                <tr key={item.id} className="border-t">
-                  <td className="px-4 py-2 border">{index + 1}</td>
-                  <td className="px-4 py-2 border">{item.sasaran}</td>
-                  <td className="px-4 py-2 border">{item.nama_dokumen}</td>
-                  <td className="px-4 py-2 border">{item.nomor_dokumen}</td>
-                  <td className="px-4 py-2 border">
-                    {new Date(item.tanggal_dokumen).toLocaleDateString('id-ID')}
-                  </td>
-                  <td className="px-4 py-2 border text-center">
-                    <label className="inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="sr-only peer"
-                        checked={item.status}
-                        readOnly
-                      />
-                      <div className="relative w-11 h-6 bg-gray-300 peer-checked:bg-green-500 rounded-full peer peer-focus:ring-2 peer-focus:ring-blue-500 transition-all">
-                        <div
-                          className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                            item.status ? 'translate-x-5' : ''
-                          }`}
-                        ></div>
-                      </div>
-                    </label>
-                  </td>
-                </tr>
-              ))}
-              {dummyData.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-4 py-4 text-center text-gray-500">
-                    Tidak ada data sasaran.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </AppLayout>
-  );
+    return (
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title="Data Sasaran Universitas" />
+
+            <div className="w-full px-6 py-8">
+                <div className="mb-6 flex items-center justify-between">
+                    <h2 className="text-2xl font-semibold">Data Sasaran Universitas</h2>
+                    <Link
+                        href={route('sasaran-univ.create')}
+                        className="flex items-center gap-2 rounded-md bg-blue-600 px-6 py-3 font-medium text-white transition hover:bg-blue-700"
+                    >
+                        <span>➕</span>
+                        Tambah Dokumen
+                    </Link>
+                </div>
+
+                {/* Debug Info - Hapus setelah debugging */}
+                {debug && (
+                    <div className="mb-4 rounded border border-yellow-300 bg-yellow-100 p-4">
+                        <h3 className="font-bold">Debug Info:</h3>
+                        <p>Total: {debug.total}</p>
+                        <p>Current Page: {debug.current_page}</p>
+                        <p>Has Data: {debug.has_data ? 'Yes' : 'No'}</p>
+                        <p>Data Array Length: {sasaranUnivs?.data?.length || 0}</p>
+                    </div>
+                )}
+
+                {/* Error Message */}
+                {error && (
+                    <div className="mb-6 rounded-lg border-l-4 border-red-400 bg-red-50 p-4">
+                        <div className="flex">
+                            <span className="text-red-600">❌</span>
+                            <p className="ml-3 text-sm text-red-700">Error: {error}</p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Flash Messages */}
+                {flash?.success && (
+                    <div className="mb-6 rounded-lg border-l-4 border-green-400 bg-green-50 p-4">
+                        <div className="flex">
+                            <span className="text-green-600">✅</span>
+                            <p className="ml-3 text-sm text-green-700">{flash.success}</p>
+                        </div>
+                    </div>
+                )}
+
+                {flash?.error && (
+                    <div className="mb-6 rounded-lg border-l-4 border-red-400 bg-red-50 p-4">
+                        <div className="flex">
+                            <span className="text-red-600">❌</span>
+                            <p className="ml-3 text-sm text-red-700">{flash.error}</p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Data Check and Table */}
+                <div className="rounded-xl border-2 border-gray-300 bg-white shadow-md dark:border-neutral-700 dark:bg-neutral-900">
+                    {/* Check if sasaranUnivs exists */}
+                    {!sasaranUnivs ? (
+                        <div className="p-8 text-center">
+                            <p className="text-red-500">Error: Data sasaranUnivs tidak ditemukan</p>
+                        </div>
+                    ) : !sasaranUnivs.data ? (
+                        <div className="p-8 text-center">
+                            <p className="text-red-500">Error: sasaranUnivs.data tidak ditemukan</p>
+                        </div>
+                    ) : sasaranUnivs.data.length === 0 ? (
+                        <div className="p-12 text-center">
+                            <div className="flex flex-col items-center">
+                                <span className="mb-4 text-6xl">📄</span>
+                                <p className="text-lg font-medium">Belum ada data sasaran universitas</p>
+                                <p className="mb-4 text-sm text-gray-600">Klik tombol "Tambah Dokumen" untuk menambahkan data baru</p>
+                                <Link href={route('sasaran-univ.create')} className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+                                    Tambah Data Pertama
+                                </Link>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-gray-50 dark:bg-neutral-800">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                                            ID
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                                            Kategori
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                                            Nama Dokumen
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                                            Nomor Dokumen
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                                            Tanggal
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                                            File
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                                            Aksi
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200 bg-white dark:divide-neutral-700 dark:bg-neutral-900">
+                                    {sasaranUnivs.data.map((item, index) => (
+                                        <tr key={item.id_sasaran_univ || index} className="hover:bg-gray-50 dark:hover:bg-neutral-800">
+                                            <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900 dark:text-gray-100">
+                                                {item.id_sasaran_univ}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                                                <span className="inline-flex rounded-full bg-blue-100 px-2 text-xs leading-5 font-semibold text-blue-800">
+                                                    {item.kategori}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">{item.nama_dokumen || '-'}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">{item.nomor_dokumen || '-'}</td>
+                                            <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900 dark:text-gray-100">
+                                                {item.tanggal_dokumen ? new Date(item.tanggal_dokumen).toLocaleDateString('id-ID') : '-'}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                                                {item.file_path ? (
+                                                    <a
+                                                        href={`/storage/${item.file_path}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                                                    >
+                                                        <span>📄</span>
+                                                        Lihat File
+                                                    </a>
+                                                ) : (
+                                                    <span className="text-gray-400">Tidak ada file</span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
+                                                <div className="flex space-x-2">
+                                                    <Link
+                                                        href={route('sasaran-univ.show', item.id_sasaran_univ)}
+                                                        className="text-blue-600 hover:text-blue-900"
+                                                    >
+                                                        👁️ Detail
+                                                    </Link>
+                                                    <Link
+                                                        href={route('sasaran-univ.edit', item.id_sasaran_univ)}
+                                                        className="text-yellow-600 hover:text-yellow-900"
+                                                    >
+                                                        ✏️ Edit
+                                                    </Link>
+                                                    <button
+                                                        onClick={() => handleDelete(item.id_sasaran_univ)}
+                                                        className="text-red-600 hover:text-red-900"
+                                                    >
+                                                        🗑️ Hapus
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </AppLayout>
+    );
 }

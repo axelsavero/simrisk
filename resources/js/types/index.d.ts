@@ -157,5 +157,21 @@ export interface SharedPageProps {
     [key: string]: unknown;
 }
 
+export interface SasaranUniv {
+    id_sasaran_univ: number;
+    kategori: string;
+    nama_dokumen?: string;
+    nomor_dokumen?: string;
+    tanggal_dokumen?: string;
+    file_path?: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface BreadcrumbItem {
+    title: string;
+    href: string;
+}
+
 // Generic type for Inertia page props
 export type InertiaPageProps<P extends Record<string, unknown> = Record<string, unknown>> = P & SharedPageProps;

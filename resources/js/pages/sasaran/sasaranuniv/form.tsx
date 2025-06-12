@@ -1,220 +1,227 @@
-// resources/js/pages/sasaran-univ/form.tsx
-
-import React, { useState } from 'react';
-import { useForm, Head, Link } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
+import { BreadcrumbItem, SasaranUniv } from '@/types';
+import { Head, Link, useForm } from '@inertiajs/react';
+import React from 'react';
 
-interface SasaranFormProps {
-  sasaranUniv?: {
-    id?: number;
-    sasaran: string;
+interface FormProps {
+    sasaranUniv?: SasaranUniv | null;
+}
+
+interface FormData {
+    [key: string]: any;
+    kategori: string;
     nama_dokumen: string;
     nomor_dokumen: string;
     tanggal_dokumen: string;
-    status: boolean;
-    file_url?: string;
-  };
+    file: File | null;
 }
 
-export default function SasaranForm({ sasaranUniv }: SasaranFormProps) {
-  const { data, setData, post, processing, errors } = useForm<FormData | any>({
-    sasaran: sasaranUniv?.sasaran || '',
-    nama_dokumen: sasaranUniv?.nama_dokumen || '',
-    nomor_dokumen: sasaranUniv?.nomor_dokumen || '',
-    tanggal_dokumen: sasaranUniv?.tanggal_dokumen || new Date().toISOString().split('T')[0],
-    status: sasaranUniv?.status ?? true,
-    file: null,
-  });
+export default function Form({ sasaranUniv = null }: FormProps) {
+    const { data, setData, post, put, processing, errors } = useForm<FormData>({
+        kategori: sasaranUniv?.kategori || '',
+        nama_dokumen: sasaranUniv?.nama_dokumen || '',
+        nomor_dokumen: sasaranUniv?.nomor_dokumen || '',
+        tanggal_dokumen: sasaranUniv?.tanggal_dokumen || new Date().toISOString().split('T')[0],
+        file: null,
+    });
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [fileUploaded, setFileUploaded] = useState(false);
+    function submit(e: React.FormEvent) {
+        e.preventDefault();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setSelectedFile(file);
-    setFileUploaded(false);
-  };
-
-  const handleUploadClick = () => {
-    if (selectedFile) {
-      setData('file', selectedFile);
-      setFileUploaded(true);
-    }
-  };
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-
-    const formData = new FormData();
-    formData.append('sasaran', data.sasaran);
-    formData.append('nama_dokumen', data.nama_dokumen);
-    formData.append('nomor_dokumen', data.nomor_dokumen);
-    formData.append('tanggal_dokumen', data.tanggal_dokumen);
-    formData.append('status', data.status ? '1' : '0');
-    if (data.file) {
-      formData.append('file', data.file);
+        if (sasaranUniv) {
+            put(route('sasaran-univ.update', sasaranUniv.id_sasaran_univ), {
+                forceFormData: true,
+            });
+        } else {
+            post(route('sasaran-univ.store'), {
+                forceFormData: true,
+            });
+        }
     }
 
-    if (sasaranUniv) {
-      formData.append('_method', 'put');
-      post(`/sasaran-univ/${sasaranUniv.id}`, {
-        data: formData,
-        forceFormData: true,
-      });
-    } else {
-      post('/sasaran-univ', {
-        data: formData,
-        forceFormData: true,
-      });
-    }
-  }
-
-  return (
-    <AppLayout
-      breadcrumbs={[
+    const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Daftar Sasaran', href: '/sasaran-univ' },
-        { title: sasaranUniv ? 'Edit Sasaran' : 'Tambah Sasaran', href: '#' },
-      ]}
-    >
-      <Head title={sasaranUniv ? 'Edit Sasaran' : 'Tambah Sasaran Baru'} />
-      <div className="px-6 py-8">
-        <h1 className="mb-6 text-2xl font-semibold">
-          {sasaranUniv ? 'Edit Sasaran' : 'Tambah Sasaran Baru'}
-        </h1>
+        { title: 'Sasaran Universitas', href: route('sasaran-univ.index') },
+        { title: sasaranUniv ? 'Edit Dokumen' : 'Tambah Dokumen', href: '#' },
+    ];
 
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-6 rounded-xl border border-gray-300 bg-white p-6 shadow"
-        >
-          {/* Sasaran */}
-          <div>
-            <label className="mb-1 block font-medium">Sasaran</label>
-            <textarea
-              value={data.sasaran}
-              onChange={(e) => setData('sasaran', e.target.value)}
-              className="w-full rounded border px-3 py-2"
-              rows={3}
-              required
-            />
-            {errors.sasaran && <div className="text-sm text-red-500">{errors.sasaran}</div>}
-          </div>
+    return (
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title={sasaranUniv ? 'Edit Sasaran Universitas' : 'Tambah Sasaran Universitas Baru'} />
+            <div className="w-full px-6 py-8">
+                <div className="mb-6 flex items-center justify-between">
+                    <h2 className="text-2xl font-semibold">{sasaranUniv ? 'Edit Sasaran Universitas' : 'Tambah Sasaran Universitas Baru'}</h2>
+                </div>
 
-          {/* Nama Dokumen */}
-          <div>
-            <label className="mb-1 block font-medium">Nama Dokumen</label>
-            <input
-              type="text"
-              value={data.nama_dokumen}
-              onChange={(e) => setData('nama_dokumen', e.target.value)}
-              className="w-full rounded border px-3 py-2"
-              required
-            />
-            {errors.nama_dokumen && (
-              <div className="text-sm text-red-500">{errors.nama_dokumen}</div>
-            )}
-          </div>
+                {/* Info banner */}
+                {!sasaranUniv && (
+                    <div className="mb-6 rounded-lg border-l-4 border-blue-400 bg-blue-50 p-4">
+                        <div className="flex">
+                            <div className="flex-shrink-0">
+                                <span className="text-lg">💡</span>
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm text-blue-700">
+                                    <strong>Info:</strong> Silakan lengkapi data dokumen sasaran universitas di bawah ini. Pastikan semua informasi
+                                    yang dimasukkan akurat.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
-          {/* Nomor Dokumen */}
-          <div>
-            <label className="mb-1 block font-medium">Nomor Dokumen</label>
-            <input
-              type="text"
-              value={data.nomor_dokumen}
-              onChange={(e) => setData('nomor_dokumen', e.target.value)}
-              className="w-full rounded border px-3 py-2"
-              required
-            />
-            {errors.nomor_dokumen && (
-              <div className="text-sm text-red-500">{errors.nomor_dokumen}</div>
-            )}
-          </div>
-
-          {/* Tanggal Dokumen */}
-          <div>
-            <label className="mb-1 block font-medium">Tanggal Dokumen</label>
-            <input
-              type="date"
-              value={data.tanggal_dokumen}
-              onChange={(e) => setData('tanggal_dokumen', e.target.value)}
-              className="w-full rounded border px-3 py-2"
-              required
-            />
-            {errors.tanggal_dokumen && (
-              <div className="text-sm text-red-500">{errors.tanggal_dokumen}</div>
-            )}
-          </div>
-
-          {/* Upload File dengan tombol Upload */}
-          <div>
-            <label className="mb-1 block font-medium">Unggah File Dokumen</label>
-            <div className="flex items-center gap-4">
-              <input
-                type="file"
-                onChange={handleFileChange}
-                className="w-full rounded border px-3 py-2"
-              />
-              <button
-                type="button"
-                onClick={handleUploadClick}
-                className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-              >
-                Upload
-              </button>
-            </div>
-            {fileUploaded && selectedFile && (
-              <div className="mt-1 text-sm text-green-600">
-                File "{selectedFile.name}" siap diunggah.
-              </div>
-            )}
-            {sasaranUniv?.file_url && (
-              <div className="mt-2 text-sm text-blue-600">
-                File sebelumnya:{' '}
-                <a
-                  href={sasaranUniv.file_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline"
+                <form
+                    onSubmit={submit}
+                    className="w-full space-y-6 rounded-xl border-2 border-gray-300 bg-white p-6 shadow-md dark:border-neutral-700 dark:bg-neutral-900"
+                    encType="multipart/form-data"
                 >
-                  Lihat Dokumen
-                </a>
-              </div>
-            )}
-            {errors.file && <div className="text-sm text-red-500">{errors.file}</div>}
-          </div>
+                    {/* Kategori */}
+                    <div>
+                        <label className="mb-1 block font-medium">Kategori Dokumen *</label>
+                        <select
+                            value={data.kategori}
+                            onChange={(e) => setData('kategori', e.target.value)}
+                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                            required
+                        >
+                            <option value="">Pilih Kategori</option>
+                            <option value="Visi Misi">Visi Misi</option>
+                            <option value="Rencana Strategis">Rencana Strategis</option>
+                            <option value="Sasaran Strategis">Sasaran Strategis</option>
+                            <option value="Indikator Kinerja">Indikator Kinerja</option>
+                            <option value="Program Kerja">Program Kerja</option>
+                            <option value="Evaluasi">Evaluasi</option>
+                        </select>
+                        {errors.kategori && <div className="mt-1 text-sm text-red-500">{errors.kategori}</div>}
+                    </div>
 
-          {/* Status */}
-          <div>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={data.status}
-                onChange={(e) => setData('status', e.target.checked)}
-                className="form-checkbox rounded"
-              />
-              <span className="font-medium">Status Aktif</span>
-            </label>
-            <small className="text-gray-500">Centang jika sasaran masih aktif dijalankan</small>
-          </div>
+                    {/* Nama dan Nomor Dokumen */}
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div>
+                            <label className="mb-1 block font-medium">Nama Dokumen</label>
+                            <input
+                                type="text"
+                                value={data.nama_dokumen}
+                                onChange={(e) => setData('nama_dokumen', e.target.value)}
+                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                                placeholder="Masukkan nama dokumen"
+                            />
+                            {errors.nama_dokumen && <div className="mt-1 text-sm text-red-500">{errors.nama_dokumen}</div>}
+                        </div>
 
-          {/* Tombol Aksi */}
-          <div className="mt-6 flex items-center justify-between border-t pt-4">
-            <button
-              type="submit"
-              disabled={processing}
-              className="rounded bg-green-600 px-6 py-2 font-medium text-white hover:bg-green-700 disabled:opacity-50"
-            >
-              {processing ? 'Menyimpan...' : 'Simpan'}
-            </button>
-            <Link
-              href="/sasaran-univ"
-              className="rounded border border-gray-300 px-6 py-2 text-gray-700 hover:bg-gray-100"
-            >
-              Batal
-            </Link>
-          </div>
-        </form>
-      </div>
-    </AppLayout>
-  );
+                        <div>
+                            <label className="mb-1 block font-medium">Nomor Dokumen</label>
+                            <input
+                                type="text"
+                                value={data.nomor_dokumen}
+                                onChange={(e) => setData('nomor_dokumen', e.target.value)}
+                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                                placeholder="Masukkan nomor dokumen"
+                            />
+                            {errors.nomor_dokumen && <div className="mt-1 text-sm text-red-500">{errors.nomor_dokumen}</div>}
+                        </div>
+                    </div>
+
+                    {/* Tanggal Dokumen */}
+                    <div>
+                        <label className="mb-1 block font-medium">Tanggal Dokumen</label>
+                        <input
+                            type="date"
+                            value={data.tanggal_dokumen}
+                            onChange={(e) => setData('tanggal_dokumen', e.target.value)}
+                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                        />
+                        {errors.tanggal_dokumen && <div className="mt-1 text-sm text-red-500">{errors.tanggal_dokumen}</div>}
+                    </div>
+
+                    {/* File Upload Section */}
+                    <div className="border-t-2 pt-6">
+                        <div className="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6">
+                            <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-700">
+                                <span>📎</span>
+                                Upload Dokumen
+                            </h3>
+                            <p className="mb-4 text-sm text-gray-600">
+                                Upload file dokumen sasaran universitas (PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, PNG)
+                            </p>
+
+                            <div>
+                                <label className="mb-2 block text-sm font-medium text-gray-700">File Dokumen</label>
+                                <input
+                                    type="file"
+                                    onChange={(e) => setData('file', e.target.files?.[0] || null)}
+                                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png"
+                                    className="w-full rounded-md border border-gray-300 px-3 py-2 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                                />
+                                {errors.file && <p className="mt-1 text-sm text-red-600">{errors.file}</p>}
+                                <p className="mt-1 text-xs text-gray-500">
+                                    Format: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, JPEG, PNG (Maksimal: 10MB)
+                                </p>
+                            </div>
+
+                            {/* File preview jika ada file yang dipilih */}
+                            {data.file && (
+                                <div className="mt-4 rounded-md border border-blue-200 bg-blue-50 p-3">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-blue-600">📄</span>
+                                        <span className="text-sm font-medium text-blue-800">File dipilih: {data.file.name}</span>
+                                        <span className="text-xs text-blue-600">({Math.round(data.file.size / 1024)} KB)</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Show existing file if editing */}
+                            {sasaranUniv?.file_path && (
+                                <div className="mt-4 rounded-md border border-green-200 bg-green-50 p-3">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-green-600">📄</span>
+                                        <span className="text-sm font-medium text-green-800">
+                                            File saat ini: {sasaranUniv.file_path.split('/').pop()}
+                                        </span>
+                                        <a
+                                            href={`/storage/${sasaranUniv.file_path}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-xs text-green-600 hover:text-green-800"
+                                        >
+                                            Lihat File
+                                        </a>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Submit Buttons */}
+                    <div className="mt-8 flex justify-between border-t pt-4">
+                        <button
+                            type="submit"
+                            disabled={processing}
+                            className="flex items-center gap-2 rounded-md bg-green-600 px-8 py-3 font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            {processing ? (
+                                <>
+                                    <span className="animate-spin">⏳</span>
+                                    Menyimpan...
+                                </>
+                            ) : (
+                                <>
+                                    <span>💾</span>
+                                    {sasaranUniv ? 'Update Dokumen' : 'Simpan Dokumen'}
+                                </>
+                            )}
+                        </button>
+
+                        <Link
+                            href={route('sasaran-univ.index')}
+                            className="flex items-center gap-2 rounded-md border border-gray-300 px-8 py-3 font-medium text-gray-700 transition hover:bg-gray-50"
+                        >
+                            <span>❌</span>
+                            Batal
+                        </Link>
+                    </div>
+                </form>
+            </div>
+        </AppLayout>
+    );
 }
