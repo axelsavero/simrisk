@@ -40,8 +40,9 @@ export function AppSidebar() {
         },
         {
             title: 'Sasaran',
-            href: '/sasaran',
+            href: '/sasaran-univ',
             icon: Target,
+            role: 'super-admin', // <--
         },
 
         {
