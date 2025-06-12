@@ -50,7 +50,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('sasaran-univ', SasaranUnivController::class);
+
+    Route::get('sasaran-univ/{sasaranUniv}/dokumen/{dokumenId}/download', 
+        [SasaranUnivController::class, 'downloadDokumen'])
+        ->name('sasaran-univ.download-dokumen');
 });
+
+
+
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

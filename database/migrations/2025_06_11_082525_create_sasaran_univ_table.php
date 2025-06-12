@@ -1,4 +1,5 @@
 <?php
+// database/migrations/xxxx_create_sasaran_univ_table.php (UPDATE YANG SUDAH ADA)
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -26,10 +27,12 @@ return new class extends Migration
             ])->nullable();
             $table->enum('status', ['aktif', 'non-aktif', 'selesai', 'ditunda'])->default('aktif');
             $table->string('pic_sasaran')->nullable();
+            
+            $table->json('dokumen_data')->nullable(); // Semua data dokumen dalam JSON
+            
             $table->timestamps();
             $table->softDeletes();
             
-            // Indexes
             $table->index(['periode_tahun', 'status']);
             $table->index(['kategori', 'prioritas']);
             $table->index('kode_sasaran');
