@@ -49,7 +49,7 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xl font-semibold">User Management</h3>
                     {isSuperAdmin && (
-                    <div className="border rounded-lg p-2 bg-green-500 dark:bg-white dark:text-black ">
+                    <div className="border rounded-lg p-2 bg-[#12745A] text-white px-4 py-2 font-medium dark:bg-[#12745A] dark:text-white">
                      <Link
                           href="/user/manage/create"
                             className="btn btn-primary"
@@ -82,18 +82,18 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
                                         <td className="border px-4 py-2">{user.email}</td>
                                         <td className="border px-4 py-2">{user.roles.join(', ')}</td>
                                         {isSuperAdmin && (
-                                            <td className="border px-4 py-2 flex flex-wrap gap-2">
+                                            <td className="border px-6 py-4 flex flex-wrap gap-2">
                                                 <Link
                                                     href={`/user/manage/${user.id}/edit`}
-                                                    className="px-4 py-1 border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition text-sm"
-                                                >
-                                                    Edit
+                                                     className="text-yellow-600 hover:text-yellow-900"
+                                                    >
+                                                        ✏️ Edit
                                                 </Link>
                                                 <button
                                                     onClick={() => deleteUser(user)}
-                                                    className="px-4 py-1 border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition text-sm"
-                                                >
-                                                    Hapus
+                                                    className="text-red-600 hover:text-red-900"
+                                                    >
+                                                        🗑️ Hapus
                                                 </button>
                                             </td>
                                         )}

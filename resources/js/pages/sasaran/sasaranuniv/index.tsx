@@ -59,7 +59,7 @@ export default function Index({ sasaranUnivs, flash, debug, error }: IndexProps)
                     <h2 className="text-2xl font-semibold">Data Sasaran Universitas</h2>
                     <Link
                         href={route('sasaran-univ.create')}
-                        className="flex items-center gap-2 rounded-md bg-blue-600 px-6 py-3 font-medium text-white transition hover:bg-blue-700"
+                        className="flex items-center gap-2 rounded-md bg-[#12745A] px-6 py-3 font-medium text-white transition hover:bg-green-900"
                     >
                         <span>➕</span>
                         Tambah Dokumen
@@ -123,7 +123,7 @@ export default function Index({ sasaranUnivs, flash, debug, error }: IndexProps)
                                 <span className="mb-4 text-6xl">📄</span>
                                 <p className="text-lg font-medium">Belum ada data sasaran universitas</p>
                                 <p className="mb-4 text-sm text-gray-600">Klik tombol "Tambah Dokumen" untuk menambahkan data baru</p>
-                                <Link href={route('sasaran-univ.create')} className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+                                <Link href={route('sasaran-univ.create')} className="rounded-md bg-[#12745A] px-4 py-2 text-white hover:bg-green-900">
                                     Tambah Data Pertama
                                 </Link>
                             </div>
