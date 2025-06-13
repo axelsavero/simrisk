@@ -213,6 +213,49 @@ export default function Index({ sasaranUnivs, flash, debug, error }: IndexProps)
                                     ))}
                                 </tbody>
                             </table>
+
+                            {/* Pagination Controls */}
+                            {sasaranUnivs.links && sasaranUnivs.links.length > 3 && (
+                                <div className="flex items-center justify-between px-6 py-4">
+                                    <div className="text-sm text-gray-700 dark:text-gray-400">
+                                        Menampilkan {sasaranUnivs.data.length} dari {sasaranUnivs.total} entri
+                                    </div>
+                                    <div className="flex space-x-2">
+                                        {sasaranUnivs.links.map((link: any, index: number) => {
+                                            if (!link.url) {
+                                                return (
+                                                    <span
+                                                        key={index}
+                                                        className="rounded-md border bg-gray-100 px-3 py-2 text-sm text-gray-400 dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-500"
+                                                    >
+                                                        {link.label === '&laquo; Previous' ? '«' : link.label === 'Next &raquo;' ? '»' : link.label}
+                                                    </span>
+                                                );
+                                            }
+
+                                            return (
+                                                <Link
+                                                    key={index}
+                                                    href={link.url}
+                                                    className={`rounded-md border px-3 py-2 text-sm transition-colors ${
+                                                        link.active
+                                                            ? 'border-blue-600 bg-blue-600 text-white'
+                                                            : 'bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-gray-300 dark:hover:bg-neutral-800'
+                                                    }`}
+                                                    dangerouslySetInnerHTML={{
+                                                        __html:
+                                                            link.label === '&laquo; Previous'
+                                                                ? '«'
+                                                                : link.label === 'Next &raquo;'
+                                                                  ? '»'
+                                                                  : link.label,
+                                                    }}
+                                                />
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
