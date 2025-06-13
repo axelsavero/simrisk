@@ -92,16 +92,16 @@ export default function Show({ sasaranUniv }: Props) {
                         </div>
 
                         {/* File Information */}
-                        <div className="space-y-4">
+                        <div className="space-y-4 md:col-span-1 w-full">
                             <h4 className="border-b pb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">📎 File Dokumen</h4>
 
                             {sasaranUniv.file_path ? (
                                 <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                                         <div className="flex items-center gap-3">
                                             <span className="text-2xl">📄</span>
                                             <div>
-                                                <p className="font-medium text-green-800">{sasaranUniv.file_path.split('/').pop()}</p>
+                                                <p className="font-medium text-green-800 break-all">{sasaranUniv.file_path.split('/').pop()}</p>
                                                 <p className="text-sm text-green-600">File tersedia</p>
                                             </div>
                                         </div>
