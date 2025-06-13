@@ -55,13 +55,13 @@ export default function Form({ sasaranUniv = null }: FormProps) {
 
                 {/* Info banner */}
                 {!sasaranUniv && (
-                    <div className="mb-6 rounded-lg border-l-4 border-blue-400 bg-blue-50 p-4">
+                    <div className="mb-6 rounded-lg border-l-4 border-[#12745A] bg-blue-50 p-4">
                         <div className="flex">
                             <div className="flex-shrink-0">
                                 <span className="text-lg">💡</span>
                             </div>
                             <div className="ml-3">
-                                <p className="text-sm text-blue-700">
+                                <p className="text-sm text-green-700">
                                     <strong>Info:</strong> Silakan lengkapi data dokumen sasaran universitas di bawah ini. Pastikan semua informasi
                                     yang dimasukkan akurat.
                                 </p>
@@ -129,7 +129,7 @@ export default function Form({ sasaranUniv = null }: FormProps) {
                             type="date"
                             value={data.tanggal_dokumen}
                             onChange={(e) => setData('tanggal_dokumen', e.target.value)}
-                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-green-500 focus:outline-none dark:border-neutral-700"
                         />
                         {errors.tanggal_dokumen && <div className="mt-1 text-sm text-red-500">{errors.tanggal_dokumen}</div>}
                     </div>
@@ -151,7 +151,7 @@ export default function Form({ sasaranUniv = null }: FormProps) {
                                     type="file"
                                     onChange={(e) => setData('file', e.target.files?.[0] || null)}
                                     accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png"
-                                    className="w-full rounded-md border border-gray-300 px-3 py-2 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                                    className="w-full rounded-md border border-gray-300 px-3 py-2 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-green-700 hover:file:bg-blue-100 focus:border-green-500 focus:ring-2 focus:ring-green-500"
                                 />
                                 {errors.file && <p className="mt-1 text-sm text-red-600">{errors.file}</p>}
                                 <p className="mt-1 text-xs text-gray-500">
@@ -159,13 +159,14 @@ export default function Form({ sasaranUniv = null }: FormProps) {
                                 </p>
                             </div>
 
+
                             {/* File preview jika ada file yang dipilih */}
                             {data.file && (
-                                <div className="mt-4 rounded-md border border-blue-200 bg-blue-50 p-3">
+                                <div className="mt-4 rounded-md border border-green-200 bg-green-50 p-3">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-blue-600">📄</span>
-                                        <span className="text-sm font-medium text-blue-800">File dipilih: {data.file.name}</span>
-                                        <span className="text-xs text-blue-600">({Math.round(data.file.size / 1024)} KB)</span>
+                                        <span className="text-green-500">📄</span>
+                                        <span className="text-sm font-medium text-green-500">File dipilih: {data.file.name}</span>
+                                        <span className="text-xs text-green-500">({Math.round(data.file.size / 1024)} KB)</span>
                                     </div>
                                 </div>
                             )}
@@ -197,7 +198,7 @@ export default function Form({ sasaranUniv = null }: FormProps) {
                         <button
                             type="submit"
                             disabled={processing}
-                            className="flex items-center gap-2 rounded-md bg-green-600 px-8 py-3 font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex items-center gap-2 rounded-md bg-[#12745A] px-8 py-3 font-medium text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {processing ? (
                                 <>
@@ -214,9 +215,8 @@ export default function Form({ sasaranUniv = null }: FormProps) {
 
                         <Link
                             href={route('sasaran-univ.index')}
-                            className="flex items-center gap-2 rounded-md border border-gray-300 px-8 py-3 font-medium text-gray-700 transition hover:bg-gray-50"
+                            className="flex items-center gap-2 rounded-md border bg-red-500 border-gray-300 px-8 py-3 font-medium text-gray-100 transition hover:bg-red-700"
                         >
-                            <span>❌</span>
                             Batal
                         </Link>
                     </div>
