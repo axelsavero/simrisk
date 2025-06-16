@@ -138,7 +138,7 @@ export default function Index() {
     const getValidationStatusInfo = (status: string) => {
         switch (status) {
             case 'draft':
-                return { label: 'Draft', color: 'draft', icon: '📝' };
+                return { label: 'Draft', color: 'draft', icon: <SquarePen /> };
             case 'submitted': // TREAT submitted sebagai pending
             case 'pending':
                 return { label: 'Menunggu Validasi', color: 'warning', icon: '⏳' };
@@ -348,7 +348,7 @@ export default function Index() {
                                     {/* Submit Action untuk draft */}
                                     {permissions?.canSubmit && item.validation_status === 'draft' && (
                                         <button onClick={() => submitItem(item)} className="action-btn submit-btn" title="Kirim untuk Validasi">
-                                            <Upload /> Upload
+                                            <Upload /> Kirim
                                         </button>
                                     )}
 
