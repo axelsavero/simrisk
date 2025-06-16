@@ -14,27 +14,55 @@ interface FormData {
     nomor_dokumen: string;
     tanggal_dokumen: string;
     file: File | null;
+    _method?: string; // 🔥 Tambahkan untuk method spoofing
 }
 
 export default function Form({ sasaranUniv = null }: FormProps) {
-    const { data, setData, post, put, processing, errors } = useForm<FormData>({
+    const { data, setData, post, processing, errors } = useForm<FormData>({
         kategori: sasaranUniv?.kategori || '',
         nama_dokumen: sasaranUniv?.nama_dokumen || '',
         nomor_dokumen: sasaranUniv?.nomor_dokumen || '',
         tanggal_dokumen: sasaranUniv?.tanggal_dokumen || new Date().toISOString().split('T')[0],
         file: null,
+        _method: sasaranUniv ? 'PUT' : 'POST', // 🔥 Method spoofing
     });
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
 
+        // 🔥 Debug data sebelum submit
+        console.log('Submitting data:', {
+            ...data,
+            file: data.file ? `File: ${data.file.name}` : 'No file',
+            sasaranUnivId: sasaranUniv?.id_sasaran_univ,
+        });
+
         if (sasaranUniv) {
-            put(route('sasaran-univ.update', sasaranUniv.id_sasaran_univ), {
+            // 🔥 Gunakan POST untuk semua request (create & update)
+            post(route('sasaran-univ.update', sasaranUniv.id_sasaran_univ), {
                 forceFormData: true,
+                onBefore: () => {
+                    console.log('Before update request');
+                },
+                onSuccess: () => {
+                    console.log('Update successful');
+                },
+                onError: (errors) => {
+                    console.error('Update errors:', errors);
+                },
             });
         } else {
             post(route('sasaran-univ.store'), {
                 forceFormData: true,
+                onBefore: () => {
+                    console.log('Before create request');
+                },
+                onSuccess: () => {
+                    console.log('Create successful');
+                },
+                onError: (errors) => {
+                    console.error('Create errors:', errors);
+                },
             });
         }
     }
@@ -52,6 +80,13 @@ export default function Form({ sasaranUniv = null }: FormProps) {
                 <div className="mb-6 flex items-center justify-between">
                     <h2 className="text-2xl font-semibold">{sasaranUniv ? 'Edit Sasaran Universitas' : 'Tambah Sasaran Universitas Baru'}</h2>
                 </div>
+
+                {/* Debug Info - Hapus setelah fix */}
+                {sasaranUniv && (
+                    <div className="mb-4 rounded border border-yellow-300 bg-yellow-100 p-3 text-sm">
+                        <strong>Debug:</strong> Editing ID {sasaranUniv.id_sasaran_univ} | Method: {data._method}
+                    </div>
+                )}
 
                 {/* Info banner */}
                 {!sasaranUniv && (
@@ -75,6 +110,9 @@ export default function Form({ sasaranUniv = null }: FormProps) {
                     className="w-full space-y-6 rounded-xl border-2 border-gray-300 bg-white p-6 shadow-md dark:border-neutral-700 dark:bg-neutral-900"
                     encType="multipart/form-data"
                 >
+                    {/* Hidden method field untuk debugging */}
+                    {sasaranUniv && <input type="hidden" name="_method" value="PUT" />}
+
                     {/* Kategori */}
                     <div>
                         <label className="mb-1 block font-medium">Kategori Dokumen *</label>
@@ -159,7 +197,6 @@ export default function Form({ sasaranUniv = null }: FormProps) {
                                 </p>
                             </div>
 
-
                             {/* File preview jika ada file yang dipilih */}
                             {data.file && (
                                 <div className="mt-4 rounded-md border border-green-200 bg-green-50 p-3">
@@ -215,7 +252,7 @@ export default function Form({ sasaranUniv = null }: FormProps) {
 
                         <Link
                             href={route('sasaran-univ.index')}
-                            className="flex items-center gap-2 rounded-md border bg-red-500 border-gray-300 px-8 py-3 font-medium text-gray-100 transition hover:bg-red-700"
+                            className="flex items-center gap-2 rounded-md border border-gray-300 bg-red-500 px-8 py-3 font-medium text-gray-100 transition hover:bg-red-700"
                         >
                             Batal
                         </Link>
