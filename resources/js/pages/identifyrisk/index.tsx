@@ -5,7 +5,7 @@ import { BreadcrumbItem, IdentifyRisk } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
 import React, { useState } from 'react';
 import '../../../css/IdentifyRiskIndex.css';
-import { Calendar, ChartColumnIncreasing, CircleCheck, CirclePlus, ClipboardX, Eye, FilePlus, Hourglass, IdCard, Pencil, Search, Shield, SquarePen, Trash2, Upload } from 'lucide-react';
+import { Calendar, ChartColumnIncreasing, CheckCircle2, CircleCheck, CircleHelp, CirclePlus, ClipboardX, Eye, FilePlus, Hourglass, IdCard, Pencil, Search, Shield, SquarePen, Trash2, Upload, X } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -141,13 +141,13 @@ export default function Index() {
                 return { label: 'Draft', color: 'draft', icon: <SquarePen /> };
             case 'submitted': // TREAT submitted sebagai pending
             case 'pending':
-                return { label: 'Menunggu Validasi', color: 'warning', icon: '⏳' };
+                return { label: 'Menunggu Validasi', color: 'warning', icon: <Hourglass/> };
             case 'approved':
-                return { label: 'Disetujui', color: 'success', icon: '✅' };
+                return { label: 'Disetujui', color: 'success', icon: <CheckCircle2/> };
             case 'rejected':
-                return { label: 'Ditolak', color: 'danger', icon: '❌' };
+                return { label: 'Ditolak', color: 'danger', icon: <X/> };
             default:
-                return { label: 'Unknown', color: 'secondary', icon: '❓' };
+                return { label: 'Unknown', color: 'secondary', icon: <CircleHelp /> };
         }
     };
 
@@ -373,12 +373,16 @@ export default function Index() {
                                         <>
                                             {permissions?.canApprove && (
                                                 <button onClick={() => approveItem(item)} className="action-btn approve-btn" title="Setujui">
-                                                    ✅ Setujui
+                                                    <CircleCheck /> Setujui
                                                 </button>
                                             )}
                                             {permissions?.canReject && (
-                                                <button onClick={() => rejectItem(item)} className="action-btn reject-btn" title="Tolak">
-                                                    ❌ Tolak
+                                                <button
+                                                    onClick={() => rejectItem(item)}
+                                                    className="action-btn bg-red-600 hover:bg-red-700 text-white"
+                                                    title="Tolak"
+                                                >
+                                                    <X /> Tolak
                                                 </button>
                                             )}
                                         </>
