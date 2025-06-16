@@ -3,6 +3,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
+import { CircleCheck, File, FilePlus, FileText, ScanSearch, SquarePen, Trash2, X } from 'lucide-react';
 
 interface SasaranUniv {
     id_sasaran_univ: number;
@@ -61,7 +62,7 @@ export default function Index({ sasaranUnivs, flash, debug, error }: IndexProps)
                         href={route('sasaran-univ.create')}
                         className="flex items-center gap-2 rounded-md bg-[#12745A] px-6 py-3 font-medium text-white transition hover:bg-green-900"
                     >
-                        <span>➕</span>
+                        <FilePlus />
                         Tambah Dokumen
                     </Link>
                 </div>
@@ -79,7 +80,7 @@ export default function Index({ sasaranUnivs, flash, debug, error }: IndexProps)
                 {error && (
                     <div className="mb-6 rounded-lg border-l-4 border-red-400 bg-red-50 p-4">
                         <div className="flex">
-                            <span className="text-red-600">❌</span>
+                            <X className="text-red-600" />
                             <p className="ml-3 text-sm text-red-700">Error: {error}</p>
                         </div>
                     </div>
@@ -88,7 +89,7 @@ export default function Index({ sasaranUnivs, flash, debug, error }: IndexProps)
                 {flash?.success && (
                     <div className="mb-6 rounded-lg border-l-4 border-green-400 bg-green-50 p-4">
                         <div className="flex">
-                            <span className="text-green-600">✅</span>
+                            <CircleCheck className="text-green-600" />
                             <p className="ml-3 text-sm text-green-700">{flash.success}</p>
                         </div>
                     </div>
@@ -96,7 +97,7 @@ export default function Index({ sasaranUnivs, flash, debug, error }: IndexProps)
                 {flash?.error && (
                     <div className="mb-6 rounded-lg border-l-4 border-red-400 bg-red-50 p-4">
                         <div className="flex">
-                            <span className="text-red-600">❌</span>
+                            <X className="text-red-600" />
                             <p className="ml-3 text-sm text-red-700">{flash.error}</p>
                         </div>
                     </div>
@@ -115,7 +116,7 @@ export default function Index({ sasaranUnivs, flash, debug, error }: IndexProps)
                     ) : sasaranUnivs.data.length === 0 ? (
                         <div className="p-12 text-center">
                             <div className="flex flex-col items-center">
-                                <span className="mb-4 text-6xl">📄</span>
+                                <File size={48} className="mb-2 text-gray-400" />
                                 <p className="text-lg font-medium">Belum ada data sasaran universitas</p>
                                 <p className="mb-4 text-sm text-gray-600">Klik tombol "Tambah Dokumen" untuk menambahkan data baru</p>
                                 <Link href={route('sasaran-univ.create')} className="rounded-md bg-[#12745A] px-4 py-2 text-white hover:bg-green-900">
@@ -163,7 +164,7 @@ export default function Index({ sasaranUnivs, flash, debug, error }: IndexProps)
                                                         rel="noopener noreferrer"
                                                         className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
                                                     >
-                                                        <span>📄</span>
+                                                        <FileText />
                                                         Lihat File
                                                     </a>
                                                 ) : (
@@ -171,24 +172,27 @@ export default function Index({ sasaranUnivs, flash, debug, error }: IndexProps)
                                                 )}
                                             </td>
                                             <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                                <div className="flex space-x-2">
+                                                <div className="flex items-center gap-2">
                                                     <Link
                                                         href={route('sasaran-univ.show', item.id_sasaran_univ)}
-                                                        className="text-blue-600 hover:text-blue-900"
+                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-700 transition-colors hover:bg-blue-500 hover:text-white"
+                                                        title="Detail"
                                                     >
-                                                        👁️ Detail
+                                                        <ScanSearch size={20} />
                                                     </Link>
                                                     <Link
                                                         href={route('sasaran-univ.edit', item.id_sasaran_univ)}
-                                                        className="text-yellow-600 hover:text-yellow-900"
+                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-yellow-100 text-yellow-700 transition-colors hover:bg-yellow-400 hover:text-white"
+                                                        title="Edit"
                                                     >
-                                                        ✏️ Edit
+                                                        <SquarePen size={20} />
                                                     </Link>
                                                     <button
                                                         onClick={() => handleDelete(item.id_sasaran_univ)}
-                                                        className="text-red-600 hover:text-red-900"
+                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-700 transition-colors hover:bg-red-500 hover:text-white"
+                                                        title="Delete"
                                                     >
-                                                        🗑️ Hapus
+                                                        <Trash2 size={20} />
                                                     </button>
                                                 </div>
                                             </td>

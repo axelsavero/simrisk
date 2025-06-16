@@ -2,6 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, SasaranUniv } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import React from 'react';
+import { FileText, Hourglass, Lightbulb, Paperclip, Save } from 'lucide-react';
 
 interface FormProps {
     sasaranUniv?: SasaranUniv | null;
@@ -93,7 +94,7 @@ export default function Form({ sasaranUniv = null }: FormProps) {
                     <div className="mb-6 rounded-lg border-l-4 border-[#12745A] bg-blue-50 p-4">
                         <div className="flex">
                             <div className="flex-shrink-0">
-                                <span className="text-lg">💡</span>
+                                <Lightbulb className="text-lg text-green-900" />
                             </div>
                             <div className="ml-3">
                                 <p className="text-sm text-green-700">
@@ -176,7 +177,7 @@ export default function Form({ sasaranUniv = null }: FormProps) {
                     <div className="border-t-2 pt-6">
                         <div className="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6">
                             <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-700">
-                                <span>📎</span>
+                                <Paperclip />
                                 Upload Dokumen
                             </h3>
                             <p className="mb-4 text-sm text-gray-600">
@@ -212,7 +213,7 @@ export default function Form({ sasaranUniv = null }: FormProps) {
                             {sasaranUniv?.file_path && (
                                 <div className="mt-4 rounded-md border border-green-200 bg-green-50 p-3">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-green-600">📄</span>
+                                        <FileText className='text-green-600' />
                                         <span className="text-sm font-medium text-green-800">
                                             File saat ini: {sasaranUniv.file_path.split('/').pop()}
                                         </span>
@@ -239,12 +240,12 @@ export default function Form({ sasaranUniv = null }: FormProps) {
                         >
                             {processing ? (
                                 <>
-                                    <span className="animate-spin">⏳</span>
+                                    <Hourglass className="animate-spin" />
                                     Menyimpan...
                                 </>
                             ) : (
                                 <>
-                                    <span>💾</span>
+                                    <Save />
                                     {sasaranUniv ? 'Update Dokumen' : 'Simpan Dokumen'}
                                 </>
                             )}

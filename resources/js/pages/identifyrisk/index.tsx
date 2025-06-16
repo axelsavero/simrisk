@@ -5,6 +5,7 @@ import { BreadcrumbItem, IdentifyRisk } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
 import React, { useState } from 'react';
 import '../../../css/IdentifyRiskIndex.css';
+import { ChartColumnIncreasing, CircleCheck, ClipboardX, Hourglass, Search, Shield, SquarePen } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -62,7 +63,7 @@ export default function Index() {
     if (!identifyRisks) {
         return (
             <div className="empty-state">
-                <div className="empty-icon">📊</div>
+                <ChartColumnIncreasing size={28} className='empty-icon' />
                 <h3>Data Tidak Tersedia</h3>
                 <p>Data identifikasi risiko tidak tersedia saat ini.</p>
             </div>
@@ -167,13 +168,13 @@ export default function Index() {
     });
 
     return (
-        <div className="risk-index-container">
+        <div className="risk-index-container w-full px-2 md:px-6">
             {/* Header Section */}
             <div className="page-header">
                 <div className="header-content">
                     <div className="header-info">
                         <h1 className="page-title">
-                            <span className="title-icon">🛡️</span>
+                            <Shield size={40} className="title-icon" />
                             Manajemen Risiko
                         </h1>
                         <p className="page-subtitle">Kelola dan pantau identifikasi risiko organisasi Anda</p>
@@ -190,14 +191,14 @@ export default function Index() {
             {/* 🔥 OPSI 2: Stats Cards dengan logic submitted = pending */}
             <div className="stats-grid">
                 <div className="stat-card stat-total">
-                    <div className="stat-icon">📊</div>
+                    <ChartColumnIncreasing size={40} className='stat-icon text-blue-600' />
                     <div className="stat-content">
                         <span className="stat-number">{identifyRisks.data.length}</span>
                         <span className="stat-label">Total Risiko</span>
                     </div>
                 </div>
                 <div className="stat-card stat-draft">
-                    <div className="stat-icon">📝</div>
+                    <SquarePen size={40} className='stat-icon' />
                     <div className="stat-content">
                         <span className="stat-number">
                             {identifyRisks.data.filter((item: IdentifyRisk) => item.validation_status === 'draft').length}
@@ -207,7 +208,7 @@ export default function Index() {
                 </div>
                 {/* Include both submitted and pending as "Pending" */}
                 <div className="stat-card stat-pending">
-                    <div className="stat-icon">⏳</div>
+                    <Hourglass size={40} className='stat-icon text-yellow-500' />
                     <div className="stat-content">
                         <span className="stat-number">
                             {
@@ -220,7 +221,7 @@ export default function Index() {
                     </div>
                 </div>
                 <div className="stat-card stat-approved">
-                    <div className="stat-icon">✅</div>
+                    <CircleCheck size={40} className='stat-icon text-green-600' />
                     <div className="stat-content">
                         <span className="stat-number">
                             {identifyRisks.data.filter((item: IdentifyRisk) => item.validation_status === 'approved').length}
@@ -229,7 +230,7 @@ export default function Index() {
                     </div>
                 </div>
                 <div className="stat-card stat-rejected">
-                    <div className="stat-icon">❌</div>
+                    <ClipboardX size={40} className='stat-icon text-red-600' />
                     <div className="stat-content">
                         <span className="stat-number">
                             {identifyRisks.data.filter((item: IdentifyRisk) => item.validation_status === 'rejected').length}
@@ -249,7 +250,7 @@ export default function Index() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="search-input"
                     />
-                    <span className="search-icon">🔍</span>
+                    <Search size={20} className='search-icon' />
                 </div>
                 <div className="filter-tabs">
                     <button className={`filter-tab ${filterStatus === 'all' ? 'active' : ''}`} onClick={() => setFilterStatus('all')}>
@@ -287,7 +288,7 @@ export default function Index() {
                                     <div className="risk-id">
                                         <span className="id-icon">🆔</span>
                                         {item.id_identify}
-                                        {item.validation_status === 'draft' && <span className="draft-badge">DRAFT</span>}
+                                        {item.validation_status === 'draft' && <span className="draft-badge"></span>}
                                     </div>
                                     <div className={`validation-badge ${validationInfo.color}`}>
                                         {validationInfo.icon} {validationInfo.label}
@@ -383,8 +384,10 @@ export default function Index() {
                     })
                 ) : (
                     <div className="empty-state">
-                        <div className="empty-icon">🔍</div>
-                        <h3>Tidak Ada Risiko Ditemukan</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <Search size={40} className='empty-icon' />
+                            <h3>Tidak Ada Risiko Ditemukan</h3>
+                        </div>
                         <p>
                             {searchTerm || filterStatus !== 'all'
                                 ? 'Tidak ada risiko yang sesuai dengan filter atau pencarian Anda.'
