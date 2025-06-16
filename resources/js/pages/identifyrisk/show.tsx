@@ -3,6 +3,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, IdentifyRisk } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
+import { Bomb, ChartColumn, CheckCircle2, CircleHelp, CornerDownLeft, FileText, Hourglass, Info, Pencil, ShieldCheck, TriangleAlert, X } from 'lucide-react';
 
 interface ShowProps {
     identifyRisk: IdentifyRisk & {
@@ -46,16 +47,16 @@ export default function Show() {
     const getValidationStatusInfo = (status: string) => {
         switch (status) {
             case 'draft':
-                return { label: 'Draft', color: 'bg-gray-100 text-gray-800', icon: '📝' };
+                return { label: 'Draft', color: 'bg-gray-100 text-gray-800', icon: <FileText/> };
             case 'submitted':
             case 'pending':
-                return { label: 'Menunggu Validasi', color: 'bg-yellow-100 text-yellow-800', icon: '⏳' };
+                return { label: 'Menunggu Validasi', color: 'bg-yellow-100 text-yellow-800', icon: <Hourglass/> };
             case 'approved':
-                return { label: 'Disetujui', color: 'bg-green-100 text-green-800', icon: '✅' };
+                return { label: 'Disetujui', color: 'bg-green-100 text-green-800', icon: <CheckCircle2/> };
             case 'rejected':
-                return { label: 'Ditolak', color: 'bg-red-100 text-red-800', icon: '❌' };
+                return { label: 'Ditolak', color: 'bg-red-100 text-red-800', icon: <X/> };
             default:
-                return { label: 'Unknown', color: 'bg-gray-100 text-gray-800', icon: '❓' };
+                return { label: 'Unknown', color: 'bg-gray-100 text-gray-800', icon: <CircleHelp /> };
         }
     };
 
@@ -103,7 +104,7 @@ export default function Show() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Detail Risiko ${identifyRisk.id_identify}`} />
 
-            <div className="mx-auto max-w-6xl px-6 py-8">
+            <div className="mx-auto max-w-6xl px-6 py-8 w-screen">
                 {/* Header Section */}
                 <div className="mb-6 rounded-lg bg-white p-6 shadow-md">
                     <div className="mb-4 flex items-start justify-between">
@@ -127,13 +128,14 @@ export default function Show() {
                             href={route('identify-risk.edit', identifyRisk.id)}
                             className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
                         >
-                            ✏️ Edit
+                            <Pencil/>
+                            Edit
                         </Link>
                         <Link
                             href={route('identify-risk.index')}
                             className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-50"
                         >
-                            ← Kembali
+                            <CornerDownLeft /> Kembali
                         </Link>
                     </div>
                 </div>
@@ -141,7 +143,7 @@ export default function Show() {
                 {/* Basic Information */}
                 <div className="mb-6 rounded-lg bg-white p-6 shadow-md">
                     <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
-                        <span>ℹ️</span>
+                        <Info />
                         Informasi Dasar
                     </h2>
 
@@ -186,7 +188,7 @@ export default function Show() {
                 {/* Risk Assessment */}
                 <div className="mb-6 rounded-lg bg-white p-6 shadow-md">
                     <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
-                        <span>📊</span>
+                        <ChartColumn />
                         Assessment Risiko
                     </h2>
 
@@ -241,7 +243,7 @@ export default function Show() {
                 {identifyRisk.penyebab && identifyRisk.penyebab.length > 0 && (
                     <div className="mb-6 rounded-lg bg-white p-6 shadow-md">
                         <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
-                            <span>⚠️</span>
+                            <TriangleAlert />
                             Penyebab Risiko
                         </h2>
                         <div className="space-y-3">
@@ -261,7 +263,7 @@ export default function Show() {
                 {identifyRisk.dampak_kualitatif && identifyRisk.dampak_kualitatif.length > 0 && (
                     <div className="mb-6 rounded-lg bg-white p-6 shadow-md">
                         <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
-                            <span>💥</span>
+                            <Bomb />
                             Dampak Kualitatif
                         </h2>
                         <div className="space-y-3">
@@ -281,7 +283,7 @@ export default function Show() {
                 {identifyRisk.penanganan_risiko && identifyRisk.penanganan_risiko.length > 0 && (
                     <div className="mb-6 rounded-lg bg-white p-6 shadow-md">
                         <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
-                            <span>🛡️</span>
+                            <ShieldCheck />
                             Penanganan Risiko
                         </h2>
                         <div className="space-y-3">

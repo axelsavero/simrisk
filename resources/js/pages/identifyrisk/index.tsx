@@ -5,7 +5,7 @@ import { BreadcrumbItem, IdentifyRisk } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
 import React, { useState } from 'react';
 import '../../../css/IdentifyRiskIndex.css';
-import { ChartColumnIncreasing, CircleCheck, ClipboardX, Hourglass, Search, Shield, SquarePen } from 'lucide-react';
+import { Calendar, ChartColumnIncreasing, CircleCheck, CirclePlus, ClipboardX, Eye, FilePlus, Hourglass, IdCard, Pencil, Search, Shield, SquarePen, Trash2, Upload } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -181,7 +181,7 @@ export default function Index() {
                     </div>
                     {permissions?.canCreate && (
                         <Link href={route('identify-risk.create')} className="btn btn-primary btn-create">
-                            <span className="btn-icon">➕</span>
+                            <CirclePlus size={28} className='btn-icon' />
                             Tambah Risiko Baru
                         </Link>
                     )}
@@ -286,7 +286,7 @@ export default function Index() {
                                 {/* Card Header */}
                                 <div className="card-header">
                                     <div className="risk-id">
-                                        <span className="id-icon">🆔</span>
+                                        <IdCard className='id-icon' />
                                         {item.id_identify}
                                         {item.validation_status === 'draft' && <span className="draft-badge"></span>}
                                     </div>
@@ -320,9 +320,12 @@ export default function Index() {
 
                                     {/* Dates */}
                                     <div className="risk-dates">
-                                        <div className="date-range">
-                                            📅 {new Date(item.identification_date_start).toLocaleDateString('id-ID')} -{' '}
-                                            {new Date(item.identification_date_end).toLocaleDateString('id-ID')}
+                                        <div className="date-range justify-center" style={{ display: 'flex', alignItems: 'center', gap: '0.4em' }}>
+                                            <Calendar />
+                                            <span>
+                                                {new Date(item.identification_date_start).toLocaleDateString('id-ID')} -{' '}
+                                                {new Date(item.identification_date_end).toLocaleDateString('id-ID')}
+                                            </span>
                                         </div>
                                     </div>
 
@@ -339,27 +342,29 @@ export default function Index() {
                                 <div className="card-actions">
                                     {/* 🔥 TAMBAHAN: Tombol Detail (sesuai memory entry [3] - antarmuka ramah pengguna) */}
                                     <Link href={route('identify-risk.show', item.id)} className="action-btn detail-btn" title="Lihat Detail Risiko">
-                                        👁️ Detail
+                                        <Eye /> Detail
                                     </Link>
 
                                     {/* Submit Action untuk draft */}
                                     {permissions?.canSubmit && item.validation_status === 'draft' && (
                                         <button onClick={() => submitItem(item)} className="action-btn submit-btn" title="Kirim untuk Validasi">
-                                            📤 Kirim
+                                            <Upload /> Upload
                                         </button>
                                     )}
 
                                     {/* Edit Actions */}
                                     {permissions?.canEdit && (item.validation_status === 'draft' || item.validation_status === 'rejected') && (
                                         <Link href={route('identify-risk.edit', item.id)} className="action-btn edit-btn" title="Edit">
-                                            ✏️ Edit
+                                            <Pencil />
+                                            Edit
                                         </Link>
                                     )}
 
                                     {/* Delete Actions - hanya untuk draft */}
                                     {permissions?.canDelete && item.validation_status === 'draft' && (
                                         <button onClick={() => deleteItem(item)} className="action-btn delete-btn" title="Hapus">
-                                            🗑️ Hapus
+                                            <Trash2 />
+                                            Hapus
                                         </button>
                                     )}
 
@@ -394,9 +399,12 @@ export default function Index() {
                                 : 'Belum ada risiko yang dibuat. Mulai dengan menambah risiko baru.'}
                         </p>
                         {!searchTerm && filterStatus === 'all' && permissions?.canCreate && (
-                            <Link href={route('identify-risk.create')} className="btn btn-primary">
-                                ➕ Tambah Risiko Pertama
-                            </Link>
+                            <div className="flex justify-center">
+                                <Link href={route('identify-risk.create')} className="btn btn-primary flex flex-row items-center gap-1">
+                                    <FilePlus size={28} />
+                                    Tambah Risiko Pertama
+                                </Link>
+                            </div>
                         )}
                     </div>
                 )}

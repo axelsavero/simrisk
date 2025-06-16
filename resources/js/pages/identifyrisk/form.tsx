@@ -3,6 +3,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, IdentifyRisk } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { Hourglass, Lightbulb, Paperclip, Save, X } from 'lucide-react';
 import React from 'react';
 
 interface FormProps {
@@ -189,7 +190,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                     <div className="mb-6 rounded-lg border-l-4 border-yellow-400 bg-yellow-50 p-4">
                         <div className="flex">
                             <div className="flex-shrink-0">
-                                <span className="text-lg">💡</span>
+                                <Lightbulb size={20} className='text-yellow-600' />
                             </div>
                             <div className="ml-3">
                                 <p className="text-sm text-yellow-700">
@@ -515,7 +516,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                     <div className="border-t-2 pt-6">
                         <div className="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6">
                             <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-700">
-                                <span>📎</span>
+                                <Paperclip size={28} />
                                 Bukti Risiko (Opsional)
                             </h3>
                             <p className="mb-4 text-sm text-gray-600">
@@ -586,12 +587,12 @@ export default function Form({ identifyRisk = null }: FormProps) {
                         >
                             {processing ? (
                                 <>
-                                    <span className="animate-spin">⏳</span>
+                                    <Hourglass className='animate-spin' />
                                     Menyimpan...
                                 </>
                             ) : (
                                 <>
-                                    <span>💾</span>
+                                    <Save />
                                     {identifyRisk ? 'Update Risiko' : 'Simpan Risiko'}
                                 </>
                             )}
@@ -599,9 +600,9 @@ export default function Form({ identifyRisk = null }: FormProps) {
 
                         <Link
                             href={route('identify-risk.index')}
-                            className="flex items-center gap-2 rounded-md border border-gray-300 px-8 py-3 font-medium text-gray-700 transition hover:bg-gray-50"
+                            className="flex items-center gap-2 rounded-md border border-gray-300 px-8 py-3 font-medium transition bg-red-600 text-white hover:bg-red-700"
                         >
-                            <span>❌</span>
+                            <X/>
                             Batal
                         </Link>
                     </div>
