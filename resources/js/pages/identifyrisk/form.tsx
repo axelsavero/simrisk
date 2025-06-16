@@ -203,7 +203,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
 
                 <form
                     onSubmit={submit}
-                    className="w-full space-y-6 rounded-xl border-2 border-gray-300 bg-white p-6 shadow-md dark:border-neutral-700 dark:bg-neutral-900"
+                    className="w-full space-y-6 rounded-xl border-2 border-gray-300 bg-white p-6 shadow-md"
                     encType="multipart/form-data" // 🔥 TAMBAHAN: Support file upload
                 >
                     {/* ID Identify */}
@@ -213,7 +213,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                             type="text"
                             value={data.id_identify}
                             onChange={(e) => setData('id_identify', e.target.value)}
-                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                             placeholder="Masukkan kode risiko"
                             required
                         />
@@ -226,7 +226,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                         <select
                             value={data.risk_category}
                             onChange={(e) => setData('risk_category', e.target.value)}
-                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                             required
                         >
                             <option value="">Pilih Kategori</option>
@@ -247,7 +247,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                                 type="date"
                                 value={data.identification_date_start}
                                 onChange={(e) => setData('identification_date_start', e.target.value)}
-                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 required
                             />
                             {errors.identification_date_start && <div className="mt-1 text-sm text-red-500">{errors.identification_date_start}</div>}
@@ -259,7 +259,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                                 type="date"
                                 value={data.identification_date_end}
                                 onChange={(e) => setData('identification_date_end', e.target.value)}
-                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 required
                             />
                             {errors.identification_date_end && <div className="mt-1 text-sm text-red-500">{errors.identification_date_end}</div>}
@@ -272,7 +272,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                         <textarea
                             value={data.description}
                             onChange={(e) => setData('description', e.target.value)}
-                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                             rows={4}
                             placeholder="Deskripsikan risiko secara detail..."
                             required
@@ -288,7 +288,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                                 <textarea
                                     value={item.description}
                                     onChange={(e) => handlePenyebabChange(index, e.target.value)}
-                                    className="flex-1 rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                                    className="flex-1 rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                     placeholder={`Penyebab ${index + 1}`}
                                     rows={2}
                                     required
@@ -323,7 +323,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                                     type="text"
                                     value={item.description}
                                     onChange={(e) => handleDampakKualitatifChange(index, e.target.value)}
-                                    className="flex-1 rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                                    className="flex-1 rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                     placeholder={`Dampak kualitatif ${index + 1}`}
                                     required
                                 />
@@ -355,7 +355,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                             <select
                                 value={data.probability}
                                 onChange={(e) => setData('probability', parseInt(e.target.value))}
-                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 required
                             >
                                 <option value={1}>1 - Sangat Rendah</option>
@@ -372,7 +372,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                             <select
                                 value={data.impact}
                                 onChange={(e) => setData('impact', parseInt(e.target.value))}
-                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 required
                             >
                                 <option value={1}>1 - Sangat Rendah</option>
@@ -401,7 +401,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                                 type="text"
                                 value={data.nama_risiko}
                                 onChange={(e) => setData('nama_risiko', e.target.value)}
-                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 placeholder="Nama pemilik risiko"
                             />
                             {errors.nama_risiko && <div className="mt-1 text-sm text-red-500">{errors.nama_risiko}</div>}
@@ -413,7 +413,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                                 type="text"
                                 value={data.jabatan_risiko}
                                 onChange={(e) => setData('jabatan_risiko', e.target.value)}
-                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 placeholder="Jabatan pemilik risiko"
                             />
                             {errors.jabatan_risiko && <div className="mt-1 text-sm text-red-500">{errors.jabatan_risiko}</div>}
@@ -427,7 +427,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                                 type="text"
                                 value={data.no_kontak}
                                 onChange={(e) => setData('no_kontak', e.target.value)}
-                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 placeholder="Nomor kontak"
                             />
                             {errors.no_kontak && <div className="mt-1 text-sm text-red-500">{errors.no_kontak}</div>}
@@ -439,7 +439,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                                 type="text"
                                 value={data.strategi}
                                 onChange={(e) => setData('strategi', e.target.value)}
-                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 placeholder="Strategi penanganan"
                             />
                             {errors.strategi && <div className="mt-1 text-sm text-red-500">{errors.strategi}</div>}
@@ -452,7 +452,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                             <select
                                 value={data.pengendalian_internal}
                                 onChange={(e) => setData('pengendalian_internal', e.target.value)}
-                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                             >
                                 <option value="">Pilih Jenis Pengendalian</option>
                                 <option value="Preventif">Preventif</option>
@@ -469,7 +469,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                                 type="number"
                                 value={data.biaya_penangan}
                                 onChange={(e) => setData('biaya_penangan', e.target.value)}
-                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 placeholder="Estimasi biaya"
                                 min="0"
                                 step="0.01"
@@ -487,7 +487,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                                     type="text"
                                     value={item.description}
                                     onChange={(e) => handlePenangananRisikoChange(index, e.target.value)}
-                                    className="flex-1 rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                                    className="flex-1 rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                     placeholder={`Penanganan risiko ${index + 1}`}
                                 />
                                 {data.penanganan_risiko.length > 1 && (
@@ -574,7 +574,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                             />
                             <span className="font-medium">Status Aktif</span>
                         </label>
-                        <small className="text-gray-500 dark:text-gray-400">Centang jika risiko ini masih aktif dipantau</small>
+                        <small className="text-gray-500">Centang jika risiko ini masih aktif dipantau</small>
                     </div>
 
                     {/* Submit Buttons */}
