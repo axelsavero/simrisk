@@ -36,8 +36,9 @@ class IdentifyRiskController extends Controller
         
         // Logic filtering yang lebih fleksibel untuk semua role
         if ($user->hasRole('super-admin')) {
-            // Super admin melihat semua data (termasuk draft untuk debugging)
-            // Tidak ada filter khusus
+            // Super admin melihat semua data )
+            $query = $query->whereNotIn('validation_status', [IdentifyRisk::STATUS_DRAFT])
+                      ->where('status', true);
         } elseif ($user->hasRole('owner-risk')) {
             // Owner-risk melihat semua risiko mereka (termasuk draft)
             $query = $query->where('status', true);
@@ -49,7 +50,7 @@ class IdentifyRiskController extends Controller
             $query = $query->approved()->where('status', true);
         }
 
-        $identifyRisks = $query->paginate(10)->through(fn ($risk) => [
+        $identifyRisks = $query->paginate(12)->through(fn ($risk) => [
             'id' => $risk->id,
             'id_identify' => $risk->id_identify,
             'status' => $risk->status,
@@ -93,9 +94,9 @@ class IdentifyRiskController extends Controller
         return Inertia::render('identifyrisk/index', [
             'identifyRisks' => $identifyRisks,
             'permissions' => [
-                'canCreate' => $user->hasRole('super-admin') || $user->hasRole('owner-risk'),
-                'canEdit' => $user->hasRole('super-admin') || $user->hasRole('owner-risk'),
-                'canDelete' => $user->hasRole('super-admin') || $user->hasRole('owner-risk'),
+                'canCreate' => $user->hasRole('super-admins') || $user->hasRole('owner-risk'),
+                'canEdit' => $user->hasRole('super-admins') || $user->hasRole('owner-risk'),
+                'canDelete' => $user->hasRole('super-admins') || $user->hasRole('owner-risk'),
                 'canSubmit' => $user->hasRole('owner-risk'),
                 'canValidate' => $user->hasRole('super-admin'),
                 'canApprove' => $user->hasRole('super-admin'),
