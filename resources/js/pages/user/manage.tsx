@@ -49,7 +49,7 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xl font-semibold">User Management</h3>
                     {isSuperAdmin && (
-                    <div className="border rounded-lg p-2 bg-[#12745A] text-white px-4 py-2 font-medium dark:bg-[#12745A] dark:text-white">
+                    <div className="border rounded-lg p-2 bg-[#12745A] text-white px-4 py-2 font-medium">
                      <Link
                           href="/user/manage/create"
                             className="btn btn-primary"
@@ -61,10 +61,10 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
 
                 </div>
 
-                <div className="rounded-xl border border-sidebar-border overflow-hidden shadow-sm bg-white dark:bg-neutral-900">
+                <div className="rounded-xl border border-sidebar-border overflow-hidden shadow-sm bg-white">
                     <div className="p-4 overflow-x-auto">
                        <table className="min-w-full border border-gray-300 text-sm text-left">
-                        <thead className="bg-gray-100 dark:bg-neutral-800">
+                        <thead className="bg-gray-100">
                             <tr>
                                 <th className="border px-4 py-2">ID</th>
                                 <th className="border px-4 py-2">Name</th>
@@ -76,7 +76,7 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
 
                             <tbody>
                                 {users.map((user: User) => (
-                                    <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-neutral-800">
+                                    <tr key={user.id} className="hover:bg-gray-50">
                                         <td className="border px-4 py-2">{user.id}</td>
                                         <td className="border px-4 py-2">{user.name}</td>
                                         <td className="border px-4 py-2">{user.email}</td>

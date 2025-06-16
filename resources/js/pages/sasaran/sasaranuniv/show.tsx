@@ -38,15 +38,13 @@ export default function Show({ sasaranUniv }: Props) {
                     </div>
                 </div>
 
-                <div className="rounded-xl border-2 border-gray-300 bg-white p-6 shadow-md dark:border-neutral-700 dark:bg-neutral-900">
+                <div className="rounded-xl border-2 border-gray-300 bg-white p-6 shadow-md">
                     {/* Header Info */}
                     <div className="mb-8 border-b pb-6">
                         <div className="mb-4 flex items-center gap-3">
                             <span className="text-3xl">📄</span>
                             <div>
-                                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                                    {sasaranUniv.nama_dokumen || 'Dokumen Sasaran Universitas'}
-                                </h3>
+                                <h3 className="text-xl font-semibold text-gray-900">{sasaranUniv.nama_dokumen || 'Dokumen Sasaran Universitas'}</h3>
                                 <p className="text-sm text-gray-500">
                                     ID: {sasaranUniv.id_sasaran_univ} • Dibuat: {new Date(sasaranUniv.created_at).toLocaleDateString('id-ID')}
                                 </p>
@@ -60,26 +58,26 @@ export default function Show({ sasaranUniv }: Props) {
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                         {/* Informasi Dokumen */}
                         <div className="space-y-4">
-                            <h4 className="border-b pb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">📋 Informasi Dokumen</h4>
+                            <h4 className="border-b pb-2 text-lg font-semibold text-gray-900">📋 Informasi Dokumen</h4>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Kategori</label>
-                                <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">{sasaranUniv.kategori}</p>
+                                <label className="block text-sm font-medium text-gray-700">Kategori</label>
+                                <p className="mt-1 text-sm text-gray-900">{sasaranUniv.kategori}</p>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama Dokumen</label>
-                                <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">{sasaranUniv.nama_dokumen || '-'}</p>
+                                <label className="block text-sm font-medium text-gray-700">Nama Dokumen</label>
+                                <p className="mt-1 text-sm text-gray-900">{sasaranUniv.nama_dokumen || '-'}</p>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nomor Dokumen</label>
-                                <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">{sasaranUniv.nomor_dokumen || '-'}</p>
+                                <label className="block text-sm font-medium text-gray-700">Nomor Dokumen</label>
+                                <p className="mt-1 text-sm text-gray-900">{sasaranUniv.nomor_dokumen || '-'}</p>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tanggal Dokumen</label>
-                                <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                                <label className="block text-sm font-medium text-gray-700">Tanggal Dokumen</label>
+                                <p className="mt-1 text-sm text-gray-900">
                                     {sasaranUniv.tanggal_dokumen
                                         ? new Date(sasaranUniv.tanggal_dokumen).toLocaleDateString('id-ID', {
                                               year: 'numeric',
@@ -92,8 +90,8 @@ export default function Show({ sasaranUniv }: Props) {
                         </div>
 
                         {/* File Information */}
-                        <div className="space-y-4 md:col-span-1 w-full">
-                            <h4 className="border-b pb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">📎 File Dokumen</h4>
+                        <div className="w-full space-y-4 md:col-span-1">
+                            <h4 className="border-b pb-2 text-lg font-semibold text-gray-900">📎 File Dokumen</h4>
 
                             {sasaranUniv.file_path ? (
                                 <div className="rounded-lg border border-green-200 bg-green-50 p-4">
@@ -101,7 +99,7 @@ export default function Show({ sasaranUniv }: Props) {
                                         <div className="flex items-center gap-3">
                                             <span className="text-2xl">📄</span>
                                             <div>
-                                                <p className="font-medium text-green-800 break-all">{sasaranUniv.file_path.split('/').pop()}</p>
+                                                <p className="font-medium break-all text-green-800">{sasaranUniv.file_path.split('/').pop()}</p>
                                                 <p className="text-sm text-green-600">File tersedia</p>
                                             </div>
                                         </div>
@@ -137,11 +135,11 @@ export default function Show({ sasaranUniv }: Props) {
 
                     {/* Metadata */}
                     <div className="mt-8 border-t pt-6">
-                        <h4 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">ℹ️ Informasi Sistem</h4>
+                        <h4 className="mb-4 text-lg font-semibold text-gray-900">ℹ️ Informasi Sistem</h4>
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Dibuat pada</label>
-                                <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                                <label className="block text-sm font-medium text-gray-700">Dibuat pada</label>
+                                <p className="mt-1 text-sm text-gray-900">
                                     {new Date(sasaranUniv.created_at).toLocaleString('id-ID', {
                                         year: 'numeric',
                                         month: 'long',
@@ -153,8 +151,8 @@ export default function Show({ sasaranUniv }: Props) {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Terakhir diupdate</label>
-                                <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                                <label className="block text-sm font-medium text-gray-700">Terakhir diupdate</label>
+                                <p className="mt-1 text-sm text-gray-900">
                                     {new Date(sasaranUniv.updated_at).toLocaleString('id-ID', {
                                         year: 'numeric',
                                         month: 'long',

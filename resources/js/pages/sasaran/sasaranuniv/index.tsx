@@ -65,7 +65,6 @@ export default function Index({ sasaranUnivs, flash, debug, error }: IndexProps)
                         Tambah Dokumen
                     </Link>
                 </div>
-
                 {/* Debug Info - Hapus setelah debugging */}
                 {debug && (
                     <div className="mb-4 rounded border border-yellow-300 bg-yellow-100 p-4">
@@ -76,7 +75,6 @@ export default function Index({ sasaranUnivs, flash, debug, error }: IndexProps)
                         <p>Data Array Length: {sasaranUnivs?.data?.length || 0}</p>
                     </div>
                 )}
-
                 {/* Error Message */}
                 {error && (
                     <div className="mb-6 rounded-lg border-l-4 border-red-400 bg-red-50 p-4">
@@ -86,7 +84,6 @@ export default function Index({ sasaranUnivs, flash, debug, error }: IndexProps)
                         </div>
                     </div>
                 )}
-
                 {/* Flash Messages */}
                 {flash?.success && (
                     <div className="mb-6 rounded-lg border-l-4 border-green-400 bg-green-50 p-4">
@@ -96,7 +93,6 @@ export default function Index({ sasaranUnivs, flash, debug, error }: IndexProps)
                         </div>
                     </div>
                 )}
-
                 {flash?.error && (
                     <div className="mb-6 rounded-lg border-l-4 border-red-400 bg-red-50 p-4">
                         <div className="flex">
@@ -105,9 +101,8 @@ export default function Index({ sasaranUnivs, flash, debug, error }: IndexProps)
                         </div>
                     </div>
                 )}
-
                 {/* Data Check and Table */}
-                <div className="rounded-xl border-2 border-gray-300 bg-white shadow-md dark:border-neutral-700 dark:bg-neutral-900">
+                <div className="rounded-xl border-2 border-gray-300 bg-white shadow-md">
                     {/* Check if sasaranUnivs exists */}
                     {!sasaranUnivs ? (
                         <div className="p-8 text-center">
@@ -131,48 +126,36 @@ export default function Index({ sasaranUnivs, flash, debug, error }: IndexProps)
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-gray-50 dark:bg-neutral-800">
+                                <thead className="bg-gray-50">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                                            ID
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                                            Kategori
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">ID</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Kategori</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                                             Nama Dokumen
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                                             Nomor Dokumen
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                                            Tanggal
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                                            File
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                                            Aksi
-                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Tanggal</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">File</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-200 bg-white dark:divide-neutral-700 dark:bg-neutral-900">
+                                <tbody className="divide-y divide-gray-200 bg-white">
                                     {sasaranUnivs.data.map((item, index) => (
-                                        <tr key={item.id_sasaran_univ || index} className="hover:bg-gray-50 dark:hover:bg-neutral-800">
-                                            <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900 dark:text-gray-100">
-                                                {item.id_sasaran_univ}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                                        <tr key={item.id_sasaran_univ || index} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">{item.id_sasaran_univ}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-900">
                                                 <span className="inline-flex rounded-full bg-blue-100 px-2 text-xs leading-5 font-semibold text-blue-800">
                                                     {item.kategori}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">{item.nama_dokumen || '-'}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">{item.nomor_dokumen || '-'}</td>
-                                            <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900 dark:text-gray-100">
+                                            <td className="px-6 py-4 text-sm text-gray-900">{item.nama_dokumen || '-'}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-900">{item.nomor_dokumen || '-'}</td>
+                                            <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
                                                 {item.tanggal_dokumen ? new Date(item.tanggal_dokumen).toLocaleDateString('id-ID') : '-'}
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                                            <td className="px-6 py-4 text-sm text-gray-900">
                                                 {item.file_path ? (
                                                     <a
                                                         href={`/storage/${item.file_path}`}
@@ -217,17 +200,14 @@ export default function Index({ sasaranUnivs, flash, debug, error }: IndexProps)
                             {/* Pagination Controls */}
                             {sasaranUnivs.links && sasaranUnivs.links.length > 3 && (
                                 <div className="flex items-center justify-between px-6 py-4">
-                                    <div className="text-sm text-gray-700 dark:text-gray-400">
+                                    <div className="text-sm text-gray-700">
                                         Menampilkan {sasaranUnivs.data.length} dari {sasaranUnivs.total} entri
                                     </div>
                                     <div className="flex space-x-2">
                                         {sasaranUnivs.links.map((link: any, index: number) => {
                                             if (!link.url) {
                                                 return (
-                                                    <span
-                                                        key={index}
-                                                        className="rounded-md border bg-gray-100 px-3 py-2 text-sm text-gray-400 dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-500"
-                                                    >
+                                                    <span key={index} className="rounded-md border bg-gray-100 px-3 py-2 text-sm text-gray-400">
                                                         {link.label === '&laquo; Previous' ? '«' : link.label === 'Next &raquo;' ? '»' : link.label}
                                                     </span>
                                                 );
@@ -240,7 +220,7 @@ export default function Index({ sasaranUnivs, flash, debug, error }: IndexProps)
                                                     className={`rounded-md border px-3 py-2 text-sm transition-colors ${
                                                         link.active
                                                             ? 'border-blue-600 bg-blue-600 text-white'
-                                                            : 'bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-gray-300 dark:hover:bg-neutral-800'
+                                                            : 'bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50'
                                                     }`}
                                                     dangerouslySetInnerHTML={{
                                                         __html:

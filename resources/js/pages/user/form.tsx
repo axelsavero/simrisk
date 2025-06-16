@@ -58,7 +58,7 @@ export default function Form({ allRoles, user = null }: FormProps) {
 
                 <form
                     onSubmit={submit}
-                    className="w-full space-y-6 rounded-xl border-2 border-gray-300 bg-white p-6 shadow-md dark:border-neutral-700 dark:bg-neutral-900"
+                    className="w-full space-y-6 rounded-xl border-2 border-gray-300 bg-white p-6 shadow-md"
                 >
                     <div>
                         <label className="mb-1 block font-medium">Nama</label>
@@ -66,7 +66,7 @@ export default function Form({ allRoles, user = null }: FormProps) {
                             type="text"
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
-                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         />
                         {errors.name && <div className="mt-1 text-sm text-red-500">{errors.name}</div>}
                     </div>
@@ -77,7 +77,7 @@ export default function Form({ allRoles, user = null }: FormProps) {
                             type="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
-                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         />
                         {errors.email && <div className="mt-1 text-sm text-red-500">{errors.email}</div>}
                     </div>
@@ -88,9 +88,9 @@ export default function Form({ allRoles, user = null }: FormProps) {
                             type="password"
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
-                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         />
-                        <small className="text-gray-500 dark:text-gray-400">
+                        <small className="text-gray-500">
                             {user ? 'Kosongkan jika tidak ingin mengubah password.' : 'Minimal 8 karakter.'}
                         </small>
                         {errors.password && <div className="mt-1 text-sm text-red-500">{errors.password}</div>}

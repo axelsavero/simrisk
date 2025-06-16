@@ -107,7 +107,7 @@ export default function Form({ sasaranUniv = null }: FormProps) {
 
                 <form
                     onSubmit={submit}
-                    className="w-full space-y-6 rounded-xl border-2 border-gray-300 bg-white p-6 shadow-md dark:border-neutral-700 dark:bg-neutral-900"
+                    className="w-full space-y-6 rounded-xl border-2 border-gray-300 bg-white p-6 shadow-md"
                     encType="multipart/form-data"
                 >
                     {/* Hidden method field untuk debugging */}
@@ -119,7 +119,7 @@ export default function Form({ sasaranUniv = null }: FormProps) {
                         <select
                             value={data.kategori}
                             onChange={(e) => setData('kategori', e.target.value)}
-                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                             required
                         >
                             <option value="">Pilih Kategori</option>
@@ -141,7 +141,7 @@ export default function Form({ sasaranUniv = null }: FormProps) {
                                 type="text"
                                 value={data.nama_dokumen}
                                 onChange={(e) => setData('nama_dokumen', e.target.value)}
-                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 placeholder="Masukkan nama dokumen"
                             />
                             {errors.nama_dokumen && <div className="mt-1 text-sm text-red-500">{errors.nama_dokumen}</div>}
@@ -153,7 +153,7 @@ export default function Form({ sasaranUniv = null }: FormProps) {
                                 type="text"
                                 value={data.nomor_dokumen}
                                 onChange={(e) => setData('nomor_dokumen', e.target.value)}
-                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-700"
+                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 placeholder="Masukkan nomor dokumen"
                             />
                             {errors.nomor_dokumen && <div className="mt-1 text-sm text-red-500">{errors.nomor_dokumen}</div>}
@@ -167,7 +167,7 @@ export default function Form({ sasaranUniv = null }: FormProps) {
                             type="date"
                             value={data.tanggal_dokumen}
                             onChange={(e) => setData('tanggal_dokumen', e.target.value)}
-                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-green-500 focus:outline-none dark:border-neutral-700"
+                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-green-500 focus:outline-none"
                         />
                         {errors.tanggal_dokumen && <div className="mt-1 text-sm text-red-500">{errors.tanggal_dokumen}</div>}
                     </div>
