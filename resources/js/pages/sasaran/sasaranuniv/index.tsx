@@ -3,6 +3,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
+import Swal from 'sweetalert2';
 import { CircleCheck, File, FilePlus, FileText, ScanSearch, SquarePen, Trash2, X } from 'lucide-react';
 
 interface SasaranUniv {
@@ -41,10 +42,21 @@ export default function Index({ sasaranUnivs, flash, debug, error }: IndexProps)
     console.log('Props received:', { sasaranUnivs, flash, debug, error });
 
     const handleDelete = (id: number) => {
-        if (confirm('Yakin ingin menghapus data ini?')) {
+    Swal.fire({
+        title: 'Hapus Data?',
+        text: 'Yakin ingin menghapus data ini?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#aaa',
+        confirmButtonText: 'Hapus',
+        cancelButtonText: 'Batal',
+    }).then((result) => {
+        if (result.isConfirmed) {
             router.delete(route('sasaran-univ.destroy', id));
         }
-    };
+    });
+};
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },

@@ -3,9 +3,30 @@
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, IdentifyRisk } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
+import {
+    Calendar,
+    ChartColumnIncreasing,
+    CheckCircle2,
+    CircleCheck,
+    CircleHelp,
+    CirclePlus,
+    ClipboardX,
+    Eye,
+    FilePlus,
+    Hourglass,
+    IdCard,
+    Pencil,
+    Search,
+    Shield,
+    ShieldAlert,
+    SquarePen,
+    Trash2,
+    Upload,
+    X,
+} from 'lucide-react';
 import React, { useState } from 'react';
+import Swal from 'sweetalert2';
 import '../../../css/IdentifyRiskIndex.css';
-import { Calendar, ChartColumnIncreasing, CheckCircle2, CircleCheck, CircleHelp, CirclePlus, ClipboardX, Eye, FilePlus, Hourglass, IdCard, Pencil, Search, Shield, SquarePen, Trash2, Upload, X } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -63,7 +84,7 @@ export default function Index() {
     if (!identifyRisks) {
         return (
             <div className="empty-state">
-                <ChartColumnIncreasing size={28} className='empty-icon' />
+                <ChartColumnIncreasing size={28} className="empty-icon" />
                 <h3>Data Tidak Tersedia</h3>
                 <p>Data identifikasi risiko tidak tersedia saat ini.</p>
             </div>
@@ -71,56 +92,83 @@ export default function Index() {
     }
 
     function deleteItem(item: IdentifyRisk) {
-        if (confirm(`Yakin ingin menghapus identifikasi risiko "${item.id_identify}"?`)) {
-            router.delete(route('identify-risk.destroy', item.id), {
-                preserveScroll: true,
-            });
-        }
+        Swal.fire({
+            title: 'Hapus Risiko?',
+            text: `Yakin ingin menghapus identifikasi risiko "${item.id_identify}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#aaa',
+            confirmButtonText: 'Hapus',
+            cancelButtonText: 'Batal',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.delete(route('identify-risk.destroy', item.id), {
+                    preserveScroll: true,
+                });
+            }
+        });
     }
 
     function approveItem(item: IdentifyRisk) {
-        if (confirm(`Yakin ingin menyetujui risiko "${item.id_identify}"?`)) {
-            router.post(
-                route('identify-risk.approve', item.id),
-                {},
-                {
-                    preserveScroll: true,
-                },
-            );
-        }
-    }
-
-    function rejectItem(item: IdentifyRisk) {
-        const reason = prompt(`Masukkan alasan penolakan untuk risiko "${item.id_identify}":`);
-        if (reason !== null) {
-            router.post(
-                route('identify-risk.reject', item.id),
-                {
-                    rejection_reason: reason,
-                },
-                {
-                    preserveScroll: true,
-                },
-            );
-        }
+        Swal.fire({
+            title: 'Setujui Risiko?',
+            text: `Yakin ingin menyetujui risiko "${item.id_identify}"?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#16a34a',
+            cancelButtonColor: '#aaa',
+            confirmButtonText: 'Setujui',
+            cancelButtonText: 'Batal',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.post(route('identify-risk.approve', item.id), {}, { preserveScroll: true });
+            }
+        });
     }
 
     function submitItem(item: IdentifyRisk) {
-        if (confirm(`Yakin ingin mengirim risiko "${item.id_identify}" untuk validasi?`)) {
-            router.post(
-                route('identify-risk.submit', item.id),
-                {},
-                {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        console.log('✅ Risiko berhasil dikirim untuk validasi');
-                    },
-                    onError: (errors) => {
-                        console.error('❌ Gagal mengirim risiko:', errors);
-                    },
-                },
-            );
-        }
+        Swal.fire({
+            title: 'Kirim Risiko?',
+            text: `Yakin ingin mengirim risiko "${item.id_identify}" untuk validasi?`,
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#2563eb',
+            cancelButtonColor: '#aaa',
+            confirmButtonText: 'Kirim',
+            cancelButtonText: 'Batal',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.post(route('identify-risk.submit', item.id), {}, { preserveScroll: true });
+            }
+        });
+    }
+
+    function rejectItem(item: IdentifyRisk) {
+        Swal.fire({
+            title: 'Tolak Risiko',
+            input: 'textarea',
+            inputLabel: `Masukkan alasan penolakan untuk risiko "${item.id_identify}"`,
+            inputPlaceholder: 'Tuliskan alasan penolakan...',
+            inputAttributes: {
+                'aria-label': 'Alasan penolakan',
+            },
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#aaa',
+            confirmButtonText: 'Tolak',
+            cancelButtonText: 'Batal',
+            preConfirm: (reason) => {
+                if (!reason) {
+                    Swal.showValidationMessage('Alasan penolakan harus diisi');
+                }
+                return reason;
+            },
+        }).then((result) => {
+            if (result.isConfirmed && result.value) {
+                router.post(route('identify-risk.reject', item.id), { rejection_reason: result.value }, { preserveScroll: true });
+            }
+        });
     }
 
     const showEditDeleteActions = permissions?.canEdit || permissions?.canDelete;
@@ -141,11 +189,11 @@ export default function Index() {
                 return { label: 'Draft', color: 'draft', icon: <SquarePen /> };
             case 'submitted': // TREAT submitted sebagai pending
             case 'pending':
-                return { label: 'Menunggu Validasi', color: 'warning', icon: <Hourglass/> };
+                return { label: 'Menunggu Validasi', color: 'warning', icon: <Hourglass /> };
             case 'approved':
-                return { label: 'Disetujui', color: 'success', icon: <CheckCircle2/> };
+                return { label: 'Disetujui', color: 'success', icon: <CheckCircle2 /> };
             case 'rejected':
-                return { label: 'Ditolak', color: 'danger', icon: <X/> };
+                return { label: 'Ditolak', color: 'danger', icon: <X /> };
             default:
                 return { label: 'Unknown', color: 'secondary', icon: <CircleHelp /> };
         }
@@ -174,14 +222,14 @@ export default function Index() {
                 <div className="header-content">
                     <div className="header-info">
                         <h1 className="page-title">
-                            <Shield size={40} className="title-icon" />
+                            <ShieldAlert size={40} className="title-icon" />
                             Manajemen Risiko
                         </h1>
                         <p className="page-subtitle">Kelola dan pantau identifikasi risiko organisasi Anda</p>
                     </div>
                     {permissions?.canCreate && (
                         <Link href={route('identify-risk.create')} className="btn btn-primary btn-create">
-                            <CirclePlus size={28} className='btn-icon' />
+                            <CirclePlus size={28} className="btn-icon" />
                             Tambah Risiko Baru
                         </Link>
                     )}
@@ -191,14 +239,14 @@ export default function Index() {
             {/* 🔥 OPSI 2: Stats Cards dengan logic submitted = pending */}
             <div className="stats-grid">
                 <div className="stat-card stat-total">
-                    <ChartColumnIncreasing size={40} className='stat-icon text-blue-600' />
+                    <ChartColumnIncreasing size={40} className="stat-icon text-blue-600" />
                     <div className="stat-content">
                         <span className="stat-number">{identifyRisks.data.length}</span>
                         <span className="stat-label">Total Risiko</span>
                     </div>
                 </div>
                 <div className="stat-card stat-draft">
-                    <SquarePen size={40} className='stat-icon' />
+                    <SquarePen size={40} className="stat-icon" />
                     <div className="stat-content">
                         <span className="stat-number">
                             {identifyRisks.data.filter((item: IdentifyRisk) => item.validation_status === 'draft').length}
@@ -208,7 +256,7 @@ export default function Index() {
                 </div>
                 {/* Include both submitted and pending as "Pending" */}
                 <div className="stat-card stat-pending">
-                    <Hourglass size={40} className='stat-icon text-yellow-500' />
+                    <Hourglass size={40} className="stat-icon text-yellow-500" />
                     <div className="stat-content">
                         <span className="stat-number">
                             {
@@ -221,7 +269,7 @@ export default function Index() {
                     </div>
                 </div>
                 <div className="stat-card stat-approved">
-                    <CircleCheck size={40} className='stat-icon text-green-600' />
+                    <CircleCheck size={40} className="stat-icon text-green-600" />
                     <div className="stat-content">
                         <span className="stat-number">
                             {identifyRisks.data.filter((item: IdentifyRisk) => item.validation_status === 'approved').length}
@@ -230,7 +278,7 @@ export default function Index() {
                     </div>
                 </div>
                 <div className="stat-card stat-rejected">
-                    <ClipboardX size={40} className='stat-icon text-red-600' />
+                    <ClipboardX size={40} className="stat-icon text-red-600" />
                     <div className="stat-content">
                         <span className="stat-number">
                             {identifyRisks.data.filter((item: IdentifyRisk) => item.validation_status === 'rejected').length}
@@ -250,7 +298,7 @@ export default function Index() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="search-input"
                     />
-                    <Search size={20} className='search-icon' />
+                    <Search size={20} className="search-icon" />
                 </div>
                 <div className="filter-tabs">
                     <button className={`filter-tab ${filterStatus === 'all' ? 'active' : ''}`} onClick={() => setFilterStatus('all')}>
@@ -286,7 +334,7 @@ export default function Index() {
                                 {/* Card Header */}
                                 <div className="card-header">
                                     <div className="risk-id">
-                                        <IdCard className='id-icon' />
+                                        <IdCard className="id-icon" />
                                         {item.id_identify}
                                         {item.validation_status === 'draft' && <span className="draft-badge"></span>}
                                     </div>
@@ -379,7 +427,7 @@ export default function Index() {
                                             {permissions?.canReject && (
                                                 <button
                                                     onClick={() => rejectItem(item)}
-                                                    className="action-btn bg-red-600 hover:bg-red-700 text-white"
+                                                    className="action-btn bg-red-600 text-white hover:bg-red-700"
                                                     title="Tolak"
                                                 >
                                                     <X /> Tolak
@@ -394,7 +442,7 @@ export default function Index() {
                 ) : (
                     <div className="empty-state">
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <Search size={40} className='empty-icon' />
+                            <Search size={40} className="empty-icon" />
                             <h3>Tidak Ada Risiko Ditemukan</h3>
                         </div>
                         <p>

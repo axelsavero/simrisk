@@ -38,8 +38,8 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
             <Head title="User Management" />
             <div className="flex flex-col gap-4 p-4">
                 {/* Flash Message */}
-                {flash?.success && <div className="alert alert-success">{flash.success}</div>}
-                {flash?.error && <div className="alert alert-danger">{flash.error}</div>}
+                {flash?.success && <div className="rounded border border-green-400 bg-green-100 px-4 py-3 text-green-700">{flash.success}</div>}
+                {flash?.error && <div className="rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700">{flash.error}</div>}
 
                 <div className="mb-4 flex items-center justify-between">
                     <h3 className="text-xl font-semibold">User Management</h3>
