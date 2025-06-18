@@ -136,8 +136,8 @@ export default function LaporanIndex() {
                     </select>
                 </div>
                 {/* Table */}
-                <div className="w-full overflow-x-auto rounded bg-white p-4">
-                    <table className="w-full min-w-[1200px] border border-black text-xs">
+                <div className="w-full rounded bg-white p-4 overflow-x-hidden">
+                    <table className="w-full border border-black text-xs">
                         <thead>
                             <tr>
                                 <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 font-bold">
@@ -195,23 +195,23 @@ export default function LaporanIndex() {
                         <tbody>
                             {laporanData.map((row) => (
                                 <tr key={row.no}>
-                                    <td className="border border-black px-2 py-1 align-top">{row.no}</td>
-                                    <td className="border border-black px-2 py-1 align-top">{row.kode}</td>
-                                    <td className="border border-black px-2 py-1 align-top">{row.deskripsi}</td>
-                                    <td className="border border-black px-2 py-1 align-top whitespace-pre-line">{row.penanganan}</td>
-                                    <td className="border border-black px-2 py-1 align-top">{row.jadwal}</td>
-                                    <td className="border border-black px-2 py-1 align-top">{row.ket}</td>
-                                    <td className="border border-black px-2 py-1 align-top">{row.ket}</td>
-                                    <td className="border border-black px-2 py-1 align-top">{row.rencana}</td>
-                                    <td className="border border-black px-2 py-1 align-top">{row.realisasi}</td>
-                                    <td className="border border-black px-2 py-1 align-top">{row.varian}</td>
-                                    <td className="border border-black px-2 py-1 align-top">{row.status}</td>
-                                    <td className="border border-black px-2 py-1 text-center align-top">{row.diperiksa_spi ? '✓' : ''}</td>
-                                    <td className="border border-black px-2 py-1 text-center align-top">{row.diperiksa_urm ? '✓' : ''}</td>
-                                    <td className="border border-black px-2 py-1 align-top">{row.pemilik}</td>
-                                    <td className="border border-black px-2 py-1 align-top">{row.pelaksana}</td>
-                                    <td className="border border-black px-2 py-1 align-top">{row.penanggung}</td>
-                                    <td className="border border-black px-2 py-1 align-top">{row.rekomendasi}</td>
+                                    <td className="border border-black px-2 py-1 align-top break-words whitespace-normal">{row.no}</td>
+                                    <td className="border border-black px-2 py-1 align-top break-words whitespace-normal">{row.kode}</td>
+                                    <td className="border border-black px-2 py-1 align-top break-words whitespace-normal">{row.deskripsi}</td>
+                                    <td className="border border-black px-2 py-1 align-top break-words whitespace-pre-line whitespace-normal">{row.penanganan}</td>
+                                    <td className="border border-black px-2 py-1 align-top break-words whitespace-normal">{row.jadwal}</td>
+                                    <td className="border border-black px-2 py-1 align-top break-words whitespace-normal">{row.ket}</td>
+                                    <td className="border border-black px-2 py-1 align-top break-words whitespace-normal">{row.ket}</td>
+                                    <td className="border border-black px-2 py-1 align-top break-words whitespace-normal">{row.rencana}</td>
+                                    <td className="border border-black px-2 py-1 align-top break-words whitespace-normal">{row.realisasi}</td>
+                                    <td className="border border-black px-2 py-1 align-top break-words whitespace-normal">{row.varian}</td>
+                                    <td className="border border-black px-2 py-1 align-top break-words whitespace-normal">{row.status}</td>
+                                    <td className="border border-black px-2 py-1 text-center align-top break-words whitespace-normal">{row.diperiksa_spi ? '✓' : ''}</td>
+                                    <td className="border border-black px-2 py-1 text-center align-top break-words whitespace-normal">{row.diperiksa_urm ? '✓' : ''}</td>
+                                    <td className="border border-black px-2 py-1 align-top break-words whitespace-normal">{row.pemilik}</td>
+                                    <td className="border border-black px-2 py-1 align-top break-words whitespace-normal">{row.pelaksana}</td>
+                                    <td className="border border-black px-2 py-1 align-top break-words whitespace-normal">{row.penanggung}</td>
+                                    <td className="border border-black px-2 py-1 align-top break-words whitespace-normal">{row.rekomendasi}</td>
                                 </tr>
                             ))}
                         </tbody>
