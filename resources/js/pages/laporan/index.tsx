@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { Head } from '@inertiajs/react';
+import { useState } from 'react';
 
 const laporanData = [
     {
@@ -45,16 +45,14 @@ const laporanData = [
         pemilik: 'Rafuddin Syam',
         pelaksana: 'UPT TIK',
         penanggung: 'UPT TIK',
-        rekomendasi: 'Peningkatan infrastruktur jaringan internet server, router, dan penambahan switch, access point, dan mengoptimalkan pengelolaan bandwidth untuk memastikan distribusi bandwidth yang optimal.',
+        rekomendasi:
+            'Peningkatan infrastruktur jaringan internet server, router, dan penambahan switch, access point, dan mengoptimalkan pengelolaan bandwidth untuk memastikan distribusi bandwidth yang optimal.',
     },
     {
         no: 3,
         kode: '003_TIK_UNJ_XL_2024',
         deskripsi: 'Pengelolaan kerja di dunia admin dan dunia kerja melibatkan data/arsip aset digital.',
-        penanganan: [
-            '1) Pembuatan peraturan minimal pengelolaan kerja',
-            '2) Melakukan interview mendalam terkait pengalaman kerja',
-        ].join('\n'),
+        penanganan: ['1) Pembuatan peraturan minimal pengelolaan kerja', '2) Melakukan interview mendalam terkait pengalaman kerja'].join('\n'),
         jadwal: 'SESUAI',
         ket: 'BAK',
         rencana: '100.000.000',
@@ -72,9 +70,7 @@ const laporanData = [
         no: 4,
         kode: '004_TIK_UNJ_XL_2024',
         deskripsi: 'Belum terkelolanya pengadaan dan inventarisasi aset dengan baik',
-        penanganan: [
-            'Pengembangan sistem informasi aset yang handal',
-        ].join('\n'),
+        penanganan: ['Pengembangan sistem informasi aset yang handal'].join('\n'),
         jadwal: 'SESUAI',
         ket: 'BAK',
         rencana: '80.000.000',
@@ -86,7 +82,8 @@ const laporanData = [
         pemilik: 'Rafuddin Syam',
         pelaksana: 'UPT TIK',
         penanggung: 'UPT TIK',
-        rekomendasi: 'Subbagian Inventarisasi dan Pengelolaan Aset Bagian Aset melakukan pendataan dan pengelolaan aset secara periodik terhadap pemanfaatan aset.',
+        rekomendasi:
+            'Subbagian Inventarisasi dan Pengelolaan Aset Bagian Aset melakukan pendataan dan pengelolaan aset secara periodik terhadap pemanfaatan aset.',
     },
     {
         no: 5,
@@ -121,50 +118,78 @@ export default function LaporanIndex() {
             <Head title="Laporan" />
             <div className="min-h-screen bg-gray-100 p-4">
                 {/* Filter */}
-                <div className="flex flex-col md:flex-row gap-4 mb-6 justify-center">
-                    <select className="w-64 rounded border px-4 py-3 text-lg" value={unit} onChange={e => setUnit(e.target.value)}>
+                <div className="mb-6 flex flex-col justify-center gap-4 md:flex-row">
+                    <select className="w-64 rounded border px-4 py-3 text-lg" value={unit} onChange={(e) => setUnit(e.target.value)}>
                         <option value="">Pilih Unit</option>
                         <option value="UPT TIK">UPT TIK</option>
                         <option value="Bagian Aset">Bagian Aset</option>
                     </select>
-                    <select className="w-64 rounded border px-4 py-3 text-lg" value={kategori} onChange={e => setKategori(e.target.value)}>
+                    <select className="w-64 rounded border px-4 py-3 text-lg" value={kategori} onChange={(e) => setKategori(e.target.value)}>
                         <option value="">Kategori</option>
                         <option value="TI">TI</option>
                         <option value="Aset">Aset</option>
                     </select>
-                    <select className="w-64 rounded border px-4 py-3 text-lg" value={tahun} onChange={e => setTahun(e.target.value)}>
+                    <select className="w-64 rounded border px-4 py-3 text-lg" value={tahun} onChange={(e) => setTahun(e.target.value)}>
                         <option value="">Tahun</option>
                         <option value="2024">2024</option>
                         <option value="2025">2025</option>
                     </select>
                 </div>
                 {/* Table */}
-                <div className="overflow-x-auto rounded bg-white p-4">
-                    <table className="min-w-[1200px] w-full border border-black text-xs">
+                <div className="w-full overflow-x-auto rounded bg-white p-4">
+                    <table className="w-full min-w-[1200px] border border-black text-xs">
                         <thead>
                             <tr>
-                                <th rowSpan={2} className="border border-black px-2 py-1 bg-gray-100 font-bold">NO.</th>
-                                <th rowSpan={2} className="border border-black px-2 py-1 bg-gray-100 font-bold">KODE RISIKO</th>
-                                <th rowSpan={2} className="border border-black px-2 py-1 bg-gray-100 font-bold">DESKRIPSI ATAU KEJADIAN RISIKO</th>
-                                <th rowSpan={2} className="border border-black px-2 py-1 bg-gray-100 font-bold">PENANGANAN RISIKO</th>
-                                <th colSpan={2} className="border border-black px-2 py-1 bg-gray-100 font-bold">JADWAL DAN PELAKSANAAN</th>
-                                <th rowSpan={2} className="border border-black px-2 py-1 bg-gray-100 font-bold">KET</th>
-                                <th colSpan={2} className="border border-black px-2 py-1 bg-gray-100 font-bold">BIAYA PENANGANAN RISIKO (RP)</th>
-                                <th rowSpan={2} className="border border-black px-2 py-1 bg-gray-100 font-bold">VARIANS BIAYA</th>
-                                <th rowSpan={2} className="border border-black px-2 py-1 bg-gray-100 font-bold">STATUS PENGENDALIAN</th>
-                                <th colSpan={2} className="border border-black px-2 py-1 bg-gray-100 font-bold">DIPERIKSA OLEH</th>
-                                <th rowSpan={2} className="border border-black px-2 py-1 bg-gray-100 font-bold">PEMILIK RISIKO</th>
-                                <th rowSpan={2} className="border border-black px-2 py-1 bg-gray-100 font-bold">PELAKSANA PENANGANAN RISIKO</th>
-                                <th rowSpan={2} className="border border-black px-2 py-1 bg-gray-100 font-bold">PENANGGUNG JAWAB PENANGANAN RISIKO</th>
-                                <th rowSpan={2} className="border border-black px-2 py-1 bg-gray-100 font-bold">REKOMENDASI / TINDAKAN LEBIH LANJUT</th>
+                                <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 font-bold">
+                                    NO.
+                                </th>
+                                <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 font-bold">
+                                    KODE RISIKO
+                                </th>
+                                <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 font-bold">
+                                    DESKRIPSI ATAU KEJADIAN RISIKO
+                                </th>
+                                <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 font-bold">
+                                    PENANGANAN RISIKO
+                                </th>
+                                <th colSpan={2} className="border border-black bg-gray-100 px-2 py-1 font-bold">
+                                    JADWAL DAN PELAKSANAAN
+                                </th>
+                                <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 font-bold">
+                                    KET
+                                </th>
+                                <th colSpan={2} className="border border-black bg-gray-100 px-2 py-1 font-bold">
+                                    BIAYA PENANGANAN RISIKO (RP)
+                                </th>
+                                <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 font-bold">
+                                    VARIANS BIAYA
+                                </th>
+                                <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 font-bold">
+                                    STATUS PENGENDALIAN
+                                </th>
+                                <th colSpan={2} className="border border-black bg-gray-100 px-2 py-1 font-bold">
+                                    DIPERIKSA OLEH
+                                </th>
+                                <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 font-bold">
+                                    PEMILIK RISIKO
+                                </th>
+                                <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 font-bold">
+                                    PELAKSANA PENANGANAN RISIKO
+                                </th>
+                                <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 font-bold">
+                                    PENANGGUNG JAWAB PENANGANAN RISIKO
+                                </th>
+                                <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 font-bold">
+                                    REKOMENDASI / TINDAKAN LEBIH LANJUT
+                                </th>
                             </tr>
                             <tr>
-                                <th className="border border-black px-2 py-1 bg-gray-100 font-bold">SESUAI / TIDAK SESUAI</th>
-                                <th className="border border-black px-2 py-1 bg-gray-100 font-bold">KET</th>
-                                <th className="border border-black px-2 py-1 bg-gray-100 font-bold">RENCANA</th>
-                                <th className="border border-black px-2 py-1 bg-gray-100 font-bold">REALISASI</th>
-                                <th className="border border-black px-2 py-1 bg-gray-100 font-bold">SPI</th>
-                                <th className="border border-black px-2 py-1 bg-gray-100 font-bold">URM</th>
+                                <th className="border border-black bg-gray-100 px-2 py-1 font-bold">SESUAI / TIDAK SESUAI</th>
+                                <th className="border border-black bg-gray-100 px-2 py-1 font-bold">KET</th>
+                                <th className="border border-black bg-gray-100 px-2 py-1 font-bold">RENCANA</th>
+                                <th className="border border-black bg-gray-100 px-2 py-1 font-bold">REALISASI</th>
+                                <th className="border border-black bg-gray-100 px-2 py-1 font-bold">SPI</th>
+                                <th className="border border-black bg-gray-100 px-2 py-1 font-bold">URM</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -181,8 +206,8 @@ export default function LaporanIndex() {
                                     <td className="border border-black px-2 py-1 align-top">{row.realisasi}</td>
                                     <td className="border border-black px-2 py-1 align-top">{row.varian}</td>
                                     <td className="border border-black px-2 py-1 align-top">{row.status}</td>
-                                    <td className="border border-black px-2 py-1 align-top text-center">{row.diperiksa_spi ? '✓' : ''}</td>
-                                    <td className="border border-black px-2 py-1 align-top text-center">{row.diperiksa_urm ? '✓' : ''}</td>
+                                    <td className="border border-black px-2 py-1 text-center align-top">{row.diperiksa_spi ? '✓' : ''}</td>
+                                    <td className="border border-black px-2 py-1 text-center align-top">{row.diperiksa_urm ? '✓' : ''}</td>
                                     <td className="border border-black px-2 py-1 align-top">{row.pemilik}</td>
                                     <td className="border border-black px-2 py-1 align-top">{row.pelaksana}</td>
                                     <td className="border border-black px-2 py-1 align-top">{row.penanggung}</td>
@@ -193,11 +218,8 @@ export default function LaporanIndex() {
                     </table>
                 </div>
                 {/* Tombol Cetak */}
-                <div className="flex justify-center mt-8">
-                    <button
-                        className="rounded border bg-white px-12 py-4 text-lg shadow hover:bg-gray-200 transition"
-                        onClick={() => window.print()}
-                    >
+                <div className="mt-8 flex justify-center">
+                    <button className="rounded border bg-white px-12 py-4 text-lg shadow transition hover:bg-gray-200" onClick={() => window.print()}>
                         Cetak
                     </button>
                 </div>

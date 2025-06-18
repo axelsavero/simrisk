@@ -10,16 +10,16 @@ use Carbon\Carbon;
 
 class LaporanController extends Controller
 {
-    public function __construct()
-    {
-        // Middleware untuk akses laporan
-        $this->middleware(function ($request, $next) {
-            if (!Auth::check()) {
-                abort(403, 'AKSES DITOLAK: Anda harus login terlebih dahulu.');
-            }
-            return $next($request);
-        });
-    }
+    // public function __construct()
+    // {
+    //     // Middleware untuk akses laporan
+    //     $this->middleware(function ($request, $next) {
+    //         if (!Auth::check()) {
+    //             abort(403, 'AKSES DITOLAK: Anda harus login terlebih dahulu.');
+    //         }
+    //         return $next($request);
+    //     });
+    // }
 
     /**
      * Halaman utama laporan dengan pilihan jenis laporan
