@@ -2,9 +2,11 @@
 
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserManageController;
-use App\Http\Controllers\IdentifyRiskController;
 use App\Http\Controllers\SasaranUnivController;
+use App\Http\Controllers\IdentifyRiskController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -56,8 +58,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('sasaran-univ.download-dokumen');
 });
 
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/api/risk/{id}/detail', [DashboardController::class, 'getRiskDetail'])->name('risk.detail');
+Route::post('/dashboard/export', [DashboardController::class, 'exportDashboard'])->name('dashboard.export');
 
 
+
+// Routes untuk laporan
+Route::prefix('laporan')->name('laporan.')->group(function () {
+    Route::get('/', [LaporanController::class, 'index'])->name('index');
+    Route::get('/risk-matrix', [LaporanController::class, 'riskMatrix'])->name('risk-matrix');
+    Route::get('/risk-detail', [LaporanController::class, 'riskDetail'])->name('risk-detail');
+    Route::get('/export-pdf', [LaporanController::class, 'exportPdf'])->name('export-pdf');
+    Route::get('/export-excel', [LaporanController::class, 'exportExcel'])->name('export-excel');
+});
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

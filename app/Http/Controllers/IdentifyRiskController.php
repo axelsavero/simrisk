@@ -139,6 +139,11 @@ class IdentifyRiskController extends Controller
             'penanganan_risiko.*.description' => 'required|string|max:1000',
             'bukti_risiko_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png|max:10240',
             'bukti_risiko_nama' => 'nullable|string|max:255',
+            'unit_kerja' => 'nullable|string|max:255',
+            'kategori_risiko' => 'nullable|string|max:255', 
+            'tahun' => 'nullable|integer|min:2020|max:' . (date('Y') + 5),
+            'probability_residual' => 'nullable|integer|min:1|max:5',
+            'impact_residual' => 'nullable|integer|min:1|max:5',
         ]);
 
         // Calculate risk level
@@ -346,6 +351,11 @@ class IdentifyRiskController extends Controller
             'penanganan_risiko.*.description' => 'required|string|max:1000',
             'bukti_risiko_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png|max:10240',
             'bukti_risiko_nama' => 'nullable|string|max:255',
+            'unit_kerja' => 'nullable|string|max:255',
+            'kategori_risiko' => 'nullable|string|max:255', 
+            'tahun' => 'nullable|integer|min:2020|max:' . (date('Y') + 5),
+            'probability_residual' => 'nullable|integer|min:1|max:5',
+            'impact_residual' => 'nullable|integer|min:1|max:5',
         ]);
 
         // Recalculate level
@@ -393,6 +403,10 @@ class IdentifyRiskController extends Controller
                     ->with('error', 'Gagal mengupload bukti: ' . $e->getMessage());
             }
         }
+
+        // if ($validated['probability_residual'] && $validated['impact_residual']) {
+        // $validated['level_residual'] = (int)$validated['probability_residual'] * (int)$validated['impact_residual'];
+        //  }
 
         // Update relationships - hapus lama, buat baru
         $identifyRisk->penyebab()->delete();

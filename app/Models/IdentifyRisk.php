@@ -45,6 +45,17 @@ class IdentifyRisk extends Model
         'validation_processed_at',    
         'rejection_reason', 
         'bukti_files',
+        'unit_kerja',
+        'kategori_risiko', 
+        'tahun',
+        'probability_residual',
+        'impact_residual',
+        'level_residual',
+        'status_mitigasi', // ✅ Added missing field
+        'pemilik_risiko',
+        'rencana_mitigasi',
+        'target_mitigasi',
+        'created_by',
     ];
 
     protected $casts = [
@@ -54,7 +65,11 @@ class IdentifyRisk extends Model
         'probability' => 'integer',
         'impact' => 'integer',
         'level' => 'integer',
+        'probability_residual' => 'integer',
+        'impact_residual' => 'integer',
+        'level_residual' => 'integer',
         'validation_processed_at' => 'datetime',
+        'target_mitigasi' => 'date',
         'deleted_at' => 'datetime',
         'biaya_penangan' => 'decimal:2',
         'bukti_files' => 'array', 
@@ -81,8 +96,13 @@ class IdentifyRisk extends Model
         return $this->belongsTo(User::class, 'validation_processed_by');
     }
 
-    //  Enhanced Scopes untuk handle submitted = pending
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 
+    // SCOPES FOR VALIDATION STATUS
+    
     /**
      * Scope untuk risiko draft
      */
@@ -93,7 +113,7 @@ class IdentifyRisk extends Model
 
     /**
      * Scope untuk risiko yang sudah dikirim (submitted/pending)
-     *   Include both submitted dan pending
+     * Include both submitted dan pending
      */
     public function scopeSubmitted(Builder $query): Builder
     {
@@ -102,7 +122,7 @@ class IdentifyRisk extends Model
 
     /**
      * Scope untuk risiko menunggu validasi
-     *   Unified scope untuk pending (include submitted)
+     * Unified scope untuk pending (include submitted)
      */
     public function scopePendingValidation(Builder $query): Builder
     {
@@ -110,7 +130,7 @@ class IdentifyRisk extends Model
     }
 
     /**
-     *   New scope - Awaiting Validation (alias untuk pendingValidation)
+     * New scope - Awaiting Validation (alias untuk pendingValidation)
      */
     public function scopeAwaitingValidation(Builder $query): Builder
     {
@@ -118,7 +138,7 @@ class IdentifyRisk extends Model
     }
 
     /**
-     *   New scope - In Process (for super admin to see all non-draft)
+     * New scope - In Process (for super admin to see all non-draft)
      */
     public function scopeInProcess(Builder $query): Builder
     {
@@ -155,7 +175,7 @@ class IdentifyRisk extends Model
     }
 
     /**
-     *   New scope - By Status (flexible status filtering)
+     * New scope - By Status (flexible status filtering)
      */
     public function scopeByStatus(Builder $query, string $status): Builder
     {
@@ -168,7 +188,7 @@ class IdentifyRisk extends Model
     }
 
     /**
-     *   New scope - For Dashboard Stats
+     * New scope - For Dashboard Stats
      */
     public function scopeForStats(Builder $query): Builder
     {
@@ -179,6 +199,66 @@ class IdentifyRisk extends Model
                              ELSE validation_status
                          END as display_status
                      ');
+    }
+
+    // SCOPES FOR DASHBOARD FILTERING
+
+    /**
+     * Filter by status mitigasi
+     */
+    public function scopeByStatusMitigasi(Builder $query, ?string $status): Builder
+    {
+        if ($status) {
+            return $query->where('status_mitigasi', $status);
+        }
+        return $query;
+    }
+
+    /**
+     * Filter by unit kerja
+     */
+    public function scopeByUnit(Builder $query, ?string $unit): Builder
+    {
+        if ($unit) {
+            return $query->where('unit_kerja', $unit);
+        }
+        return $query;
+    }
+
+    /**
+     * Filter by kategori risiko
+     */
+    public function scopeByKategori(Builder $query, ?string $kategori): Builder
+    {
+        if ($kategori) {
+            return $query->where('kategori_risiko', $kategori);
+        }
+        return $query;
+    }
+
+    /**
+     * Filter by tahun
+     */
+    public function scopeByTahun(Builder $query, ?string $tahun): Builder
+    {
+        if ($tahun) {
+            return $query->where('tahun', $tahun);
+        }
+        return $query;
+    }
+
+    /**
+     * Filter by risk level range
+     */
+    public function scopeByRiskLevel(Builder $query, string $level): Builder
+    {   
+    return match($level) {
+        'high' => $query->where('level', '>=', 17),           // 17-25
+        'medium' => $query->whereBetween('level', [9, 16]),   // 9-16
+        'low' => $query->whereBetween('level', [3, 8]),       // 3-8
+        'very_low' => $query->whereBetween('level', [1, 2]),  // 1-2
+        default => $query
+    };
     }
 
     // STATUS CHECK METHODS
@@ -192,7 +272,7 @@ class IdentifyRisk extends Model
     }
 
     /**
-     *   Enhanced - Cek apakah risiko sudah dikirim (submitted atau pending)
+     * Enhanced - Cek apakah risiko sudah dikirim (submitted atau pending)
      */
     public function isSubmitted(): bool
     {
@@ -200,7 +280,7 @@ class IdentifyRisk extends Model
     }
 
     /**
-     *   New method - Cek apakah awaiting validation
+     * New method - Cek apakah awaiting validation
      */
     public function isAwaitingValidation(): bool
     {
@@ -247,7 +327,7 @@ class IdentifyRisk extends Model
         return $this->validation_status === self::STATUS_REJECTED;
     }
 
-    //   Enhanced Accessors
+    // ACCESSORS FOR DASHBOARD
 
     /**
      * Get validation status label dengan unified pending
@@ -256,7 +336,7 @@ class IdentifyRisk extends Model
     {
         return match($this->validation_status) {
             self::STATUS_DRAFT => 'Draft',
-            self::STATUS_SUBMITTED => 'Menunggu Validasi', // Treat as pending
+            self::STATUS_SUBMITTED => 'Menunggu Validasi',
             self::STATUS_PENDING => 'Menunggu Validasi',
             self::STATUS_APPROVED => 'Disetujui',
             self::STATUS_REJECTED => 'Ditolak',
@@ -265,7 +345,7 @@ class IdentifyRisk extends Model
     }
 
     /**
-     *   Get display status untuk UI (unified pending)
+     * Get display status untuk UI (unified pending)
      */
     public function getDisplayStatusAttribute(): string
     {
@@ -276,21 +356,70 @@ class IdentifyRisk extends Model
     }
 
     /**
-     * Get risk level text
+     * Get risk level text - unified method
      */
     public function getRiskLevelTextAttribute(): string
     {
         $level = $this->level ?? ($this->probability * $this->impact);
-        
-        return match(true) {
-            $level >= 20 => 'Kritis',
-            $level >= 15 => 'Tinggi', 
-            $level >= 8 => 'Sedang',
-            default => 'Rendah'
-        };
+        return $this->getRiskLevel($level);
     }
 
-    //   Enhanced Static Methods
+    /**
+     * Get inherent risk level
+     */
+    public function getInherentRiskLevelAttribute(): string
+    {
+        return $this->getRiskLevel($this->level);
+    }
+
+    /**
+     * Get residual risk level
+     */
+    public function getResidualRiskLevelAttribute(): string
+    {
+        return $this->getRiskLevel($this->level_residual);
+    }
+
+    /**
+     * Get risk reduction value
+     */
+    public function getRiskReductionAttribute(): int
+    {
+        if ($this->level && $this->level_residual) {
+            return $this->level - $this->level_residual;
+        }
+        return 0;
+    }
+
+    /**
+     * Get risk reduction percentage
+     */
+    public function getRiskReductionPercentageAttribute(): float
+    {
+        if ($this->level && $this->level_residual && $this->level > 0) {
+            return round((($this->level - $this->level_residual) / $this->level) * 100, 1);
+        }
+        return 0;
+    }
+
+    /**
+     * Unified risk level calculation method
+     */
+    private function getRiskLevel(?int $score): string
+{
+    if (!$score) {
+        return 'Tidak Diketahui';
+    }
+    
+    return match(true) {
+        $score >= 17 => 'Tinggi',        // 17-25 (was >= 20)
+        $score >= 9 => 'Sedang',         // 9-16 (was >= 8) 
+        $score >= 3 => 'Rendah',         // 3-8 (was >= 4)
+        default => 'Sangat Rendah'       // 1-2 (was default)
+    };
+}
+
+    // STATIC METHODS FOR DASHBOARD
 
     /**
      * Get count by status dengan unified pending
@@ -328,19 +457,74 @@ class IdentifyRisk extends Model
                    ->toArray();
     }
 
+    /**
+     * Get dashboard statistics
+     */
+    public static function getDashboardStats(): array
+    {
+    return [
+        'total_risks' => self::count(),
+        'draft_risks' => self::draft()->count(),
+        'pending_risks' => self::pendingValidation()->count(),
+        'approved_risks' => self::approved()->count(),
+        'rejected_risks' => self::rejected()->count(),
+        'high_risks' => self::where('level', '>=', 17)->count(),        // 17-25
+        'medium_risks' => self::whereBetween('level', [9, 16])->count(), // 9-16
+        'low_risks' => self::whereBetween('level', [3, 8])->count(),     // 3-8
+        'very_low_risks' => self::whereBetween('level', [1, 2])->count() // 1-2
+    ];
+    }
+
+    /**
+     * Get validation rules for this model
+     */
+    public static function validationRules(): array
+    {
+        return [
+            'id_identify' => 'required|string|unique:identify_risks,id_identify',
+            'risk_category' => 'required|string|max:255',
+            'unit_kerja' => 'nullable|string|max:255',
+            'kategori_risiko' => 'required|string|max:255',
+            'tahun' => 'nullable|integer|min:2020|max:' . (date('Y') + 5),
+            'description' => 'required|string',
+            'nama_risiko' => 'required|string|max:255',
+            'probability' => 'required|integer|min:1|max:5',
+            'impact' => 'required|integer|min:1|max:5',
+            'probability_residual' => 'nullable|integer|min:1|max:5',
+            'impact_residual' => 'nullable|integer|min:1|max:5',
+            'validation_status' => 'in:draft,submitted,pending,approved,rejected',
+            'status_mitigasi' => 'in:belum_dimulai,sedang_berjalan,selesai',
+        ];
+    }
+
     // MUTATORS
-    public function setProbabilityAttribute($value)
+    public function setProbabilityAttribute($value): void
     {
         $this->attributes['probability'] = $value;
         $this->calculateLevel();
     }
 
-    public function setImpactAttribute($value)
+    public function setImpactAttribute($value): void
     {
         $this->attributes['impact'] = $value;
         $this->calculateLevel();
     }
 
+    public function setProbabilityResidualAttribute($value): void
+    {
+        $this->attributes['probability_residual'] = $value;
+        $this->calculateResidualLevel();
+    }
+
+    public function setImpactResidualAttribute($value): void
+    {
+        $this->attributes['impact_residual'] = $value;
+        $this->calculateResidualLevel();
+    }
+
+    /**
+     * Calculate inherent risk level
+     */
     protected function calculateLevel(): void
     {
         if (isset($this->attributes['probability']) && isset($this->attributes['impact'])) {
@@ -348,24 +532,58 @@ class IdentifyRisk extends Model
         }
     }
 
+    /**
+     * Calculate residual risk level
+     */
+    protected function calculateResidualLevel(): void
+    {
+        if (isset($this->attributes['probability_residual']) && isset($this->attributes['impact_residual'])) {
+            $this->attributes['level_residual'] = (int)$this->attributes['probability_residual'] * (int)$this->attributes['impact_residual'];
+        }
+    }
+
     // BOOT METHOD
-    protected static function boot()
+    protected static function boot(): void
     {
         parent::boot();
 
         static::creating(function ($model) {
+            // Auto-calculate level on create
             if ($model->probability && $model->impact) {
                 $model->level = $model->probability * $model->impact;
             }
+
+            if ($model->probability_residual && $model->impact_residual) {
+                $model->level_residual = $model->probability_residual * $model->impact_residual;
+            }
             
+            // Set default validation status
             if (!$model->validation_status) {
                 $model->validation_status = self::STATUS_DRAFT;
+            }
+
+            // Set default tahun
+            if (!$model->tahun) {
+                $model->tahun = date('Y');
+            }
+
+            // Set default status mitigasi
+            if (!$model->status_mitigasi) {
+                $model->status_mitigasi = 'belum_dimulai';
             }
         });
 
         static::updating(function ($model) {
+            // Recalculate level if probability or impact changed
             if ($model->isDirty('probability') || $model->isDirty('impact')) {
                 $model->level = $model->probability * $model->impact;
+            }
+
+            // Recalculate residual level if residual values changed
+            if ($model->isDirty('probability_residual') || $model->isDirty('impact_residual')) {
+                if ($model->probability_residual && $model->impact_residual) {
+                    $model->level_residual = $model->probability_residual * $model->impact_residual;
+                }
             }
         });
     }

@@ -11,7 +11,7 @@ class SasaranUniv extends Model
     use HasFactory;
 
     protected $table = 'sasaran_univ';
-    protected $primaryKey = 'id_sasaran_univ'; // 🔥 Primary key custom
+    protected $primaryKey = 'id_sasaran_univ'; 
     
     protected $fillable = [
         'kategori',
@@ -25,7 +25,7 @@ class SasaranUniv extends Model
         'tanggal_dokumen' => 'date'
     ];
 
-    // 🔥 Override route key untuk custom primary key
+    // route key untuk custom primary key
     public function getRouteKeyName()
     {
         return 'id_sasaran_univ';

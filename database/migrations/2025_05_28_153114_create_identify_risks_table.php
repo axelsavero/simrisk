@@ -8,9 +8,15 @@ return new class extends Migration {
     {
         Schema::create('identify_risks', function (Blueprint $table) {
             $table->id();
-            $table->string('id_identify')->unique(); // ID unik buatan Anda
+            $table->string('id_identify')->unique();
             $table->boolean('status')->default(true);
             $table->string('risk_category');
+            
+            // Field untuk dashboard filtering
+            $table->string('unit_kerja')->nullable();
+            $table->string('kategori_risiko')->nullable();
+            $table->year('tahun')->default(date('Y'));
+            
             $table->date('identification_date_start');
             $table->date('identification_date_end');
             $table->text('description');
@@ -20,18 +26,33 @@ return new class extends Migration {
             $table->string('strategi');
             $table->string('pengendalian_internal');
             $table->decimal('biaya_penangan', 15, 2);
+            
+            // Risk assessment
             $table->integer('probability');
             $table->integer('impact');
-            $table->integer('level')->nullable(); // Akan dihitung otomatis
-            $table->string('validation_status')->default('pending')->index()->comment('Status validasi: pending, approved, rejected');
-            $table->timestamp('validation_processed_at')->nullable()->comment('Waktu validasi diproses (approved/rejected)');
-            $table->foreignId('validation_processed_by')->nullable()->constrained('users')->onDelete('set null')->comment('User yang memproses validasi');
-            $table->text('rejection_reason')->nullable()->comment('Alasan jika validasi ditolak');
+            $table->integer('level')->nullable();
+            
+            // Residual risk (setelah mitigasi)
+            $table->integer('probability_residual')->nullable();
+            $table->integer('impact_residual')->nullable();
+            $table->integer('level_residual')->nullable();
+            
+            // Mitigasi fields
+            $table->string('pemilik_risiko')->nullable();
+            $table->text('rencana_mitigasi')->nullable();
+            $table->date('target_mitigasi')->nullable();
+            $table->enum('status_mitigasi', ['belum_dimulai', 'sedang_berjalan', 'selesai'])->default('belum_dimulai');
+            
+            // Validation workflow
+            $table->string('validation_status')->default('pending')->index();
+            $table->timestamp('validation_processed_at')->nullable();
+            $table->foreignId('validation_processed_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->text('rejection_reason')->nullable();
+            $table->json('bukti_files')->nullable();
+            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
+            
             $table->timestamps();
-            $table->softDeletes(); 
-
-            $table->json('bukti_files')->nullable(); // Menyimpan array file bukti
-
+            $table->softDeletes();
         });
     }
 
