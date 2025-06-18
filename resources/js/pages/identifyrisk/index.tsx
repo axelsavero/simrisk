@@ -17,7 +17,6 @@ import {
     IdCard,
     Pencil,
     Search,
-    Shield,
     ShieldAlert,
     SquarePen,
     Trash2,
@@ -30,7 +29,7 @@ import '../../../css/IdentifyRiskIndex.css';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Manajemen Risiko', href: route('identify-risk.index') },
+    { title: 'Validasi Input Risiko', href: route('identify-risk.index') },
 ];
 
 // Define PageProps type according to your props structure
@@ -147,26 +146,39 @@ export default function Index() {
     function rejectItem(item: IdentifyRisk) {
         Swal.fire({
             title: 'Tolak Risiko',
-            input: 'textarea',
-            inputLabel: `Masukkan alasan penolakan untuk risiko "${item.id_identify}"`,
-            inputPlaceholder: 'Tuliskan alasan penolakan...',
-            inputAttributes: {
-                'aria-label': 'Alasan penolakan',
-            },
+            html: `
+            <div style="text-align:left;max-width:420px">
+                <div style="margin-bottom:8px;word-break:break-word;">
+                <strong>Kode Risiko</strong> : ${item.id_identify}
+                </div>
+                <div style="margin-bottom:8px;word-break:break-word;">
+                <strong>Deskripsi Risiko</strong> : ${item.description}
+                </div>
+                <div style="margin-bottom:8px;word-break:break-word;">
+                <strong>Penyebab Risiko</strong> : ${item.penyebab && Array.isArray(item.penyebab) ? item.penyebab.map((p: any) => p.description).join(', ') : ''}
+                </div>
+                <div style="margin-bottom:8px">
+                <strong>Alasan</strong> :
+                </div>
+                <textarea id="swal-reject-reason" class="swal2-textarea" placeholder="Tuliskan alasan penolakan..." style="width:100%;min-width:0;max-width:95%;min-height:100px;resize:vertical;box-sizing:border-box;overflow-x:hidden"></textarea>
+            </div>
+            `,
+            focusConfirm: false,
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#aaa',
             confirmButtonText: 'Tolak',
             cancelButtonText: 'Batal',
-            preConfirm: (reason) => {
-                if (!reason) {
-                    Swal.showValidationMessage('Alasan penolakan harus diisi');
-                }
-                return reason;
+            preConfirm: () => {
+            const reason = (document.getElementById('swal-reject-reason') as HTMLTextAreaElement)?.value;
+            if (!reason || reason.trim() === '') {
+                Swal.showValidationMessage('Alasan penolakan harus diisi');
+            }
+            return reason;
             },
         }).then((result) => {
             if (result.isConfirmed && result.value) {
-                router.post(route('identify-risk.reject', item.id), { rejection_reason: result.value }, { preserveScroll: true });
+            router.post(route('identify-risk.reject', item.id), { rejection_reason: result.value }, { preserveScroll: true });
             }
         });
     }

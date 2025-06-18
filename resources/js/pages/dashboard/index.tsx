@@ -253,16 +253,16 @@ function RiskMatrixTable({ riskPoints }: { riskPoints: { x: number; y: number; l
                                 let text = 'text-white';
                                 if (cell === 20 || cell === 25) {
                                     bg = 'bg-red-500';
-                                    text = 'text-white';
+                                    text = 'text-black';
                                 } else if (cell >= 9 && cell <= 16) {
                                     bg = 'bg-orange-400';
-                                    text = 'text-white';
+                                    text = 'text-black';
                                 } else if (cell >= 3 && cell <= 8) {
                                     bg = 'bg-yellow-300';
                                     text = 'text-black';
                                 } else if (cell === 1 || cell === 2) {
                                     bg = 'bg-green-500';
-                                    text = 'text-white';
+                                    text = 'text-black';
                                 }
                                 return (
                                     <td key={colIdx} className={`relative h-10 w-1/5 border border-black p-0 text-center md:h-20 ${bg}`}>

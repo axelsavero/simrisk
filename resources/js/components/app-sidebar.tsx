@@ -56,11 +56,11 @@ export function AppSidebar() {
             title: 'Validasi',
             href: '/validasi',
             icon: ListChecks,
+            role: 'super-admin',
             children: [
                 {
                     title: 'Validasi Identifikasi Risiko',
                     href: '/identify-risk',
-                    role: 'super-admin', // Hanya untuk peran 'super admin'
                 },
                 {
                     title: 'Validasi Evaluasi Risiko',

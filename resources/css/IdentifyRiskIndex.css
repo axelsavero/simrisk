@@ -173,6 +173,24 @@
     color: #a0aec0;
 }
 
+.risk-cards-grid {
+    display: flex;
+    gap: 1.5rem;
+    align-items: stretch;
+  }
+  
+  .risk-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  .card-content {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
 .filter-tabs {
     display: flex;
     gap: 0.5rem;
