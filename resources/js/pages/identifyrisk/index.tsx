@@ -176,10 +176,10 @@ export default function Index() {
 
     const getRiskLevelInfo = (probability: number, impact: number) => {
         const risk = probability * impact;
-        if (risk >= 20) return { level: 'Kritis', color: 'critical', icon: '🔴' };
-        if (risk >= 15) return { level: 'Tinggi', color: 'high', icon: '🟠' };
-        if (risk >= 8) return { level: 'Sedang', color: 'medium', icon: '🟡' };
-        return { level: 'Rendah', color: 'low', icon: '🟢' };
+        if (risk >= 20) return { level: 'Tinggi', color: 'high', icon: '🔴' };
+        if (risk >= 9) return { level: 'Sedang', color: 'medium', icon: '🟠' };
+        if (risk >= 3) return { level: 'Rendah', color: 'low', icon: '🟡' };
+        return { level: 'Sangat Rendah', color: 'Very low', icon: '🟢' };
     };
 
     // 🔥 OPSI 2: Update function untuk handle 'submitted' sebagai 'pending'

@@ -39,12 +39,6 @@ export function AppSidebar() {
             role: 'super-admin', // <-- Item ini hanya untuk peran 'super admin'
         },
         {
-            title: 'Identifikasi Risiko',
-            href: '/identify-risk',
-            icon: ShieldCheck,
-            role: 'super-admin', // <-- Item ini hanya untuk peran 'super admin'
-        },
-        {
             title: 'Sasaran',
             href: '/sasaran-univ',
             icon: Target,
@@ -65,7 +59,8 @@ export function AppSidebar() {
             children: [
                 {
                     title: 'Validasi Identifikasi Risiko',
-                    href: '/validasi/identifikasi',
+                    href: '/identify-risk',
+                    role: 'super-admin', // Hanya untuk peran 'super admin'
                 },
                 {
                     title: 'Validasi Evaluasi Risiko',

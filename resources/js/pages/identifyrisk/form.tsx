@@ -153,16 +153,16 @@ export default function Form({ identifyRisk = null }: FormProps) {
     // Calculate risk level
     const riskLevel = data.probability * data.impact;
     const getRiskLevelText = (level: number) => {
-        if (level >= 20) return 'Sangat Tinggi';
-        if (level >= 15) return 'Tinggi';
-        if (level >= 8) return 'Sedang';
-        return 'Rendah';
+        if (level >= 20) return 'Tinggi';
+        if (level >= 9) return 'Sedang';
+        if (level >= 3) return 'Rendah';
+        return 'Sangat Rendah';
     };
 
     const getRiskLevelColor = (level: number) => {
         if (level >= 20) return 'text-red-600 bg-red-100';
-        if (level >= 15) return 'text-orange-600 bg-orange-100';
-        if (level >= 8) return 'text-yellow-600 bg-yellow-100';
+        if (level >= 9) return 'text-orange-600 bg-orange-100';
+        if (level >= 3) return 'text-yellow-600 bg-yellow-100';
         return 'text-green-600 bg-green-100';
     };
 

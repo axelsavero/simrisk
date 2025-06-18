@@ -10,16 +10,16 @@ use Carbon\Carbon;
 
 class LaporanController extends Controller
 {
-    public function __construct()
-    {
-        // Middleware untuk akses laporan
-        $this->middleware(function ($request, $next) {
-            if (!Auth::check()) {
-                abort(403, 'AKSES DITOLAK: Anda harus login terlebih dahulu.');
-            }
-            return $next($request);
-        });
-    }
+    // public function __construct()
+    // {
+    //     // Middleware untuk akses laporan
+    //     $this->middleware(function ($request, $next) {
+    //         if (!Auth::check()) {
+    //             abort(403, 'AKSES DITOLAK: Anda harus login terlebih dahulu.');
+    //         }
+    //         return $next($request);
+    //     });
+    // }
 
     /**
      * Halaman utama laporan dengan pilihan jenis laporan
@@ -27,7 +27,7 @@ class LaporanController extends Controller
     public function index()
     {
         $user = Auth::user();
-        
+
         return Inertia::render('laporan/index', [
             'permissions' => [
                 'canViewAll' => $user->hasRole('super-admin'),
@@ -45,14 +45,14 @@ class LaporanController extends Controller
     {
         // Filter parameters
         $unit = $request->get('unit');
-        $kategori = $request->get('kategori'); 
+        $kategori = $request->get('kategori');
         $tahun = $request->get('tahun', date('Y'));
         $periode_start = $request->get('periode_start');
         $periode_end = $request->get('periode_end');
 
         // Base query dengan role-based filtering
         $query = $this->getBaseQuery();
-        
+
         // Apply filters
         $risks = $query->byUnit($unit)
             ->byKategori($kategori)
@@ -87,12 +87,12 @@ class LaporanController extends Controller
     {
         // Filter sama seperti risk matrix
         $unit = $request->get('unit');
-        $kategori = $request->get('kategori'); 
+        $kategori = $request->get('kategori');
         $tahun = $request->get('tahun', date('Y'));
         $validation_status = $request->get('validation_status');
 
         $query = $this->getBaseQuery();
-        
+
         $risks = $query->byUnit($unit)
             ->byKategori($kategori)
             ->byTahun($tahun)
@@ -122,7 +122,7 @@ class LaporanController extends Controller
     {
         // Implementasi export PDF menggunakan DomPDF atau lainnya
         $unit = $request->get('unit');
-        $kategori = $request->get('kategori'); 
+        $kategori = $request->get('kategori');
         $tahun = $request->get('tahun', date('Y'));
 
         $query = $this->getBaseQuery();
@@ -154,7 +154,7 @@ class LaporanController extends Controller
     {
         // Implementasi export Excel menggunakan Laravel Excel
         $unit = $request->get('unit');
-        $kategori = $request->get('kategori'); 
+        $kategori = $request->get('kategori');
         $tahun = $request->get('tahun', date('Y'));
 
         $query = $this->getBaseQuery();
@@ -193,7 +193,7 @@ class LaporanController extends Controller
     {
         $user = Auth::user();
         $query = IdentifyRisk::query();
-        
+
         // Role-based filtering
         if ($user->hasRole('super-admin')) {
             // Super admin melihat semua kecuali draft
@@ -315,7 +315,7 @@ class LaporanController extends Controller
     private function getStatistikLaporan($risks)
     {
         $total = $risks->count();
-        
+
         return [
             'total_risks' => $total,
             'high_risks' => $risks->where('level', '>=', 17)->count(),
@@ -332,7 +332,7 @@ class LaporanController extends Controller
     private function getDetailStatistik($risks)
     {
         $collection = collect($risks->items());
-        
+
         return [
             'total_records' => $risks->total(),
             'current_page_count' => $collection->count(),
