@@ -175,16 +175,16 @@ function RiskMatrixTable({ riskPoints }: { riskPoints: { x: number; y: number; l
                                 const points = riskPoints.filter((p) => p.x === colIdx + 1 && p.y === 5 - rowIdx);
                                 let bg = '';
                                 let text = 'text-white';
-                                if (cell >= 20) {
+                                if (cell === 20 || cell === 25) {
                                     bg = 'bg-red-500';
                                     text = 'text-white';
-                                } else if (cell >= 15) {
+                                } else if (cell >= 9 && cell <= 16) {
                                     bg = 'bg-orange-400';
                                     text = 'text-white';
-                                } else if (cell >= 8) {
+                                } else if (cell >= 3 && cell <= 8) {
                                     bg = 'bg-yellow-300';
                                     text = 'text-black';
-                                } else {
+                                } else if (cell === 1 || cell === 2) {
                                     bg = 'bg-green-500';
                                     text = 'text-white';
                                 }

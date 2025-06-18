@@ -4,7 +4,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { type NavItem } from '@/types';
 // 1. Import hook usePage dari Inertia
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, User, Target, ShieldCheck, ListChecks } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, User, Target, ShieldCheck, ListChecks, Minus } from 'lucide-react';
 import AppLogo from './app-logo';
 import React, { useState } from 'react';
 
