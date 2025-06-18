@@ -123,8 +123,8 @@ export default function Dashboard() {
 // Komponen Matriks Risiko
 function RiskMatrixTable({ riskPoints }: { riskPoints: { x: number; y: number; label: string }[] }) {
     return (
-        <div className="overflow-x-auto">
-            <table className="w-full min-w-[600px] border border-black">
+        <div className="w-full overflow-x-hidden">
+            <table className="w-full border border-black">
                 <thead>
                     <tr>
                         <th className="border border-black bg-white" rowSpan={2} colSpan={2}></th>
@@ -134,7 +134,7 @@ function RiskMatrixTable({ riskPoints }: { riskPoints: { x: number; y: number; l
                     </tr>
                     <tr>
                         {Array.from({ length: 5 }).map((_, i) => (
-                            <th key={i} className="h-10 w-16 border border-black bg-white text-center font-normal md:h-16 md:w-24">
+                            <th key={i} className="h-10 w-1/5 border border-black bg-white text-center font-normal md:h-16">
                                 {i + 1}
                             </th>
                         ))}
@@ -189,7 +189,7 @@ function RiskMatrixTable({ riskPoints }: { riskPoints: { x: number; y: number; l
                                     text = 'text-white';
                                 }
                                 return (
-                                    <td key={colIdx} className={`relative h-10 w-16 border border-black p-0 text-center md:h-20 md:w-24 ${bg}`}>
+                                    <td key={colIdx} className={`relative h-10 w-1/5 border border-black p-0 text-center md:h-20 ${bg}`}>
                                         <span
                                             className={`font-bold ${text} mx-auto my-1 inline-flex h-10 w-10 items-center justify-center rounded-full text-base shadow md:h-16 md:w-16 md:text-xl`}
                                             style={{ background: 'rgba(255,255,255,0.18)' }}
@@ -213,7 +213,7 @@ function RiskMatrixTable({ riskPoints }: { riskPoints: { x: number; y: number; l
                     <tr>
                         <td className="border border-black bg-white text-center font-bold" colSpan={2}></td>
                         {probabilityLabels.map((label, i) => (
-                            <td key={i} className="w-16 border border-black bg-white px-1 text-center align-top text-xs md:w-24">
+                            <td key={i} className="w-1/5 border border-black bg-white px-1 text-center align-top text-xs">
                                 <span className="block text-base break-words whitespace-normal">{label}</span>
                             </td>
                         ))}
