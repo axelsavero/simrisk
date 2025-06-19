@@ -197,7 +197,7 @@ function Sidebar({
           }
           side={side}
         >
-          <div className="flex h-full w-full flex-col">{children}</div>
+          <div className="bg-[#12745a] flex h-full w-full flex-col">{children}</div>
         </SheetContent>
       </Sheet>
     )

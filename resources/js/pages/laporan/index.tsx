@@ -150,116 +150,87 @@ export default function LaporanIndex() {
 
                 {/* Table Container - Responsive with Horizontal Scroll */}
                 <div className="w-full overflow-x-auto rounded bg-white p-2 shadow-lg sm:p-4">
-                    <div className="min-w-0">
-                        <table className="w-full min-w-[1400px] table-fixed border-collapse border border-black text-[9px] sm:text-[10px] lg:min-w-[1600px] lg:text-xs xl:min-w-[1800px] xl:text-sm">
-                            <thead>
-                                <tr>
-                                    <th rowSpan={2} className="w-8 border border-black bg-gray-100 px-1 py-1 font-bold sm:w-12 sm:px-2 sm:py-2">
-                                        NO.
-                                    </th>
-                                    <th
-                                        rowSpan={2}
-                                        className="w-20 border border-black bg-gray-100 px-1 py-1 font-bold sm:w-28 sm:px-2 sm:py-2 lg:w-32"
-                                    >
-                                        KODE RISIKO
-                                    </th>
-                                    <th
-                                        rowSpan={2}
-                                        className="w-32 border border-black bg-gray-100 px-1 py-1 font-bold sm:w-40 sm:px-2 sm:py-2 lg:w-48"
-                                    >
-                                        DESKRIPSI ATAU KEJADIAN RISIKO
-                                    </th>
-                                    <th
-                                        rowSpan={2}
-                                        className="w-32 border border-black bg-gray-100 px-1 py-1 font-bold sm:w-40 sm:px-2 sm:py-2 lg:w-48"
-                                    >
-                                        PENANGANAN RISIKO
-                                    </th>
-                                    <th colSpan={2} className="border border-black bg-gray-100 px-1 py-1 font-bold sm:px-2 sm:py-2">
-                                        JADWAL DAN PELAKSANAAN
-                                    </th>
-                                    <th rowSpan={2} className="w-12 border border-black bg-gray-100 px-1 py-1 font-bold sm:w-16 sm:px-2 sm:py-2">
-                                        KET
-                                    </th>
-                                    <th colSpan={2} className="border border-black bg-gray-100 px-1 py-1 font-bold sm:px-2 sm:py-2">
-                                        BIAYA PENANGANAN RISIKO (RP)
-                                    </th>
-                                    <th rowSpan={2} className="w-16 border border-black bg-gray-100 px-1 py-1 font-bold sm:w-20 sm:px-2 sm:py-2">
-                                        VARIANS BIAYA
-                                    </th>
-                                    <th rowSpan={2} className="w-16 border border-black bg-gray-100 px-1 py-1 font-bold sm:w-20 sm:px-2 sm:py-2">
-                                        STATUS PENGENDALIAN
-                                    </th>
-                                    <th colSpan={2} className="border border-black bg-gray-100 px-1 py-1 font-bold sm:px-2 sm:py-2">
-                                        DIPERIKSA OLEH
-                                    </th>
-                                    <th
-                                        rowSpan={2}
-                                        className="w-20 border border-black bg-gray-100 px-1 py-1 font-bold sm:w-24 sm:px-2 sm:py-2 lg:w-28"
-                                    >
-                                        PEMILIK RISIKO
-                                    </th>
-                                    <th
-                                        rowSpan={2}
-                                        className="w-20 border border-black bg-gray-100 px-1 py-1 font-bold sm:w-24 sm:px-2 sm:py-2 lg:w-28"
-                                    >
-                                        PELAKSANA PENANGANAN RISIKO
-                                    </th>
-                                    <th
-                                        rowSpan={2}
-                                        className="w-20 border border-black bg-gray-100 px-1 py-1 font-bold sm:w-24 sm:px-2 sm:py-2 lg:w-28"
-                                    >
-                                        PENANGGUNG JAWAB PENANGANAN RISIKO
-                                    </th>
-                                    <th
-                                        rowSpan={2}
-                                        className="w-32 border border-black bg-gray-100 px-1 py-1 font-bold sm:w-40 sm:px-2 sm:py-2 lg:w-48"
-                                    >
-                                        REKOMENDASI / TINDAKAN LEBIH LANJUT
-                                    </th>
+                    <table className="w-full min-w-[1200px] table-auto border-collapse border border-black text-[10px] sm:text-xs">
+                        <thead>
+                            <tr>
+                                <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 text-center align-middle font-bold">
+                                    NO.
+                                </th>
+                                <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 text-center align-middle font-bold">
+                                    KODE RISIKO
+                                </th>
+                                <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 text-center align-middle font-bold">
+                                    DESKRIPSI ATAU KEJADIAN RISIKO
+                                </th>
+                                <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 text-center align-middle font-bold">
+                                    PENANGANAN RISIKO
+                                </th>
+                                <th colSpan={2} className="border border-black bg-gray-100 px-2 py-1 text-center align-middle font-bold">
+                                    JADWAL DAN PELAKSANAAN
+                                </th>
+                                <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 text-center align-middle font-bold">
+                                    KET
+                                </th>
+                                <th colSpan={2} className="border border-black bg-gray-100 px-2 py-1 text-center align-middle font-bold">
+                                    BIAYA PENANGANAN RISIKO (RP)
+                                </th>
+                                <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 text-center align-middle font-bold">
+                                    VARIANS BIAYA
+                                </th>
+                                <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 text-center align-middle font-bold">
+                                    STATUS PENGENDALIAN
+                                </th>
+                                <th colSpan={2} className="border border-black bg-gray-100 px-2 py-1 text-center align-middle font-bold">
+                                    DIPERIKSA OLEH
+                                </th>
+                                <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 text-center align-middle font-bold">
+                                    PEMILIK RISIKO
+                                </th>
+                                <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 text-center align-middle font-bold">
+                                    PELAKSANA PENANGANAN RISIKO
+                                </th>
+                                <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 text-center align-middle font-bold">
+                                    PENANGGUNG JAWAB PENANGANAN RISIKO
+                                </th>
+                                <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 text-center align-middle font-bold">
+                                    REKOMENDASI / TINDAKAN LEBIH LANJUT
+                                </th>
+                            </tr>
+                            <tr>
+                                <th className="border border-black bg-gray-100 px-2 py-1 text-center align-middle font-bold">
+                                    SESUAI / TIDAK SESUAI
+                                </th>
+                                <th className="border border-black bg-gray-100 px-2 py-1 text-center align-middle font-bold">KET</th>
+                                <th className="border border-black bg-gray-100 px-2 py-1 text-center align-middle font-bold">RENCANA</th>
+                                <th className="border border-black bg-gray-100 px-2 py-1 text-center align-middle font-bold">REALISASI</th>
+                                <th className="border border-black bg-gray-100 px-2 py-1 text-center align-middle font-bold">SPI</th>
+                                <th className="border border-black bg-gray-100 px-2 py-1 text-center align-middle font-bold">URM</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {laporanData.map((row) => (
+                                <tr key={row.no} className="hover:bg-gray-50">
+                                    <td className="border border-black px-2 py-1 text-center align-middle">{row.no}</td>
+                                    <td className="border border-black px-2 py-1 align-middle break-words">{row.kode}</td>
+                                    <td className="border border-black px-2 py-1 align-middle break-words">{row.deskripsi}</td>
+                                    <td className="border border-black px-2 py-1 align-middle break-words whitespace-pre-line">{row.penanganan}</td>
+                                    <td className="border border-black px-2 py-1 text-center align-middle">{row.jadwal}</td>
+                                    <td className="border border-black px-2 py-1 text-center align-middle">{row.ket}</td>
+                                    <td className="border border-black px-2 py-1 text-center align-middle">{row.ket}</td>
+                                    <td className="border border-black px-2 py-1 text-right align-middle">{row.rencana}</td>
+                                    <td className="border border-black px-2 py-1 text-right align-middle">{row.realisasi}</td>
+                                    <td className="border border-black px-2 py-1 text-center align-middle">{row.varian}</td>
+                                    <td className="border border-black px-2 py-1 text-center align-middle">{row.status}</td>
+                                    <td className="border border-black px-2 py-1 text-center align-middle">{row.diperiksa_spi ? '✓' : ''}</td>
+                                    <td className="border border-black px-2 py-1 text-center align-middle">{row.diperiksa_urm ? '✓' : ''}</td>
+                                    <td className="border border-black px-2 py-1 align-middle break-words">{row.pemilik}</td>
+                                    <td className="border border-black px-2 py-1 align-middle break-words">{row.pelaksana}</td>
+                                    <td className="border border-black px-2 py-1 align-middle break-words">{row.penanggung}</td>
+                                    <td className="border border-black px-2 py-1 align-middle break-words">{row.rekomendasi}</td>
                                 </tr>
-                                <tr>
-                                    <th className="w-16 border border-black bg-gray-100 px-1 py-1 font-bold sm:w-20 sm:px-2 sm:py-2">
-                                        SESUAI / TIDAK SESUAI
-                                    </th>
-                                    <th className="w-12 border border-black bg-gray-100 px-1 py-1 font-bold sm:w-16 sm:px-2 sm:py-2">KET</th>
-                                    <th className="w-20 border border-black bg-gray-100 px-1 py-1 font-bold sm:w-24 sm:px-2 sm:py-2">RENCANA</th>
-                                    <th className="w-20 border border-black bg-gray-100 px-1 py-1 font-bold sm:w-24 sm:px-2 sm:py-2">REALISASI</th>
-                                    <th className="w-8 border border-black bg-gray-100 px-1 py-1 font-bold sm:w-12 sm:px-2 sm:py-2">SPI</th>
-                                    <th className="w-8 border border-black bg-gray-100 px-1 py-1 font-bold sm:w-12 sm:px-2 sm:py-2">URM</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {laporanData.map((row) => (
-                                    <tr key={row.no} className="hover:bg-gray-50">
-                                        <td className="border border-black px-1 py-1 text-center align-top sm:px-2 sm:py-2">{row.no}</td>
-                                        <td className="border border-black px-1 py-1 align-top break-words sm:px-2 sm:py-2">{row.kode}</td>
-                                        <td className="border border-black px-1 py-1 align-top break-words sm:px-2 sm:py-2">{row.deskripsi}</td>
-                                        <td className="border border-black px-1 py-1 align-top break-words whitespace-pre-line sm:px-2 sm:py-2">
-                                            {row.penanganan}
-                                        </td>
-                                        <td className="border border-black px-1 py-1 text-center align-top sm:px-2 sm:py-2">{row.jadwal}</td>
-                                        <td className="border border-black px-1 py-1 text-center align-top sm:px-2 sm:py-2">{row.ket}</td>
-                                        <td className="border border-black px-1 py-1 text-center align-top sm:px-2 sm:py-2">{row.ket}</td>
-                                        <td className="border border-black px-1 py-1 text-right align-top sm:px-2 sm:py-2">{row.rencana}</td>
-                                        <td className="border border-black px-1 py-1 text-right align-top sm:px-2 sm:py-2">{row.realisasi}</td>
-                                        <td className="border border-black px-1 py-1 text-center align-top sm:px-2 sm:py-2">{row.varian}</td>
-                                        <td className="border border-black px-1 py-1 text-center align-top sm:px-2 sm:py-2">{row.status}</td>
-                                        <td className="border border-black px-1 py-1 text-center align-top sm:px-2 sm:py-2">
-                                            {row.diperiksa_spi ? '✓' : ''}
-                                        </td>
-                                        <td className="border border-black px-1 py-1 text-center align-top sm:px-2 sm:py-2">
-                                            {row.diperiksa_urm ? '✓' : ''}
-                                        </td>
-                                        <td className="border border-black px-1 py-1 align-top break-words sm:px-2 sm:py-2">{row.pemilik}</td>
-                                        <td className="border border-black px-1 py-1 align-top break-words sm:px-2 sm:py-2">{row.pelaksana}</td>
-                                        <td className="border border-black px-1 py-1 align-top break-words sm:px-2 sm:py-2">{row.penanggung}</td>
-                                        <td className="border border-black px-1 py-1 align-top break-words sm:px-2 sm:py-2">{row.rekomendasi}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
 
                 {/* Print Button - Responsive */}
