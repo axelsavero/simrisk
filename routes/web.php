@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserManageController;
 use App\Http\Controllers\SasaranUnivController;
 use App\Http\Controllers\IdentifyRiskController;
+use App\Http\Controllers\SipegProxyController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -24,6 +25,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/user/manage/{user}/edit', [UserManageController::class, 'edit'])->name('user.manage.edit');
     Route::put('/user/manage/{user}', [UserManageController::class, 'update'])->name('user.manage.update');
     Route::delete('/user/manage/{user}', [UserManageController::class, 'destroy'])->name('user.manage.destroy');
+    Route::get('/proxy/sipeg/{any}', [SipegProxyController::class, 'proxy'])->where('any', '.*');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
