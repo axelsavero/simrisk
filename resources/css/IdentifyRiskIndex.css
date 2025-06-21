@@ -50,7 +50,7 @@
 }
 
 .btn-create {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #12745A, #12745b);
     color: white;
     border: none;
     padding: 0.875rem 1.5rem;
@@ -178,13 +178,13 @@
     gap: 1.5rem;
     align-items: stretch;
   }
-  
+
   .risk-card {
     display: flex;
     flex-direction: column;
     height: 100%;
   }
-  
+
   .card-content {
     flex: 1 1 auto;
     display: flex;
@@ -213,7 +213,7 @@
 }
 
 .filter-tab.active {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #12745a, #12745b);
     color: white;
     border-color: transparent;
 }
