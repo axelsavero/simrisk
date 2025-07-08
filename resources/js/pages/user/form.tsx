@@ -46,7 +46,6 @@ interface FormData {
     [key: string]: string; // Add index signature
 }
 
-
 export default function Form({ allRoles, user = null }: FormProps) {
     const [units, setUnits] = useState<Unit[]>([]);
     const [availableNames, setAvailableNames] = useState<string[]>([]);
@@ -72,28 +71,37 @@ export default function Form({ allRoles, user = null }: FormProps) {
         // Fetch all units on mount
         fetchUnits();
 
-        // Fetch all pegawai for the search dropdown
+        // Fetch all pegawai for mapping ke unit
         fetch('/proxy/sipeg/api/pegawai')
             .then((res) => res.json())
             .then((data) => {
+                let pegawaiArr = [];
                 if (Array.isArray(data)) {
-                    setAllPegawai(data);
+                    pegawaiArr = data;
                 } else if (data && Array.isArray(data.data)) {
-                    setAllPegawai(data.data);
+                    pegawaiArr = data.data;
                 }
+                setAllPegawai(pegawaiArr);
+
+                // Mapping pegawai ke unit jika units sudah ada
+                setUnits((prevUnits) =>
+                    prevUnits.map((unit) => ({
+                        ...unit,
+                        members: pegawaiArr.filter((p: any) => p.unit_kerja && p.unit_kerja.trim() === unit.name.trim()).map((p: any) => p.nama),
+                    })),
+                );
             })
             .catch(() => setAllPegawai([]));
     }, []);
-
 
     // Improved API call function
     const apiCall = async (endpoint: string, options: RequestInit = {}) => {
         // --- PERBAIKAN: Cek throttle sebelum melakukan panggilan API ---
         if (Date.now() < throttleUntil) {
-             const remainingSeconds = Math.ceil((throttleUntil - Date.now()) / 1000);
-             throw new Error(`Terlalu banyak permintaan. Coba lagi dalam ${remainingSeconds} detik. (HTTP 429)`);
+            const remainingSeconds = Math.ceil((throttleUntil - Date.now()) / 1000);
+            throw new Error(`Terlalu banyak permintaan. Coba lagi dalam ${remainingSeconds} detik. (HTTP 429)`);
         }
-        
+
         const defaultOptions: RequestInit = {
             headers: {
                 Accept: 'application/json',
@@ -150,13 +158,14 @@ export default function Form({ allRoles, user = null }: FormProps) {
         setLoadingUnits(true);
         setApiError('');
         try {
-            const result = await apiCall('/allunit');
-            
+            // Ganti endpoint ke /allhomebase
+            const result = await apiCall('/allhomebase');
+
             if (!result.success) {
                 throw new Error('Gagal memuat unit');
             }
 
-            let unitsData: ApiUnit[] = [];
+            let unitsData: any[] = [];
             if (Array.isArray(result.data)) {
                 unitsData = result.data;
             } else if (result.data?.data && Array.isArray(result.data.data)) {
@@ -165,33 +174,34 @@ export default function Form({ allRoles, user = null }: FormProps) {
                 unitsData = result.data.result;
             } else if (typeof result.data === 'object' && result.data !== null) {
                 const arr = Object.values(result.data).find((v) => Array.isArray(v));
-                if (arr) unitsData = arr as ApiUnit[];
+                if (arr) unitsData = arr as any[];
             }
-            
+
             if (!unitsData || unitsData.length === 0) {
                 throw new Error('Tidak ada data unit yang ditemukan dari respons API');
             }
 
-            const transformedUnits: Unit[] = unitsData.map((apiUnit: any) => ({
-                id: apiUnit.id || apiUnit.id_unit || apiUnit.kode_unit,
-                name: apiUnit.nama_unit || apiUnit.nama || `Unit Tidak Dikenal ${apiUnit.id}`,
-                members: [],
-            }));
+            // Gunakan ur_homebase sebagai nama unit
+            const transformedUnits: Unit[] = unitsData
+                .filter((apiUnit: any) => apiUnit.ur_homebase && apiUnit.ur_homebase.trim() !== '')
+                .map((apiUnit: any) => ({
+                    id: apiUnit.id || apiUnit.id_homebase || apiUnit.kode_homebase || apiUnit.kode_unit,
+                    name: apiUnit.ur_homebase,
+                    members: [], // akan diisi setelah fetch pegawai
+                }));
 
             setUnits(transformedUnits);
             setApiError(`✅ ${transformedUnits.length} unit berhasil dimuat dari API SIPEG.`);
             setTimeout(() => setApiError(''), 5000);
-
         } catch (error: any) {
             console.error('Error fetching units:', error);
             let errorMessage = 'Gagal memuat data unit dari API SIPEG. ';
-             if (error.message.includes('429')) {
+            if (error.message.includes('429')) {
                 errorMessage = `❌ Gagal: Terlalu banyak permintaan ke SIPEG (HTTP 429). Silakan tunggu beberapa saat sebelum mencoba lagi.`;
             } else {
                 errorMessage += `Detail: ${error.message}`;
             }
             setApiError(errorMessage);
-            
             // Fallback dummy hanya untuk development
             if (process.env.NODE_ENV === 'development') {
                 setUnits([
@@ -212,18 +222,18 @@ export default function Form({ allRoles, user = null }: FormProps) {
         try {
             const encodedUnitName = encodeURIComponent(unitName);
             const result = await apiCall(`/unit/${encodedUnitName}`);
-            
+
             if (!result.success) {
                 throw new Error('Gagal memuat pegawai');
             }
-            
+
             let pegawaiData: ApiPegawai[] = [];
             if (result.data.success && result.data.data) {
                 pegawaiData = Array.isArray(result.data.data) ? result.data.data : [];
             } else if (Array.isArray(result.data)) {
                 pegawaiData = result.data;
             }
-            
+
             const pegawaiNames = pegawaiData.map((pegawai: ApiPegawai) => pegawai.nama || `Pegawai ${pegawai.id}`);
             setAvailableNames(pegawaiNames);
             setUnits((prevUnits) => prevUnits.map((unit) => (unit.name === unitName ? { ...unit, members: pegawaiNames } : unit)));
@@ -236,7 +246,7 @@ export default function Form({ allRoles, user = null }: FormProps) {
                 errorMessage += `Detail: ${error.message}`;
             }
             setApiError(errorMessage);
-            
+
             // Fallback dummy hanya untuk development
             if (process.env.NODE_ENV === 'development') {
                 const dummyNames = ['John Doe', 'Jane Smith'];
@@ -249,7 +259,7 @@ export default function Form({ allRoles, user = null }: FormProps) {
             setLoadingPegawai(false);
         }
     };
-    
+
     // Debounced fetchPegawaiByUnit
     const debouncedFetchPegawaiByUnit = (unitName: string) => {
         if (pegawaiDebounceTimeout) clearTimeout(pegawaiDebounceTimeout);
@@ -312,7 +322,7 @@ export default function Form({ allRoles, user = null }: FormProps) {
         { title: 'Manajemen User', href: '/user/manage' },
         { title: user ? 'Edit User' : 'Tambah User', href: '#' },
     ];
-    
+
     const isThrottled = Date.now() < throttleUntil;
 
     return (
@@ -338,19 +348,23 @@ export default function Form({ allRoles, user = null }: FormProps) {
                                     {apiStatus === 'testing' ? 'Menguji...' : 'Test Koneksi'}
                                 </button>
                                 {/* --- PERBAIKAN: Nonaktifkan tombol saat throttle --- */}
-                                <button onClick={fetchUnits} className="text-sm text-red-600 underline hover:text-red-800 disabled:cursor-not-allowed disabled:text-gray-400" disabled={loadingUnits || isThrottled}>
+                                <button
+                                    onClick={fetchUnits}
+                                    className="text-sm text-red-600 underline hover:text-red-800 disabled:cursor-not-allowed disabled:text-gray-400"
+                                    disabled={loadingUnits || isThrottled}
+                                >
                                     {loadingUnits ? 'Memuat...' : 'Coba Lagi'}
                                 </button>
                             </div>
                         )}
                     </div>
                 )}
-                
+
                 {/* ... (Debug Info tidak berubah) ... */}
 
                 <form onSubmit={submit} className="w-full space-y-6 rounded-xl border-2 border-gray-300 bg-white p-6 shadow-md">
                     {/* ... (Dropdown Unit, Nama Pegawai, Email, Password, Role tidak berubah, tapi properti `disabled` akan terpengaruh `isThrottled`) ... */}
-                     <div>
+                    <div>
                         <label className="mb-1 block font-medium">Unit</label>
                         <select
                             value={data.unit_id}
@@ -385,7 +399,7 @@ export default function Form({ allRoles, user = null }: FormProps) {
                         </select>
                         {errors.name && <div className="text-sm text-red-500">{errors.name}</div>}
                     </div>
-                    
+
                     {/* ... (Sisa form) ... */}
 
                     {/* Form Actions */}
