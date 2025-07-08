@@ -57,41 +57,48 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
                         <table className="min-w-full border border-gray-300 text-left text-sm">
                             <thead className="bg-gray-100">
                                 <tr>
-                                    <th className="border px-4 py-2">ID</th>
-                                    <th className="border px-4 py-2">Name</th>
-                                    <th className="border px-4 py-2">Email</th>
-                                    <th className="border px-4 py-2">Roles</th>
-                                    {isSuperAdmin && <th className="border px-4 py-2">Aksi</th>}
+                                    <th className="border px-4 py-2">No</th>
+                                    <th className="border px-4 py-2">Unit</th>
+                                    <th className="border px-4 py-2">Kode Unit</th>
+                                    <th className="border px-4 py-2">User Admin</th>
+                                    <th className="border px-4 py-2">Aksi</th>
                                 </tr>
                             </thead>
-
                             <tbody>
-                                {users.map((user: User) => (
-                                    <tr key={user.id} className="hover:bg-gray-50">
-                                        <td className="border px-4 py-2">{user.id}</td>
-                                        <td className="border px-4 py-2">{user.name}</td>
-                                        <td className="border px-4 py-2">{user.email}</td>
-                                        <td className="border px-4 py-2">{user.roles?.join(', ') || '-'}</td>
-                                        {isSuperAdmin && (
-                                            <td className="flex flex-wrap gap-2 border px-6 py-4">
-                                                <Link
-                                                    href={`/user/manage/${user.id}/edit`}
-                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-yellow-100 text-yellow-700 transition-colors hover:bg-yellow-400 hover:text-white"
-                                                    title="Edit"
-                                                >
-                                                    <Pencil size={20} />
-                                                </Link>
-                                                <button
-                                                    onClick={() => deleteUser(user)}
-                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-700 transition-colors hover:bg-red-500 hover:text-white"
-                                                    title="Hapus"
-                                                >
-                                                    <Trash2 size={20} />
-                                                </button>
+                                {users && users.length > 0 ? (
+                                    users.map((user: User, idx: number) => (
+                                        <tr key={user.id} className="hover:bg-gray-50">
+                                            <td className="border px-4 py-2">{idx + 1}</td>
+                                            <td className="border px-4 py-2">{typeof user.unit === 'string' ? user.unit : ''}</td>
+                                            <td className="border px-4 py-2">{typeof user.kode_unit === 'string' ? user.kode_unit : ''}</td>
+                                            <td className="border px-4 py-2">{user.name}</td>
+                                            <td className="border px-4 py-2">
+                                                <div className="flex items-center gap-2">
+                                                    <Link
+                                                        href={`/user/manage/${user.id}/edit`}
+                                                        className="inline-flex items-center justify-center text-black hover:text-blue-600"
+                                                        title="Edit"
+                                                    >
+                                                        <Pencil size={20} />
+                                                    </Link>
+                                                    <button
+                                                        onClick={() => deleteUser(user)}
+                                                        className="inline-flex items-center justify-center text-black hover:text-red-600"
+                                                        title="Hapus"
+                                                    >
+                                                        <Trash2 size={20} />
+                                                    </button>
+                                                </div>
                                             </td>
-                                        )}
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={5} className="py-8 text-center text-gray-500">
+                                            Tidak ada data user.
+                                        </td>
                                     </tr>
-                                ))}
+                                )}
                             </tbody>
                         </table>
                     </div>

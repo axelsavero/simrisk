@@ -264,6 +264,8 @@ function RiskMatrixTable({ riskPoints }: { riskPoints: { x: number; y: number; l
                                     bg = 'bg-green-500';
                                     text = 'text-black';
                                 }
+                                // Hitung total risiko di cell ini
+                                const totalRisiko = points.length;
                                 return (
                                     <td key={colIdx} className={`relative h-10 w-1/5 border border-black p-0 text-center md:h-20 ${bg}`}>
                                         <span
@@ -272,15 +274,10 @@ function RiskMatrixTable({ riskPoints }: { riskPoints: { x: number; y: number; l
                                         >
                                             {cell}
                                         </span>
-                                        {points.map((p, i) => (
-                                            <span
-                                                key={i}
-                                                className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full border border-blue-600 bg-blue-200 text-xs"
-                                                style={{ zIndex: 2, fontSize: 11 }}
-                                            >
-                                                {p.label}
-                                            </span>
-                                        ))}
+                                        {/* Total risiko di bawah lingkaran */}
+                                        <div className="mt-1 mb-1 w-full text-center text-xs font-semibold" style={{ minHeight: '1.2em' }}>
+                                            {totalRisiko > 0 ? `${totalRisiko} Risiko` : ''}
+                                        </div>
                                     </td>
                                 );
                             })}

@@ -71,6 +71,8 @@ export interface PenangananRisiko {
 
 // Main IdentifyRisk interface
 export interface IdentifyRisk {
+    unit_kerja?: string;
+    bukti_files?: string[];
     id: number;
     id_identify: string;
     status: boolean;

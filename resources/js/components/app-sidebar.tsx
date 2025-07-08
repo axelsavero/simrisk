@@ -4,7 +4,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { type NavItem } from '@/types';
 // 1. Import hook usePage dari Inertia
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, User, Target, ShieldCheck, ListChecks, Minus } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, User, Target, ShieldCheck, ListChecks, Bolt } from 'lucide-react';
 import AppLogo from './app-logo';
 import React, { useState } from 'react';
 
@@ -33,6 +33,44 @@ export function AppSidebar() {
             icon: LayoutGrid,
         },
         {
+            title: 'Referensi',
+            href: '/referensi',
+            icon: Bolt,
+            role: 'owner-risk',
+            children: [
+                {
+                    title: 'Kategori Risiko',
+                    href: '/identify-risk',
+                },
+                {
+                    title: 'Kriteria Risiko',
+                    href: '/validasi/kriteriarisiko',
+                },
+            ],
+        },
+        {
+            title: 'Sasaran',
+            href: '/sasaran', // Menggunakan nama route
+            icon: Target,
+            role: 'owner-risk',
+        },
+        {
+            title: 'Kelola Risiko',
+            href: '/kelola-risiko',
+            icon: ListChecks,
+            role: 'owner-risk',
+            children: [
+                {
+                    title: 'Identifikasi Risiko',
+                    href: '/identify-risk',
+                },
+                {
+                    title: 'Evaluasi Risiko',
+                    href: '/validasi/evaluasi',
+                },
+            ],
+        },
+        {
             title: 'User Admin',
             href: '/user/manage',
             icon: User,
@@ -44,14 +82,6 @@ export function AppSidebar() {
             icon: Target,
             role: 'super-admin', // <--
         },
-
-        {
-            title: 'Identifikasi Risiko',
-            href: '/identify-risk', // Menggunakan nama route
-            icon: ShieldCheck,
-            role: 'owner-risk', // Hanya untuk peran 'operator'
-        },
-
         {
             title: 'Validasi',
             href: '/validasi',
