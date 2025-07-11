@@ -1,5 +1,6 @@
 // resources/js/Pages/User/Manage.tsx
 
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, User } from '@/types';
 import { PageProps } from '@/types/page-props';
@@ -44,11 +45,9 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
                 <div className="mb-4 flex items-center justify-between">
                     <h3 className="text-xl font-semibold">User Management</h3>
                     {isSuperAdmin && (
-                        <div className="rounded-lg border bg-[#12745A] p-2 px-4 py-2 font-medium text-white">
-                            <Link href="/user/manage/create" className="btn btn-primary">
-                                Tambah User Baru
-                            </Link>
-                        </div>
+                        <Button asChild className="rounded-lg border bg-[#12745A] px-4 py-2 font-medium text-white">
+                            <Link href="/user/manage/create">Tambah User Baru</Link>
+                        </Button>
                     )}
                 </div>
 
@@ -74,20 +73,26 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
                                             <td className="border px-4 py-2">{user.name}</td>
                                             <td className="border px-4 py-2">
                                                 <div className="flex items-center gap-2">
-                                                    <Link
-                                                        href={`/user/manage/${user.id}/edit`}
-                                                        className="inline-flex items-center justify-center text-black hover:text-blue-600"
+                                                    <Button
+                                                        asChild
+                                                        variant="outline"
+                                                        size="icon"
+                                                        className="border-blue-600 text-white bg-blue-600 hover:bg-blue-700"
                                                         title="Edit"
                                                     >
-                                                        <Pencil size={20} />
-                                                    </Link>
-                                                    <button
+                                                        <Link href={`/user/manage/${user.id}/edit`}>
+                                                            <Pencil size={20} />
+                                                        </Link>
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        variant="destructive"
+                                                        size="icon"
                                                         onClick={() => deleteUser(user)}
-                                                        className="inline-flex items-center justify-center text-black hover:text-red-600"
                                                         title="Hapus"
                                                     >
                                                         <Trash2 size={20} />
-                                                    </button>
+                                                    </Button>
                                                 </div>
                                             </td>
                                         </tr>

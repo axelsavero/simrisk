@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, User } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
@@ -340,21 +341,24 @@ export default function Form({ allRoles, user = null }: FormProps) {
                         <span className={apiError.startsWith('✅') ? 'text-green-700' : 'text-red-700'}>{apiError}</span>
                         {!apiError.startsWith('✅') && (
                             <div className="flex gap-2">
-                                <button
+                                <Button
+                                    type="button"
+                                    variant="link"
+                                    className="h-auto p-0 text-sm text-blue-600 underline hover:text-blue-800 disabled:cursor-not-allowed disabled:text-gray-400"
                                     onClick={testApiConnection}
-                                    className="text-sm text-blue-600 underline hover:text-blue-800 disabled:cursor-not-allowed disabled:text-gray-400"
                                     disabled={apiStatus === 'testing' || isThrottled}
                                 >
                                     {apiStatus === 'testing' ? 'Menguji...' : 'Test Koneksi'}
-                                </button>
-                                {/* --- PERBAIKAN: Nonaktifkan tombol saat throttle --- */}
-                                <button
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="link"
+                                    className="h-auto p-0 text-sm text-red-600 underline hover:text-red-800 disabled:cursor-not-allowed disabled:text-gray-400"
                                     onClick={fetchUnits}
-                                    className="text-sm text-red-600 underline hover:text-red-800 disabled:cursor-not-allowed disabled:text-gray-400"
                                     disabled={loadingUnits || isThrottled}
                                 >
                                     {loadingUnits ? 'Memuat...' : 'Coba Lagi'}
-                                </button>
+                                </Button>
                             </div>
                         )}
                     </div>
@@ -404,19 +408,17 @@ export default function Form({ allRoles, user = null }: FormProps) {
 
                     {/* Form Actions */}
                     <div className="mt-6 flex justify-between">
-                        <button
+                        <Button
                             type="submit"
                             disabled={processing || loadingUnits || loadingPegawai || isThrottled}
-                            className="rounded-md border border-green-600 px-6 py-2 text-green-600 transition hover:bg-green-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                            className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
+                            variant="outline"
                         >
                             {user ? 'Simpan Perubahan' : 'Tambah User'}
-                        </button>
-                        <Link
-                            href="/user/manage"
-                            className="rounded-md border border-red-500 px-6 py-2 text-red-500 transition hover:bg-red-500 hover:text-white"
-                        >
-                            Batal
-                        </Link>
+                        </Button>
+                        <Button asChild variant="outline" className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white">
+                            <Link href="/user/manage">Batal</Link>
+                        </Button>
                     </div>
                 </form>
             </div>

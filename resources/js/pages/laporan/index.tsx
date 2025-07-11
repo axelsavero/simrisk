@@ -2,6 +2,11 @@ import AppLayout from '@/layouts/app-layout';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 
+const breadcrumbs = [
+    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'Laporan', href: '/laporan' },
+];
+
 const laporanData = [
     {
         no: 1,
@@ -114,7 +119,7 @@ export default function LaporanIndex() {
     const [tahun, setTahun] = useState('');
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Laporan', href: '/laporan' }]}>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Laporan" />
             <div className="min-h-screen bg-gray-100 p-2 sm:p-4">
                 {/* Filter Section - Responsive */}
@@ -167,9 +172,6 @@ export default function LaporanIndex() {
                                 </th>
                                 <th colSpan={2} className="border border-black bg-gray-100 px-2 py-1 text-center align-middle font-bold">
                                     JADWAL DAN PELAKSANAAN
-                                </th>
-                                <th rowSpan={2} className="border border-black bg-gray-100 px-2 py-1 text-center align-middle font-bold">
-                                    KET
                                 </th>
                                 <th colSpan={2} className="border border-black bg-gray-100 px-2 py-1 text-center align-middle font-bold">
                                     BIAYA PENANGANAN RISIKO (RP)
@@ -245,7 +247,7 @@ export default function LaporanIndex() {
             </div>
 
             {/* Print Styles */}
-            <style jsx>{`
+            <style>{`
                 @media print {
                     body {
                         -webkit-print-color-adjust: exact;

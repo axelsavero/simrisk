@@ -1,6 +1,7 @@
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
@@ -37,12 +38,10 @@ interface Props {
 }
 
 export default function Dashboard({ riskMatrixData, filterOptions, filters }: Props) {
-    // 🔥 State filter - gunakan data dari backend atau default
     const [unit, setUnit] = useState(filters?.unit || '');
     const [kategori, setKategori] = useState(filters?.kategori || '');
     const [tahun, setTahun] = useState(filters?.tahun || '');
 
-    // 🔥 Gunakan data dari backend atau fallback ke data default
     const riskPointsSebelum = riskMatrixData?.riskPointsSebelum || [
         { x: 1, y: 3, label: '1' },
         { x: 1, y: 4, label: '2' },
@@ -65,6 +64,11 @@ export default function Dashboard({ riskMatrixData, filterOptions, filters }: Pr
         { tingkat: 'Sedang', inheren: 3, residual: 0, color: 'bg-yellow-500' },
         { tingkat: 'Tinggi', inheren: 2, residual: 0, color: 'bg-red-500' },
     ];
+
+    // Ambil role dari props
+    const { auth } = usePage().props as any;
+    const roles: string[] = auth?.user?.roles || [];
+    const isSuperAdmin = roles.includes('super-admin');
 
     // 🔥 Filter functionality - kirim ke backend
     const handleFilterChange = () => {
@@ -99,51 +103,52 @@ export default function Dashboard({ riskMatrixData, filterOptions, filters }: Pr
                 <div className="flex flex-1 flex-col gap-4 overflow-auto rounded-xl p-4">
                     <h2 className="mb-2 text-xl font-semibold">Matriks Risiko</h2>
 
-                    {/* Filter - gunakan data dari backend */}
-                    <div className="mb-2 flex flex-col justify-end gap-4 md:flex-row">
-                        <select className="rounded border px-3 py-2" value={unit} onChange={(e) => setUnit(e.target.value)}>
-                            <option value="">Pilih Unit</option>
-                            {/* 🔥 Dynamic options dari backend */}
-                            {filterOptions?.units?.map((unitOption) => (
-                                <option key={unitOption} value={unitOption}>
-                                    {unitOption}
-                                </option>
-                            )) || (
-                                <>
-                                    <option value="unit1">Unit 1</option>
-                                    <option value="unit2">Unit 2</option>
-                                </>
-                            )}
-                        </select>
-                        <select className="rounded border px-3 py-2" value={kategori} onChange={(e) => setKategori(e.target.value)}>
-                            <option value="">Kategori</option>
-                            {/* 🔥 Dynamic options dari backend */}
-                            {filterOptions?.kategoris?.map((kategoriOption) => (
-                                <option key={kategoriOption} value={kategoriOption}>
-                                    {kategoriOption}
-                                </option>
-                            )) || (
-                                <>
-                                    <option value="kategori1">Kategori 1</option>
-                                    <option value="kategori2">Kategori 2</option>
-                                </>
-                            )}
-                        </select>
-                        <select className="rounded border px-3 py-2" value={tahun} onChange={(e) => setTahun(e.target.value)}>
-                            <option value="">Tahun</option>
-                            {/* 🔥 Dynamic options dari backend */}
-                            {filterOptions?.tahuns?.map((tahunOption) => (
-                                <option key={tahunOption} value={tahunOption}>
-                                    {tahunOption}
-                                </option>
-                            )) || (
-                                <>
-                                    <option value="2024">2024</option>
-                                    <option value="2025">2025</option>
-                                </>
-                            )}
-                        </select>
-                    </div>
+                    {/* Filter hanya untuk super-admin */}
+                    {isSuperAdmin && (
+                        <div className="mb-2 flex flex-col justify-end gap-4 md:flex-row">
+                            {/* Unit Select */}
+                            <Select value={unit} onValueChange={setUnit}>
+                                <SelectTrigger className="rounded border px-3 py-2">
+                                    <SelectValue placeholder="Pilih Unit" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {(filterOptions?.units?.length ? filterOptions.units : ['unit1', 'unit2']).map((unitOption) => (
+                                        <SelectItem key={unitOption} value={unitOption}>
+                                            {unitOption}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {/* Kategori Select */}
+                            <Select value={kategori} onValueChange={setKategori}>
+                                <SelectTrigger className="rounded border px-3 py-2">
+                                    <SelectValue placeholder="Kategori" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {(filterOptions?.kategoris?.length ? filterOptions.kategoris : ['kategori1', 'kategori2']).map(
+                                        (kategoriOption) => (
+                                            <SelectItem key={kategoriOption} value={kategoriOption}>
+                                                {kategoriOption}
+                                            </SelectItem>
+                                        ),
+                                    )}
+                                </SelectContent>
+                            </Select>
+                            {/* Tahun Select */}
+                            <Select value={tahun} onValueChange={setTahun}>
+                                <SelectTrigger className="rounded border px-3 py-2">
+                                    <SelectValue placeholder="Tahun" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {(filterOptions?.tahuns?.length ? filterOptions.tahuns : ['2024', '2025']).map((tahunOption) => (
+                                        <SelectItem key={tahunOption} value={tahunOption}>
+                                            {tahunOption}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
 
                     {/* Matriks Risiko Sebelum & Sesudah - format tetap sama */}
                     <div className="flex flex-col gap-6 lg:flex-row">
