@@ -40,7 +40,7 @@ export function AppSidebar() {
             children: [
                 {
                     title: 'Kategori Risiko',
-                    href: '/identify-risk',
+                    href: '/referensi',
                 },
                 {
                     title: 'Kriteria Risiko',
@@ -52,7 +52,7 @@ export function AppSidebar() {
             title: 'Sasaran',
             href: '/sasaran', // Menggunakan nama route
             icon: Target,
-            role: 'owner-risk',
+            role: 'admin',
         },
         {
             title: 'Kelola Risiko',
@@ -65,8 +65,8 @@ export function AppSidebar() {
                     href: '/identify-risk',
                 },
                 {
-                    title: 'Evaluasi Risiko',
-                    href: '/validasi/evaluasi',
+                    title: 'Mitigasi Risiko',
+                    href: '/mitigasi',
                 },
             ],
         },

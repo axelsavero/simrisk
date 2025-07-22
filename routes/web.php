@@ -9,6 +9,8 @@ use App\Http\Controllers\SasaranUnivController;
 use App\Http\Controllers\IdentifyRiskController;
 use App\Http\Controllers\MitigasiController;
 use App\Http\Controllers\SipegProxyController;
+use App\Http\Controllers\ReferensiController;
+use League\CommonMark\Reference\Reference;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -35,7 +37,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     Route::resource('identify-risk', IdentifyRiskController::class);
-    
+
     // Routes untuk workflow dan file handling
     Route::prefix('identify-risk')->name('identify-risk.')->group(function () {
         // Workflow routes
@@ -45,7 +47,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
               ->name('approve');
         Route::post('{identifyRisk}/reject', [IdentifyRiskController::class, 'reject'])
               ->name('reject');
-        
+
         // File download route
         Route::get('{identifyRisk}/download-bukti', [IdentifyRiskController::class, 'downloadBukti'])
               ->name('download-bukti');
@@ -53,22 +55,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Mitigasi routes
     Route::resource('mitigasi', MitigasiController::class);
-    
+
     Route::prefix('mitigasi')->name('mitigasi.')->group(function () {
         // Progress update
         Route::patch('{mitigasi}/progress', [MitigasiController::class, 'updateProgress'])
               ->name('update-progress');
-        
+
         // File handling
         Route::get('{mitigasi}/download-bukti', [MitigasiController::class, 'downloadBukti'])
               ->name('download-bukti');
         Route::delete('{mitigasi}/remove-bukti', [MitigasiController::class, 'removeBukti'])
               ->name('remove-bukti');
-        
+
         // API endpoints
         Route::get('statistics', [MitigasiController::class, 'getStatistics'])
               ->name('statistics');
-        
+
         // Approval workflow routes
         Route::post('{mitigasi}/submit', [MitigasiController::class, 'submit'])
               ->name('submit');
@@ -77,7 +79,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('{mitigasi}/reject', [MitigasiController::class, 'reject'])
               ->name('reject');
     });
-    
+
     // API route for getting mitigasi by risk
     Route::get('api/risk/{identifyRisk}/mitigasi', [MitigasiController::class, 'getByRisk'])
           ->name('api.risk.mitigasi');
@@ -87,7 +89,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('sasaran-univ', SasaranUnivController::class);
 
-    Route::get('sasaran-univ/{sasaranUniv}/dokumen/{dokumenId}/download', 
+    Route::get('sasaran-univ/{sasaranUniv}/dokumen/{dokumenId}/download',
         [SasaranUnivController::class, 'downloadDokumen'])
         ->name('sasaran-univ.download-dokumen');
 });
@@ -106,6 +108,8 @@ Route::prefix('laporan')->name('laporan.')->group(function () {
     Route::get('/export-pdf', [LaporanController::class, 'exportPdf'])->name('export-pdf');
     Route::get('/export-excel', [LaporanController::class, 'exportExcel'])->name('export-excel');
 });
+
+ Route::resource('referensi', ReferensiController::class);
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
