@@ -94,7 +94,7 @@ export default function Index({ sasaranUnivs, flash }: IndexProps) {
                     {sortedData.length > 0 && (
                         <Link
                             href={route('sasaran-univ.create')}
-                            className="flex items-center gap-2 rounded-md bg-[#12745A] px-6 py-3 font-medium text-white transition hover:bg-green-900"
+                            className="flex items-center gap-2 rounded-md bg-[#12745A] px-2 py-2 font-medium text-white transition hover:bg-green-900"
                         >
                             <FilePlus />
                             Tambah Dokumen
@@ -135,87 +135,91 @@ export default function Index({ sasaranUnivs, flash }: IndexProps) {
                         </Link>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto rounded-xl border-2 border-gray-300 bg-white shadow-md">
-                        <table className="w-full">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th onClick={() => handleSort('id_sasaran_univ')} className={headerClass}>
-                                        ID {renderSortArrow('id_sasaran_univ')}
-                                    </th>
-                                    <th onClick={() => handleSort('kategori')} className={headerClass}>
-                                        Kategori {renderSortArrow('kategori')}
-                                    </th>
-                                    <th onClick={() => handleSort('nama_dokumen')} className={headerClass}>
-                                        Nama Dokumen {renderSortArrow('nama_dokumen')}
-                                    </th>
-                                    <th onClick={() => handleSort('nomor_dokumen')} className={headerClass}>
-                                        Nomor Dokumen {renderSortArrow('nomor_dokumen')}
-                                    </th>
-                                    <th onClick={() => handleSort('tanggal_dokumen')} className={headerClass}>
-                                        Tanggal {renderSortArrow('tanggal_dokumen')}
-                                    </th>
-                                    <th className={headerClass}>File</th>
-                                    <th className={headerClass}>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200 bg-white">
-                                {sortedData.map((item) => (
-                                    <tr key={item.id_sasaran_univ} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 text-sm text-gray-900">{item.id_sasaran_univ}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-900">
-                                            <span className="inline-flex rounded-full bg-blue-100 px-2 text-xs font-semibold text-blue-800">
-                                                {item.kategori}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-900">{item.nama_dokumen || '-'}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-900">{item.nomor_dokumen || '-'}</td>
-                                        <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
-                                            {item.tanggal_dokumen ? new Date(item.tanggal_dokumen).toLocaleDateString('id-ID') : '-'}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-blue-600">
-                                            {item.file_path ? (
-                                                <a
-                                                    href={`/storage/${item.file_path}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="flex items-center gap-1 hover:text-blue-800"
-                                                >
-                                                    <FileText />
-                                                    Lihat File
-                                                </a>
-                                            ) : (
-                                                <span className="text-gray-400">Tidak ada file</span>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                            <div className="flex items-center gap-2">
-                                                <Link
-                                                    href={route('sasaran-univ.show', item.id_sasaran_univ)}
-                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-700 hover:bg-blue-500 hover:text-white"
-                                                    title="Detail"
-                                                >
-                                                    <ScanSearch size={20} />
-                                                </Link>
-                                                <Link
-                                                    href={route('sasaran-univ.edit', item.id_sasaran_univ)}
-                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-yellow-100 text-yellow-700 hover:bg-yellow-400 hover:text-white"
-                                                    title="Edit"
-                                                >
-                                                    <SquarePen size={20} />
-                                                </Link>
-                                                <button
-                                                    onClick={() => handleDelete(item.id_sasaran_univ)}
-                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-700 hover:bg-red-500 hover:text-white"
-                                                    title="Hapus"
-                                                >
-                                                    <Trash2 size={20} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                    <div className="border-sidebar-border overflow-hidden rounded-xl border bg-white shadow-sm">
+                        <div className='overflow-x-auto p-4'>
+                            <div className="overflow-x-auto rounded-xl border-2 border-gray-300 bg-white shadow-md">
+                                <table className="w-full border-separate">
+                                    <thead className="bg-gray-100">
+                                        <tr>
+                                            <th onClick={() => handleSort('id_sasaran_univ')} className={headerClass}>
+                                                ID {renderSortArrow('id_sasaran_univ')}
+                                            </th>
+                                            <th onClick={() => handleSort('kategori')} className={headerClass}>
+                                                Kategori {renderSortArrow('kategori')}
+                                            </th>
+                                            <th onClick={() => handleSort('nama_dokumen')} className={headerClass}>
+                                                Nama Dokumen {renderSortArrow('nama_dokumen')}
+                                            </th>
+                                            <th onClick={() => handleSort('nomor_dokumen')} className={headerClass}>
+                                                Nomor Dokumen {renderSortArrow('nomor_dokumen')}
+                                            </th>
+                                            <th onClick={() => handleSort('tanggal_dokumen')} className={headerClass}>
+                                                Tanggal {renderSortArrow('tanggal_dokumen')}
+                                            </th>
+                                            <th className={headerClass}>File</th>
+                                            <th className={headerClass}>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-200 bg-white">
+                                        {sortedData.map((item) => (
+                                            <tr key={item.id_sasaran_univ} className="hover:bg-gray-50">
+                                                <td className="px-6 py-4 text-sm text-gray-900">{item.id_sasaran_univ}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-900">
+                                                    <span className="inline-flex rounded-full bg-blue-100 px-2 text-xs font-semibold text-blue-800">
+                                                        {item.kategori}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-gray-900">{item.nama_dokumen || '-'}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-900">{item.nomor_dokumen || '-'}</td>
+                                                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
+                                                    {item.tanggal_dokumen ? new Date(item.tanggal_dokumen).toLocaleDateString('id-ID') : '-'}
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-blue-600">
+                                                    {item.file_path ? (
+                                                        <a
+                                                            href={`/storage/${item.file_path}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="flex items-center gap-1 hover:text-blue-800"
+                                                        >
+                                                            <FileText />
+                                                            Lihat File
+                                                        </a>
+                                                    ) : (
+                                                        <span className="text-gray-400">Tidak ada file</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
+                                                    <div className="flex items-center gap-2">
+                                                        <Link
+                                                            href={route('sasaran-univ.show', item.id_sasaran_univ)}
+                                                            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-700 hover:bg-blue-500 hover:text-white"
+                                                            title="Detail"
+                                                        >
+                                                            <ScanSearch size={20} />
+                                                        </Link>
+                                                        <Link
+                                                            href={route('sasaran-univ.edit', item.id_sasaran_univ)}
+                                                            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-yellow-100 text-yellow-700 hover:bg-yellow-400 hover:text-white"
+                                                            title="Edit"
+                                                        >
+                                                            <SquarePen size={20} />
+                                                        </Link>
+                                                        <button
+                                                            onClick={() => handleDelete(item.id_sasaran_univ)}
+                                                            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-700 hover:bg-red-500 hover:text-white"
+                                                            title="Hapus"
+                                                        >
+                                                            <Trash2 size={20} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>
