@@ -5,7 +5,7 @@ import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, User } from '@/types';
 import { PageProps } from '@/types/page-props';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, UserRoundPlus } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 export default function Manage({ users }: PageProps<{ users: User[] }>) {
@@ -46,7 +46,10 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
                     <h3 className="text-xl font-semibold">User Management</h3>
                     {isSuperAdmin && (
                         <Button asChild className="rounded-lg border bg-[#12745A] px-4 py-2 font-medium text-white">
-                            <Link href="/user/manage/create">Tambah User Baru</Link>
+                            <Link href="/user/manage/create">
+                            <UserRoundPlus />
+                            Tambah User
+                            </Link>
                         </Button>
                     )}
                 </div>
@@ -77,7 +80,7 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
                                                         asChild
                                                         variant="outline"
                                                         size="icon"
-                                                        className="border-blue-600 text-white bg-blue-600 hover:bg-blue-700"
+                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-700 hover:bg-blue-500 hover:text-white"
                                                         title="Edit"
                                                     >
                                                         <Link href={`/user/manage/${user.id}/edit`}>
@@ -88,6 +91,7 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
                                                         type="button"
                                                         variant="destructive"
                                                         size="icon"
+                                                        className='className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-700 hover:bg-red-500 hover:text-white'
                                                         onClick={() => deleteUser(user)}
                                                         title="Hapus"
                                                     >

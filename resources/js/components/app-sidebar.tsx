@@ -94,7 +94,7 @@ export function AppSidebar() {
                 },
                 {
                     title: 'Validasi Evaluasi Risiko',
-                    href: '/validasi/evaluasi',
+                    href: '/mitigasi',
                 },
             ],
         },
