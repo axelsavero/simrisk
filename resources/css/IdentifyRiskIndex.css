@@ -819,3 +819,132 @@
         transform: translateY(-1px);
     }
 }
+
+/* Table Actions Styles */
+.table-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+}
+
+.table-action-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: fit-content;
+}
+
+.table-action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.table-action-btn:active {
+    transform: translateY(0);
+}
+
+.table-action-btn.detail {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.table-action-btn.detail:hover {
+    background-color: #2563eb;
+}
+
+.table-action-btn.edit {
+    background-color: #f59e0b;
+    color: white;
+}
+
+.table-action-btn.edit:hover {
+    background-color: #d97706;
+}
+
+.table-action-btn.submit {
+    background-color: #10b981;
+    color: white;
+}
+
+.table-action-btn.submit:hover {
+    background-color: #059669;
+}
+
+.table-action-btn.delete {
+    background-color: #ef4444;
+    color: white;
+}
+
+.table-action-btn.delete:hover {
+    background-color: #dc2626;
+}
+
+.table-action-btn.approve {
+    background-color: #10b981;
+    color: white;
+}
+
+.table-action-btn.approve:hover {
+    background-color: #059669;
+}
+
+.table-action-btn.reject {
+    background-color: #ef4444;
+    color: white;
+}
+
+.table-action-btn.reject:hover {
+    background-color: #dc2626;
+}
+
+/* Status Badge Styles */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.submitted {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.status-badge.approved {
+    background-color: #d1fae5;
+    color: #059669;
+}
+
+.status-badge.rejected {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+/* Responsive adjustments for table actions */
+@media (max-width: 768px) {
+    .table-actions {
+        gap: 4px;
+    }
+    
+    .table-action-btn {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+    
+    .status-badge {
+        padding: 3px 6px;
+        font-size: 10px;
+    }
+}

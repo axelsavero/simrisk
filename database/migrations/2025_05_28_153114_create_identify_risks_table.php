@@ -10,7 +10,7 @@ return new class extends Migration {
         Schema::create('identify_risks', function (Blueprint $table) {
             $table->id();
             $table->string('id_identify')->unique();
-            $table->boolean('status')->default(true);
+            $table->boolean('is_active')->default(true);
             $table->string('risk_category');
 
             // Field untuk dashboard filtering
@@ -51,9 +51,9 @@ return new class extends Migration {
             $table->text('rejection_reason')->nullable();
             $table->json('bukti_files')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null'); // Owner of the risk
 
             $table->string('status')->default('Pending'); // Add status field
-            $table->text('rejection_reason')->nullable();
 
             $table->timestamps();
             $table->softDeletes();

@@ -69,13 +69,68 @@ export interface PenangananRisiko {
     updated_at: string;
 }
 
+export interface Mitigasi {
+    id: number;
+    identify_risk_id: number;
+    judul_mitigasi: string;
+    deskripsi_mitigasi: string;
+    strategi_mitigasi: 'avoid' | 'reduce' | 'transfer' | 'accept';
+    pic_mitigasi: string;
+    target_selesai: string;
+    biaya_mitigasi?: number;
+    status_mitigasi: 'belum_dimulai' | 'sedang_berjalan' | 'selesai' | 'tertunda' | 'dibatalkan';
+    progress_percentage: number;
+    catatan_progress?: string;
+    bukti_implementasi?: Array<{
+        original_name: string;
+        file_name: string;
+        file_path: string;
+        file_size: number;
+        file_extension: string;
+        uploaded_at: string;
+    }>;
+    evaluasi_efektivitas?: string;
+    rekomendasi_lanjutan?: string;
+    validation_status: 'draft' | 'submitted' | 'pending' | 'approved' | 'rejected';
+    validation_processed_at?: string | null;
+    validation_processed_by?: number | null;
+    rejection_reason?: string | null;
+    created_by?: number;
+    updated_by?: number;
+    created_at: string;
+    updated_at: string;
+    deleted_at?: string;
+    
+    // Relationships
+    identify_risk?: IdentifyRisk;
+    creator?: User;
+    updater?: User;
+    validation_processor?: User;
+    
+    // Computed attributes
+    status_label?: string;
+    strategi_label?: string;
+    is_overdue?: boolean;
+    is_upcoming?: boolean;
+    days_remaining?: number;
+    
+    // Permissions
+    permissions?: {
+        canEdit: boolean;
+        canDelete: boolean;
+        canSubmit: boolean;
+        canApprove: boolean;
+        canReject: boolean;
+    };
+}
+
 // Main IdentifyRisk interface
 export interface IdentifyRisk {
     unit_kerja?: string;
     bukti_files?: string[];
     id: number;
     id_identify: string;
-    status: boolean;
+    is_active: boolean;
     risk_category: string;
     identification_date_start: string;
     identification_date_end: string;
@@ -103,6 +158,7 @@ export interface IdentifyRisk {
     penyebab?: Array<{ description: string }>;
     dampak_kualitatif?: Array<{ description: string }>;
     penanganan_risiko?: Array<{ description: string }>;
+    mitigasis?: Mitigasi[];
 
     created_at?: string;
     updated_at?: string;
@@ -155,6 +211,10 @@ export interface SharedPageProps {
     allRoles?: string[];
     identifyRisks?: PaginatedData<IdentifyRisk>;
     identifyRisk?: IdentifyRisk | null;
+    mitigasis?: PaginatedData<Mitigasi>;
+    mitigasi?: Mitigasi | null;
+    statusOptions?: Record<string, string>;
+    strategiOptions?: Record<string, string>;
 
     [key: string]: unknown;
 }

@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserManageController;
 use App\Http\Controllers\SasaranUnivController;
 use App\Http\Controllers\IdentifyRiskController;
+use App\Http\Controllers\MitigasiController;
 use App\Http\Controllers\SipegProxyController;
 
 Route::get('/', function () {
@@ -49,6 +50,37 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('{identifyRisk}/download-bukti', [IdentifyRiskController::class, 'downloadBukti'])
               ->name('download-bukti');
     });
+
+    // Mitigasi routes
+    Route::resource('mitigasi', MitigasiController::class);
+    
+    Route::prefix('mitigasi')->name('mitigasi.')->group(function () {
+        // Progress update
+        Route::patch('{mitigasi}/progress', [MitigasiController::class, 'updateProgress'])
+              ->name('update-progress');
+        
+        // File handling
+        Route::get('{mitigasi}/download-bukti', [MitigasiController::class, 'downloadBukti'])
+              ->name('download-bukti');
+        Route::delete('{mitigasi}/remove-bukti', [MitigasiController::class, 'removeBukti'])
+              ->name('remove-bukti');
+        
+        // API endpoints
+        Route::get('statistics', [MitigasiController::class, 'getStatistics'])
+              ->name('statistics');
+        
+        // Approval workflow routes
+        Route::post('{mitigasi}/submit', [MitigasiController::class, 'submit'])
+              ->name('submit');
+        Route::post('{mitigasi}/approve', [MitigasiController::class, 'approve'])
+              ->name('approve');
+        Route::post('{mitigasi}/reject', [MitigasiController::class, 'reject'])
+              ->name('reject');
+    });
+    
+    // API route for getting mitigasi by risk
+    Route::get('api/risk/{identifyRisk}/mitigasi', [MitigasiController::class, 'getByRisk'])
+          ->name('api.risk.mitigasi');
 
 });
 

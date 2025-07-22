@@ -13,7 +13,7 @@ interface FormProps {
 interface FormData {
     [key: string]: any;
     id_identify: string;
-    status: boolean;
+    is_active: boolean;
     risk_category: string;
     identification_date_start: string;
     identification_date_end: string;
@@ -38,7 +38,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
     const { data, setData, post, put, processing, errors } = useForm<FormData>({
         // Existing fields
         id_identify: identifyRisk?.id_identify || '',
-        status: identifyRisk?.status ?? true,
+        is_active: identifyRisk?.is_active ?? true,
         risk_category: identifyRisk?.risk_category || '',
         identification_date_start: identifyRisk?.identification_date_start || new Date().toISOString().split('T')[0],
         identification_date_end: identifyRisk?.identification_date_end || new Date().toISOString().split('T')[0],

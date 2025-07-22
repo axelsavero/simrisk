@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\IdentifyRisk;
+use App\Models\Mitigasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -30,6 +31,7 @@ class DashboardController extends Controller
 
         return Inertia::render('dashboard/index', [
             'riskMatrixData' => $this->formatRiskMatrixData($risks),
+            'mitigasiMatrixData' => $this->formatMitigasiMatrixData($unit, $kategori, $tahun),
             'dashboardStats' => $this->getDashboardStatistics($risks),
             'riskTrends' => $this->getRiskTrends($tahun),
             'filters' => compact('unit', 'kategori', 'tahun', 'statusMitigasi'),
@@ -47,16 +49,16 @@ class DashboardController extends Controller
         if ($user->hasRole('super-admin')) {
             // Super admin melihat semua kecuali draft
             return $query->whereNotIn('validation_status', [IdentifyRisk::STATUS_DRAFT])
-                        ->where('status', true);
+                        ->where('is_active', true);
         } elseif ($user->hasRole('owner-risk')) {
             // Owner-risk melihat semua data mereka
-            return $query->where('status', true);
+            return $query->where('is_active', true);
         } elseif ($user->hasRole('pimpinan')) {
             // Pimpinan hanya approved
-            return $query->approved()->where('status', true);
+            return $query->approved()->where('is_active', true);
         } else {
             // User lain hanya approved
-            return $query->approved()->where('status', true);
+            return $query->approved()->where('is_active', true);
         }
     }
 
@@ -104,6 +106,106 @@ class DashboardController extends Controller
             'tingkatRisiko' => $this->calculateRiskLevels($risks),
             'totalRisks' => $risks->count(),
             'mitigationEffectiveness' => $this->calculateMitigationEffectiveness($risks)
+        ];
+    }
+
+    private function formatMitigasiMatrixData($unit = null, $kategori = null, $tahun = null)
+    {
+        $user = Auth::user();
+        $query = Mitigasi::with(['identifyRisk'])
+                         ->where('validation_status', Mitigasi::VALIDATION_STATUS_APPROVED);
+
+        // Filter berdasarkan role
+        if ($user->hasRole('owner-risk')) {
+            $query->whereHas('identifyRisk', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            });
+        } elseif ($user->hasRole('pimpinan')) {
+            $query->whereHas('identifyRisk', function ($q) use ($user) {
+                $q->where('unit_kerja', $user->unit_kerja);
+            });
+        }
+        // Super admin bisa melihat semua mitigasi yang approved
+
+        // Apply filters
+        if ($unit) {
+            $query->whereHas('identifyRisk', function ($q) use ($unit) {
+                $q->where('unit_kerja', $unit);
+            });
+        }
+
+        if ($kategori) {
+            $query->whereHas('identifyRisk', function ($q) use ($kategori) {
+                $q->where('kategori_risiko', $kategori);
+            });
+        }
+
+        if ($tahun) {
+            $query->whereHas('identifyRisk', function ($q) use ($tahun) {
+                $q->where('tahun', $tahun);
+            });
+        }
+
+        $mitigasis = $query->get();
+
+        // Format data untuk matrix
+        $mitigasiPoints = [];
+        $statusStats = [
+            'belum_dimulai' => 0,
+            'sedang_berjalan' => 0,
+            'selesai' => 0,
+            'tertunda' => 0,
+            'dibatalkan' => 0
+        ];
+
+        $strategiStats = [
+            'menghindari' => 0,
+            'mengurangi' => 0,
+            'mentransfer' => 0,
+            'menerima' => 0
+        ];
+
+        foreach ($mitigasis as $mitigasi) {
+            $risk = $mitigasi->identifyRisk;
+            
+            if ($risk && $risk->probability_residual && $risk->impact_residual) {
+                $mitigasiPoints[] = [
+                    'id' => $mitigasi->id,
+                    'x' => $risk->probability_residual,
+                    'y' => $risk->impact_residual,
+                    'label' => $mitigasi->id,
+                    'judul_mitigasi' => $mitigasi->judul_mitigasi,
+                    'kode_risiko' => $risk->id_identify,
+                    'nama_risiko' => $risk->description,
+                    'strategi_mitigasi' => $mitigasi->strategi_mitigasi,
+                    'status_mitigasi' => $mitigasi->status_mitigasi,
+                    'progress_percentage' => $mitigasi->progress_percentage,
+                    'pic_mitigasi' => $mitigasi->pic_mitigasi,
+                    'target_selesai' => $mitigasi->target_selesai?->format('Y-m-d'),
+                    'unit_kerja' => $risk->unit_kerja,
+                    'level' => $risk->level_residual,
+                    'level_text' => $risk->residual_risk_level
+                ];
+            }
+
+            // Count statistics
+            if (isset($statusStats[$mitigasi->status_mitigasi])) {
+                $statusStats[$mitigasi->status_mitigasi]++;
+            }
+
+            if (isset($strategiStats[$mitigasi->strategi_mitigasi])) {
+                $strategiStats[$mitigasi->strategi_mitigasi]++;
+            }
+        }
+
+        return [
+            'mitigasiPoints' => $mitigasiPoints,
+            'totalMitigasi' => $mitigasis->count(),
+            'statusStats' => $statusStats,
+            'strategiStats' => $strategiStats,
+            'completionRate' => $mitigasis->count() > 0 ? 
+                round(($statusStats['selesai'] / $mitigasis->count()) * 100, 1) : 0,
+            'averageProgress' => $mitigasis->avg('progress_percentage') ?? 0
         ];
     }
 

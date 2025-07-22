@@ -2,7 +2,7 @@
 
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, IdentifyRisk } from '@/types';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Bomb, ChartColumn, CheckCircle2, CircleHelp, CornerDownLeft, FileText, Hourglass, Info, Pencil, ShieldCheck, TriangleAlert, X } from 'lucide-react';
 
 interface ShowProps {
@@ -131,6 +131,13 @@ export default function Show() {
                             <Pencil/>
                             Edit
                         </Link>
+                        <button
+                            onClick={() => router.post(route('identify-risk.submit', identifyRisk.id))}
+                            className="inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-white transition-colors hover:bg-green-700"
+                        >
+                            <CheckCircle2/>
+                            Submit
+                        </button>
                         <Link
                             href={route('identify-risk.index')}
                             className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-50"

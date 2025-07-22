@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Penyebab;
 use App\Models\DampakKualitatif;
 use App\Models\PenangananRisiko;
+use App\Models\Mitigasi;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder; 
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -26,7 +27,7 @@ class IdentifyRisk extends Model
 
     protected $fillable = [
         'id_identify',
-        'status',
+        'is_active',
         'risk_category',
         'identification_date_start',
         'identification_date_end',
@@ -51,15 +52,16 @@ class IdentifyRisk extends Model
         'probability_residual',
         'impact_residual',
         'level_residual',
-        'status_mitigasi', // ✅ Added missing field
+        'status_mitigasi',
         'pemilik_risiko',
         'rencana_mitigasi',
         'target_mitigasi',
         'created_by',
+        'user_id',  
     ];
 
     protected $casts = [
-        'status' => 'boolean',
+        'is_active' => 'boolean',
         'identification_date_start' => 'date',
         'identification_date_end' => 'date',
         'probability' => 'integer',
@@ -91,6 +93,11 @@ class IdentifyRisk extends Model
         return $this->hasMany(PenangananRisiko::class, 'identify_risk_id');
     }
 
+    public function mitigasis(): HasMany
+    {
+        return $this->hasMany(Mitigasi::class, 'identify_risk_id');
+    }
+
     public function validationProcessor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'validation_processed_by');
@@ -99,6 +106,11 @@ class IdentifyRisk extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     // SCOPES FOR VALIDATION STATUS
@@ -171,7 +183,7 @@ class IdentifyRisk extends Model
      */
     public function scopeActive(Builder $query): Builder
     {
-        return $query->where('status', true);
+        return $query->where('is_active', true);
     }
 
     /**

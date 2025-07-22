@@ -198,16 +198,16 @@ class LaporanController extends Controller
         if ($user->hasRole('super-admin')) {
             // Super admin melihat semua kecuali draft
             return $query->whereNotIn('validation_status', ['draft'])
-                        ->where('status', true);
+                        ->where('is_active', true);
         } elseif ($user->hasRole('owner-risk')) {
             // Owner-risk melihat semua data mereka
-            return $query->where('status', true);
+            return $query->where('is_active', true);
         } elseif ($user->hasRole('pimpinan')) {
             // Pimpinan hanya approved
-            return $query->approved()->where('status', true);
+            return $query->approved()->where('is_active', true);
         } else {
             // User lain hanya approved
-            return $query->approved()->where('status', true);
+            return $query->approved()->where('is_active', true);
         }
     }
 

@@ -6,6 +6,7 @@ use App\Models\IdentifyRisk;
 use App\Models\Penyebab;
 use App\Models\DampakKualitatif;
 use App\Models\PenangananRisiko;
+use App\Models\Mitigasi;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Redirect;
@@ -38,22 +39,23 @@ class IdentifyRiskController extends Controller
         if ($user->hasRole('super-admin')) {
             // Super admin melihat semua data )
             $query = $query->whereNotIn('validation_status', [IdentifyRisk::STATUS_DRAFT])
-                      ->where('status', true);
+                      ->where('is_active', true);
         } elseif ($user->hasRole('owner-risk')) {
             // Owner-risk melihat semua risiko mereka (termasuk draft)
-            $query = $query->where('status', true);
+            $query = $query->where('is_active', true);
         } elseif ($user->hasRole('pimpinan')) {
             // Pimpinan hanya melihat yang sudah approved
-            $query = $query->approved()->where('status', true);
+            $query = $query->approved()->where('is_active', true);
         } else {
             // User lain hanya melihat yang sudah approved dan aktif
-            $query = $query->approved()->where('status', true);
+            $query = $query->approved()->where('is_active', true);
         }
 
         $identifyRisks = $query->paginate(12)->through(fn ($risk) => [
             'id' => $risk->id,
             'id_identify' => $risk->id_identify,
             'status' => $risk->status,
+            'is_active' => $risk->is_active,
             'risk_category' => $risk->risk_category,
             'identification_date_start' => $risk->identification_date_start->format('Y-m-d'),
             'identification_date_end' => $risk->identification_date_end->format('Y-m-d'),
@@ -118,7 +120,7 @@ class IdentifyRiskController extends Controller
         // Validasi input dengan field yang konsisten
         $validated = $request->validate([
             'id_identify' => 'required|string|unique:identify_risks,id_identify|max:255',
-            'status' => 'required|boolean',
+            'is_active' => 'required|boolean',
             'risk_category' => 'required|string|max:255',
             'identification_date_start' => 'required|date',
             'identification_date_end' => 'required|date|after_or_equal:identification_date_start',
@@ -166,6 +168,9 @@ class IdentifyRiskController extends Controller
             'penyebab', 'dampak_kualitatif', 'penanganan_risiko', 
             'bukti_risiko_file', 'bukti_risiko_nama'
         ])->toArray();
+
+        // Tambahkan user_id
+        $identifyRiskData['user_id'] = Auth::id();
 
         // Buat IdentifyRisk
         $identifyRisk = IdentifyRisk::create($identifyRiskData);
@@ -231,7 +236,7 @@ class IdentifyRiskController extends Controller
             'identifyRisk' => [
                 'id' => $identifyRisk->id,
                 'id_identify' => $identifyRisk->id_identify,
-                'status' => $identifyRisk->status,
+                'is_active' => $identifyRisk->is_active,
                 'risk_category' => $identifyRisk->risk_category,
                 'identification_date_start' => $identifyRisk->identification_date_start->format('Y-m-d'),
                 'identification_date_end' => $identifyRisk->identification_date_end->format('Y-m-d'),
@@ -290,7 +295,7 @@ class IdentifyRiskController extends Controller
             'identifyRisk' => [
                 'id' => $identifyRisk->id,
                 'id_identify' => $identifyRisk->id_identify,
-                'status' => $identifyRisk->status,
+                'is_active' => $identifyRisk->is_active,
                 'risk_category' => $identifyRisk->risk_category,
                 'identification_date_start' => $identifyRisk->identification_date_start->format('Y-m-d'),
                 'identification_date_end' => $identifyRisk->identification_date_end->format('Y-m-d'),
@@ -330,7 +335,7 @@ class IdentifyRiskController extends Controller
         // Validasi untuk update
         $validated = $request->validate([
             'id_identify' => ['required', 'string', 'max:255', Rule::unique('identify_risks')->ignore($identifyRisk->id)],
-            'status' => 'required|boolean',
+            'is_active' => 'required|boolean',
             'risk_category' => 'required|string|max:255',
             'identification_date_start' => 'required|date',
             'identification_date_end' => 'required|date|after_or_equal:identification_date_start',
@@ -498,8 +503,20 @@ class IdentifyRiskController extends Controller
             'rejection_reason' => null, // Clear rejection reason
         ]);
 
+        // Buat draft mitigasi otomatis
+        Mitigasi::create([
+            'identify_risk_id' => $identifyRisk->id,
+            'judul_mitigasi' => 'Draft Mitigasi untuk ' . $identifyRisk->id_identify,
+            'deskripsi_mitigasi' => 'Silakan isi deskripsi mitigasi untuk risiko ini',
+            'strategi_mitigasi' => 'reduce',
+            'pic_mitigasi' => $identifyRisk->user?->name ?? 'Owner Risk',
+            'target_selesai' => now()->addMonths(3)->format('Y-m-d'),
+            'status_mitigasi' => 'belum_dimulai',
+            'validation_status' => Mitigasi::VALIDATION_STATUS_DRAFT,
+        ]);
+
         return Redirect::route('identify-risk.index')
-            ->with('success', "Risiko '{$identifyRisk->id_identify}' berhasil disetujui.");
+            ->with('success', "Risiko '{$identifyRisk->id_identify}' berhasil disetujui dan draft mitigasi telah dibuat.");
     }
 
     public function reject(Request $request, IdentifyRisk $identifyRisk)
