@@ -94,7 +94,7 @@ export default function Index({ sasaranUnivs, flash }: IndexProps) {
                     {sortedData.length > 0 && (
                         <Link
                             href={route('sasaran-univ.create')}
-                            className="flex items-center gap-2 rounded-md bg-[#12745A] px-2 py-2 font-medium text-white transition hover:bg-green-900"
+                            className="flex items-center gap-2 rounded-md bg-[#12745A] px-2 py-2 font-medium text-sm text-white transition hover:bg-green-900"
                         >
                             <FilePlus />
                             Tambah Dokumen
