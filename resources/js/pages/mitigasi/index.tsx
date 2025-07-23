@@ -17,7 +17,7 @@ import {
     Trash2,
     TrendingUp,
     User,
-    XCircle
+    XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
 import Swal from 'sweetalert2';
@@ -53,10 +53,8 @@ const Pagination = ({ links }: { links: Array<{ url: string | null; label: strin
                     <li key={index}>
                         {link.url ? (
                             <Link
-                                className={`px-3 py-2 text-sm border rounded ${
-                                    link.active
-                                        ? 'bg-blue-500 text-white border-blue-500'
-                                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                                className={`rounded border px-3 py-2 text-sm ${
+                                    link.active ? 'border-blue-500 bg-blue-500 text-white' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                                 }`}
                                 href={link.url}
                                 dangerouslySetInnerHTML={{ __html: link.label }}
@@ -64,7 +62,7 @@ const Pagination = ({ links }: { links: Array<{ url: string | null; label: strin
                             />
                         ) : (
                             <span
-                                className="px-3 py-2 text-sm text-gray-400 border border-gray-300 rounded bg-gray-50"
+                                className="rounded border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-400"
                                 dangerouslySetInnerHTML={{ __html: link.label }}
                             />
                         )}
@@ -78,23 +76,23 @@ const Pagination = ({ links }: { links: Array<{ url: string | null; label: strin
 const getStatusIcon = (status: string) => {
     switch (status) {
         case 'belum_dimulai':
-            return <Clock className="w-4 h-4 text-gray-500" />;
+            return <Clock className="h-4 w-4 text-gray-500" />;
         case 'sedang_berjalan':
-            return <TrendingUp className="w-4 h-4 text-blue-500" />;
+            return <TrendingUp className="h-4 w-4 text-blue-500" />;
         case 'selesai':
-            return <CheckCircle2 className="w-4 h-4 text-green-500" />;
+            return <CheckCircle2 className="h-4 w-4 text-green-500" />;
         case 'tertunda':
-            return <Pause className="w-4 h-4 text-yellow-500" />;
+            return <Pause className="h-4 w-4 text-yellow-500" />;
         case 'dibatalkan':
-            return <XCircle className="w-4 h-4 text-red-500" />;
+            return <XCircle className="h-4 w-4 text-red-500" />;
         default:
-            return <Clock className="w-4 h-4 text-gray-500" />;
+            return <Clock className="h-4 w-4 text-gray-500" />;
     }
 };
 
 const getStatusBadge = (status: string, label: string) => {
-    const baseClasses = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium";
-    
+    const baseClasses = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
+
     switch (status) {
         case 'belum_dimulai':
             return `${baseClasses} bg-gray-100 text-gray-800`;
@@ -112,8 +110,8 @@ const getStatusBadge = (status: string, label: string) => {
 };
 
 const getStrategiBadge = (strategi: string) => {
-    const baseClasses = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium";
-    
+    const baseClasses = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
+
     switch (strategi) {
         case 'avoid':
             return `${baseClasses} bg-red-100 text-red-800`;
@@ -129,8 +127,8 @@ const getStrategiBadge = (strategi: string) => {
 };
 
 const getValidationStatusBadge = (status: string) => {
-    const baseClasses = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium";
-    
+    const baseClasses = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
+
     switch (status) {
         case 'draft':
             return `${baseClasses} bg-gray-100 text-gray-800`;
@@ -194,7 +192,7 @@ export default function Index() {
             confirmButtonColor: '#ef4444',
             cancelButtonColor: '#6b7280',
             confirmButtonText: 'Ya, Hapus!',
-            cancelButtonText: 'Batal'
+            cancelButtonText: 'Batal',
         }).then((result) => {
             if (result.isConfirmed) {
                 router.delete(`/mitigasi/${mitigasi.id}`, {
@@ -203,7 +201,7 @@ export default function Index() {
                     },
                     onError: () => {
                         Swal.fire('Error!', 'Gagal menghapus mitigasi.', 'error');
-                    }
+                    },
                 });
             }
         });
@@ -218,17 +216,21 @@ export default function Index() {
             confirmButtonColor: '#3b82f6',
             cancelButtonColor: '#6b7280',
             confirmButtonText: 'Ya, Submit!',
-            cancelButtonText: 'Batal'
+            cancelButtonText: 'Batal',
         }).then((result) => {
             if (result.isConfirmed) {
-                router.post(`/mitigasi/${mitigasi.id}/submit`, {}, {
-                    onSuccess: () => {
-                        Swal.fire('Berhasil!', 'Mitigasi berhasil dikirim untuk persetujuan.', 'success');
+                router.post(
+                    `/mitigasi/${mitigasi.id}/submit`,
+                    {},
+                    {
+                        onSuccess: () => {
+                            Swal.fire('Berhasil!', 'Mitigasi berhasil dikirim untuk persetujuan.', 'success');
+                        },
+                        onError: () => {
+                            Swal.fire('Error!', 'Gagal mengirim mitigasi.', 'error');
+                        },
                     },
-                    onError: () => {
-                        Swal.fire('Error!', 'Gagal mengirim mitigasi.', 'error');
-                    }
-                });
+                );
             }
         });
     };
@@ -242,17 +244,21 @@ export default function Index() {
             confirmButtonColor: '#10b981',
             cancelButtonColor: '#6b7280',
             confirmButtonText: 'Ya, Setujui!',
-            cancelButtonText: 'Batal'
+            cancelButtonText: 'Batal',
         }).then((result) => {
             if (result.isConfirmed) {
-                router.post(`/mitigasi/${mitigasi.id}/approve`, {}, {
-                    onSuccess: () => {
-                        Swal.fire('Berhasil!', 'Mitigasi berhasil disetujui.', 'success');
+                router.post(
+                    `/mitigasi/${mitigasi.id}/approve`,
+                    {},
+                    {
+                        onSuccess: () => {
+                            Swal.fire('Berhasil!', 'Mitigasi berhasil disetujui.', 'success');
+                        },
+                        onError: () => {
+                            Swal.fire('Error!', 'Gagal menyetujui mitigasi.', 'error');
+                        },
                     },
-                    onError: () => {
-                        Swal.fire('Error!', 'Gagal menyetujui mitigasi.', 'error');
-                    }
-                });
+                );
             }
         });
     };
@@ -272,19 +278,23 @@ export default function Index() {
             confirmButtonColor: '#ef4444',
             cancelButtonColor: '#6b7280',
             confirmButtonText: 'Ya, Tolak!',
-            cancelButtonText: 'Batal'
+            cancelButtonText: 'Batal',
         }).then((result) => {
             if (result.isConfirmed) {
-                router.post(`/mitigasi/${mitigasi.id}/reject`, {
-                    rejection_reason: result.value
-                }, {
-                    onSuccess: () => {
-                        Swal.fire('Berhasil!', 'Mitigasi berhasil ditolak.', 'success');
+                router.post(
+                    `/mitigasi/${mitigasi.id}/reject`,
+                    {
+                        rejection_reason: result.value,
                     },
-                    onError: () => {
-                        Swal.fire('Error!', 'Gagal menolak mitigasi.', 'error');
-                    }
-                });
+                    {
+                        onSuccess: () => {
+                            Swal.fire('Berhasil!', 'Mitigasi berhasil ditolak.', 'success');
+                        },
+                        onError: () => {
+                            Swal.fire('Error!', 'Gagal menolak mitigasi.', 'error');
+                        },
+                    },
+                );
             }
         });
     };
@@ -301,52 +311,49 @@ export default function Index() {
         return new Date(dateString).toLocaleDateString('id-ID', {
             year: 'numeric',
             month: 'short',
-            day: 'numeric'
+            day: 'numeric',
         });
     };
 
     const isOverdue = (targetDate: string, status: string) => {
-        return new Date(targetDate) < new Date() && 
-               !['selesai', 'dibatalkan'].includes(status);
+        return new Date(targetDate) < new Date() && !['selesai', 'dibatalkan'].includes(status);
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Manajemen Mitigasi" />
-            
+
             <div className="space-y-6 px-6 py-8">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Manajemen Mitigasi</h1>
-                        <p className="mt-1 text-sm text-gray-600">
-                            Kelola rencana mitigasi risiko dan pantau progress implementasi
-                        </p>
+                        <p className="mt-1 text-sm text-gray-600">Kelola rencana mitigasi risiko dan pantau progress implementasi</p>
                     </div>
                     <div className="mt-4 sm:mt-0">
                         <Link
                             href="/mitigasi/create"
-                            className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                            className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-xs font-semibold tracking-widest text-white uppercase transition duration-150 ease-in-out hover:bg-blue-700 focus:bg-blue-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none active:bg-blue-900"
                         >
-                            <Plus className="w-4 h-4 mr-2" />
+                            <Plus className="mr-2 h-4 w-4" />
                             Tambah Mitigasi
                         </Link>
                     </div>
                 </div>
 
                 {/* Search and Filters */}
-                <div className="bg-white shadow rounded-lg p-6">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                <div className="rounded-lg bg-white p-6 shadow">
+                    <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
                         {/* Search */}
-                        <form onSubmit={handleSearch} className="flex-1 max-w-lg">
+                        <form onSubmit={handleSearch} className="max-w-lg flex-1">
                             <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
                                 <input
                                     type="text"
                                     placeholder="Cari mitigasi..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full rounded-md border border-gray-300 py-2 pr-4 pl-10 focus:border-blue-500 focus:ring-blue-500"
                                 />
                             </div>
                         </form>
@@ -355,16 +362,13 @@ export default function Index() {
                         <div className="flex items-center space-x-2">
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
-                                className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                                className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                             >
-                                <Filter className="w-4 h-4 mr-2" />
+                                <Filter className="mr-2 h-4 w-4" />
                                 Filter
                             </button>
                             {(filters.status || filters.strategi || filters.validation_status) && (
-                                <button
-                                    onClick={clearFilters}
-                                    className="text-sm text-blue-600 hover:text-blue-800"
-                                >
+                                <button onClick={clearFilters} className="text-sm text-blue-600 hover:text-blue-800">
                                     Clear Filters
                                 </button>
                             )}
@@ -373,46 +377,44 @@ export default function Index() {
 
                     {/* Filter Options */}
                     {showFilters && (
-                        <div className="mt-4 pt-4 border-t border-gray-200">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="mt-4 border-t border-gray-200 pt-4">
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Status
-                                    </label>
+                                    <label className="mb-1 block text-sm font-medium text-gray-700">Status</label>
                                     <select
                                         value={filters.status || ''}
                                         onChange={(e) => handleFilter('status', e.target.value)}
-                                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                                        className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
                                     >
                                         <option value="">Semua Status</option>
                                         {Object.entries(statusOptions).map(([key, label]) => (
-                                            <option key={key} value={key}>{label}</option>
+                                            <option key={key} value={key}>
+                                                {label}
+                                            </option>
                                         ))}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Strategi
-                                    </label>
+                                    <label className="mb-1 block text-sm font-medium text-gray-700">Strategi</label>
                                     <select
                                         value={filters.strategi || ''}
                                         onChange={(e) => handleFilter('strategi', e.target.value)}
-                                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                                        className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
                                     >
                                         <option value="">Semua Strategi</option>
                                         {Object.entries(strategiOptions).map(([key, label]) => (
-                                            <option key={key} value={key}>{label}</option>
+                                            <option key={key} value={key}>
+                                                {label}
+                                            </option>
                                         ))}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Status Validasi
-                                    </label>
+                                    <label className="mb-1 block text-sm font-medium text-gray-700">Status Validasi</label>
                                     <select
                                         value={filters.validation_status || ''}
                                         onChange={(e) => handleFilter('validation_status', e.target.value)}
-                                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                                        className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
                                     >
                                         <option value="">Semua Status Validasi</option>
                                         <option value="draft">Draft</option>
@@ -428,215 +430,190 @@ export default function Index() {
                 </div>
 
                 {/* Mitigasi List */}
-                <div className="bg-white shadow rounded-lg overflow-hidden">
+                <div className="overflow-hidden rounded-lg bg-white shadow">
                     {mitigasis.data.length === 0 ? (
-                        <div className="text-center py-12">
+                        <div className="py-12 text-center">
                             <AlertTriangle className="mx-auto h-12 w-12 text-gray-400" />
                             <h3 className="mt-2 text-sm font-medium text-gray-900">Tidak ada mitigasi</h3>
-                            <p className="mt-1 text-sm text-gray-500">
-                                Belum ada mitigasi yang dibuat. Mulai dengan menambahkan mitigasi baru.
-                            </p>
+                            <p className="mt-1 text-sm text-gray-500">Belum ada mitigasi yang dibuat. Mulai dengan menambahkan mitigasi baru.</p>
                             <div className="mt-6">
                                 <Link
                                     href="/mitigasi/create"
-                                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                                    className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
                                 >
-                                    <Plus className="w-4 h-4 mr-2" />
+                                    <Plus className="mr-2 h-4 w-4" />
                                     Tambah Mitigasi
                                 </Link>
                             </div>
                         </div>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
+                        <div className="w-full overflow-x-auto">
+                            {' '}
+                            {/* CHANGE: Added overflow-x-auto back, but on the inner div */}
+                            <table className="min-w-full table-fixed divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        {/* CHANGE: Adjusted width percentages */}
+                                        <th className="w-[25%] px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                                             Mitigasi
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="w-[25%] px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                                             Risiko
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="w-[8%] px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                                             Strategi
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            PIC
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="w-[8%] px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">PIC</th>
+                                        <th className="w-[10%] px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                                             Target
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="w-[7%] px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                                             Progress
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="w-[7%] px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                                             Status
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="w-[8%] px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                                             Validasi
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="w-[12%] px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                                             Aksi
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
+                                <tbody className="divide-y divide-gray-200 bg-white">
                                     {mitigasis.data.map((mitigasi) => (
                                         <tr key={mitigasi.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4">
+                                            <td className="px-3 py-4 align-top">
                                                 <div>
-                                                    <div className="text-sm font-medium text-gray-900">
-                                                        {mitigasi.judul_mitigasi}
-                                                    </div>
-                                                    <div className="text-sm text-gray-500 truncate max-w-xs">
-                                                        {mitigasi.deskripsi_mitigasi}
-                                                    </div>
+                                                    <div className="text-sm font-medium break-words text-gray-900">{mitigasi.judul_mitigasi}</div>
+                                                    <div className="text-sm break-words text-gray-500">{mitigasi.deskripsi_mitigasi}</div>{' '}
+                                                    {/* CHANGE: Changed truncate to break-words */}
                                                     {mitigasi.biaya_mitigasi && (
-                                                        <div className="text-xs text-green-600 font-medium mt-1">
+                                                        <div className="mt-1 text-xs font-medium text-green-600">
                                                             {formatCurrency(mitigasi.biaya_mitigasi)}
                                                         </div>
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4">
-                                                <div className="text-sm text-gray-900">
-                                                    {mitigasi.identify_risk?.id_identify}
-                                                </div>
-                                                <div className="text-sm text-gray-500 truncate max-w-xs">
-                                                    {mitigasi.identify_risk?.description}
-                                                </div>
+                                            <td className="px-3 py-4 align-top">
+                                                <div className="text-sm break-words text-gray-900">{mitigasi.identify_risk?.id_identify}</div>
+                                                <div className="text-sm break-words text-gray-500">{mitigasi.identify_risk?.description}</div>{' '}
+                                                {/* CHANGE: Changed truncate to break-words */}
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-3 py-4 align-top">
                                                 <span className={getStrategiBadge(mitigasi.strategi_mitigasi)}>
-                                                    {mitigasi.strategi_label || strategiOptions[mitigasi.strategi_mitigasi]}
+                                                    {mitigasi.strategi_label || strategiOptions?.[mitigasi.strategi_mitigasi]}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-3 py-4 align-top">
                                                 <div className="flex items-center">
-                                                    <User className="w-4 h-4 text-gray-400 mr-2" />
-                                                    <span className="text-sm text-gray-900">
-                                                        {mitigasi.pic_mitigasi}
-                                                    </span>
+                                                    <User className="mr-2 h-4 w-4 flex-shrink-0 text-gray-400" />
+                                                    <span className="text-sm break-words text-gray-900">{mitigasi.pic_mitigasi}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-3 py-4 align-top">
                                                 <div className="flex items-center">
-                                                    <Calendar className="w-4 h-4 text-gray-400 mr-2" />
+                                                    <Calendar className="mr-2 h-4 w-4 flex-shrink-0 text-gray-400" />
                                                     <div>
-                                                        <div className={`text-sm ${
-                                                            isOverdue(mitigasi.target_selesai, mitigasi.status_mitigasi)
-                                                                ? 'text-red-600 font-medium'
-                                                                : 'text-gray-900'
-                                                        }`}>
+                                                        <div
+                                                            className={`text-sm ${isOverdue(mitigasi.target_selesai, mitigasi.status_mitigasi) ? 'font-medium text-red-600' : 'text-gray-900'}`}
+                                                        >
                                                             {formatDate(mitigasi.target_selesai)}
                                                         </div>
                                                         {isOverdue(mitigasi.target_selesai, mitigasi.status_mitigasi) && (
-                                                            <div className="text-xs text-red-500">
-                                                                Terlambat
-                                                            </div>
+                                                            <div className="text-xs text-red-500">Terlambat</div>
                                                         )}
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center">
-                                                    <div className="flex-1">
-                                                        <div className="flex items-center justify-between mb-1">
-                                                            <span className="text-xs text-gray-600">
-                                                                {mitigasi.progress_percentage}%
-                                                            </span>
-                                                        </div>
-                                                        <div className="w-full bg-gray-200 rounded-full h-2">
-                                                            <div
-                                                                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                                                                style={{ width: `${mitigasi.progress_percentage}%` }}
-                                                            ></div>
-                                                        </div>
+                                            <td className="px-3 py-4 align-top">
+                                                <div className="w-full">
+                                                    <div className="mb-1 text-xs text-gray-600">{mitigasi.progress_percentage}%</div>
+                                                    <div className="h-2 w-full rounded-full bg-gray-200">
+                                                        <div
+                                                            className="h-2 rounded-full bg-blue-600"
+                                                            style={{ width: `${mitigasi.progress_percentage}%` }}
+                                                        ></div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-3 py-4 align-top">
                                                 <div className="flex items-center">
                                                     {getStatusIcon(mitigasi.status_mitigasi)}
-                                                    <span className={`ml-2 ${getStatusBadge(mitigasi.status_mitigasi, mitigasi.status_label || statusOptions[mitigasi.status_mitigasi])}`}>
-                                                        {mitigasi.status_label || statusOptions[mitigasi.status_mitigasi]}
+                                                    <span
+                                                        className={`ml-2 ${getStatusBadge(mitigasi.status_mitigasi, mitigasi.status_label || statusOptions?.[mitigasi.status_mitigasi])}`}
+                                                    >
+                                                        {mitigasi.status_label || statusOptions?.[mitigasi.status_mitigasi]}
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-3 py-4 align-top">
                                                 <div className="flex flex-col space-y-1">
                                                     <span className={getValidationStatusBadge(mitigasi.validation_status || 'draft')}>
                                                         {getValidationStatusLabel(mitigasi.validation_status || 'draft')}
                                                     </span>
                                                     {mitigasi.validation_status === 'rejected' && mitigasi.rejection_reason && (
-                                                        <div className="text-xs text-red-600 max-w-xs truncate" title={mitigasi.rejection_reason}>
+                                                        <div className="text-xs break-words text-red-600" title={mitigasi.rejection_reason}>
+                                                            {' '}
+                                                            {/* CHANGE: Changed truncate to break-words */}
                                                             {mitigasi.rejection_reason}
                                                         </div>
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-3 py-4 align-top">
                                                 <div className="flex items-center space-x-2">
                                                     <Link
                                                         href={`/mitigasi/${mitigasi.id}`}
                                                         className="text-blue-600 hover:text-blue-900"
                                                         title="Lihat Detail"
                                                     >
-                                                        <Eye className="w-4 h-4" />
+                                                        <Eye className="h-4 w-4" />
                                                     </Link>
-                                                    
-                                                    {/* Edit button - only if can edit */}
                                                     {mitigasi.permissions?.canEdit && (
                                                         <Link
                                                             href={`/mitigasi/${mitigasi.id}/edit`}
                                                             className="text-yellow-600 hover:text-yellow-900"
                                                             title="Edit"
                                                         >
-                                                            <Edit className="w-4 h-4" />
+                                                            <Edit className="h-4 w-4" />
                                                         </Link>
                                                     )}
-                                                    
-                                                    {/* Submit button - only if can submit */}
                                                     {mitigasi.permissions?.canSubmit && (
                                                         <button
                                                             onClick={() => handleSubmit(mitigasi)}
                                                             className="text-blue-600 hover:text-blue-900"
                                                             title="Submit untuk Persetujuan"
                                                         >
-                                                            <Send className="w-4 h-4" />
+                                                            <Send className="h-4 w-4" />
                                                         </button>
                                                     )}
-                                                    
-                                                    {/* Approve button - only if can approve */}
                                                     {mitigasi.permissions?.canApprove && (
                                                         <button
                                                             onClick={() => handleApprove(mitigasi)}
                                                             className="text-green-600 hover:text-green-900"
                                                             title="Setujui"
                                                         >
-                                                            <CheckCircle className="w-4 h-4" />
+                                                            <CheckCircle className="h-4 w-4" />
                                                         </button>
                                                     )}
-                                                    
-                                                    {/* Reject button - only if can reject */}
                                                     {mitigasi.permissions?.canReject && (
                                                         <button
                                                             onClick={() => handleReject(mitigasi)}
                                                             className="text-red-600 hover:text-red-900"
                                                             title="Tolak"
                                                         >
-                                                            <XCircle className="w-4 h-4" />
+                                                            <XCircle className="h-4 w-4" />
                                                         </button>
                                                     )}
-                                                    
-                                                    {/* Delete button - only if can delete */}
                                                     {mitigasi.permissions?.canDelete && (
                                                         <button
                                                             onClick={() => handleDelete(mitigasi)}
                                                             className="text-red-600 hover:text-red-900"
                                                             title="Hapus"
                                                         >
-                                                            <Trash2 className="w-4 h-4" />
+                                                            <Trash2 className="h-4 w-4" />
                                                         </button>
                                                     )}
                                                 </div>
