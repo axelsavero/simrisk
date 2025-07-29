@@ -3,7 +3,20 @@
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, IdentifyRisk } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Bomb, ChartColumn, CheckCircle2, CircleHelp, CornerDownLeft, FileText, Hourglass, Info, Pencil, ShieldCheck, TriangleAlert, X } from 'lucide-react';
+import {
+    Bomb,
+    ChartColumn,
+    CheckCircle2,
+    CircleHelp,
+    CornerDownLeft,
+    FileText,
+    Hourglass,
+    Info,
+    Pencil,
+    ShieldCheck,
+    TriangleAlert,
+    X,
+} from 'lucide-react';
 
 interface ShowProps {
     identifyRisk: IdentifyRisk & {
@@ -47,14 +60,14 @@ export default function Show() {
     const getValidationStatusInfo = (status: string) => {
         switch (status) {
             case 'draft':
-                return { label: 'Draft', color: 'bg-gray-100 text-gray-800', icon: <FileText/> };
+                return { label: 'Draft', color: 'bg-gray-100 text-gray-800', icon: <FileText /> };
             case 'submitted':
             case 'pending':
-                return { label: 'Menunggu Validasi', color: 'bg-yellow-100 text-yellow-800', icon: <Hourglass/> };
+                return { label: 'Menunggu Validasi', color: 'bg-yellow-100 text-yellow-800', icon: <Hourglass /> };
             case 'approved':
-                return { label: 'Disetujui', color: 'bg-green-100 text-green-800', icon: <CheckCircle2/> };
+                return { label: 'Disetujui', color: 'bg-green-100 text-green-800', icon: <CheckCircle2 /> };
             case 'rejected':
-                return { label: 'Ditolak', color: 'bg-red-100 text-red-800', icon: <X/> };
+                return { label: 'Ditolak', color: 'bg-red-100 text-red-800', icon: <X /> };
             default:
                 return { label: 'Unknown', color: 'bg-gray-100 text-gray-800', icon: <CircleHelp /> };
         }
@@ -104,7 +117,7 @@ export default function Show() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Detail Risiko ${identifyRisk.id_identify}`} />
 
-            <div className="mx-auto max-w-6xl px-6 py-8 w-screen">
+            <div className="mx-auto w-screen max-w-6xl px-6 py-8">
                 {/* Header Section */}
                 <div className="mb-6 rounded-lg bg-white p-6 shadow-md">
                     <div className="mb-4 flex items-start justify-between">
@@ -122,22 +135,28 @@ export default function Show() {
                         </div>
                     </div>
 
-                    {/* Action Buttons */}
+                    {/* Action Buttons: Edit dan Submit hanya untuk status draft/rejected */}
                     <div className="flex gap-3 border-t pt-4">
-                        <Link
-                            href={route('identify-risk.edit', identifyRisk.id)}
-                            className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
-                        >
-                            <Pencil/>
-                            Edit
-                        </Link>
-                        <button
-                            onClick={() => router.post(route('identify-risk.submit', identifyRisk.id))}
-                            className="inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-white transition-colors hover:bg-green-700"
-                        >
-                            <CheckCircle2/>
-                            Submit
-                        </button>
+                        {(identifyRisk.validation_status === 'draft' || identifyRisk.validation_status === 'rejected') && (
+                            <>
+                                <Link
+                                    href={route('identify-risk.edit', identifyRisk.id)}
+                                    className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
+                                >
+                                    <Pencil />
+                                    Edit
+                                </Link>
+                                {identifyRisk.validation_status === 'draft' && (
+                                    <button
+                                        onClick={() => router.post(route('identify-risk.submit', identifyRisk.id))}
+                                        className="inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-white transition-colors hover:bg-green-700"
+                                    >
+                                        <CheckCircle2 />
+                                        Submit
+                                    </button>
+                                )}
+                            </>
+                        )}
                         <Link
                             href={route('identify-risk.index')}
                             className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-50"

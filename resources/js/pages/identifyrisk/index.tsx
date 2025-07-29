@@ -186,6 +186,25 @@ export default function Index() {
     const showEditDeleteActions = permissions?.canEdit || permissions?.canDelete;
     const showValidationActions = permissions?.canValidate;
 
+    // Helper untuk cek apakah tombol edit/submit boleh muncul
+    const canShowEdit = (item: IdentifyRisk) => {
+        // Hanya muncul jika status draft atau rejected
+        // Untuk super-admin, jika sudah divalidasi (approved/rejected), tidak boleh muncul
+        if (auth?.user?.roles?.includes('super-admin')) {
+            return item.validation_status === 'draft' || item.validation_status === 'rejected';
+        }
+        return item.validation_status === 'draft' || item.validation_status === 'rejected';
+    };
+
+    const canShowSubmit = (item: IdentifyRisk) => {
+        // Hanya muncul jika status draft
+        // Untuk super-admin, jika sudah divalidasi, tidak boleh muncul
+        if (auth?.user?.roles?.includes('super-admin')) {
+            return item.validation_status === 'draft';
+        }
+        return item.validation_status === 'draft';
+    };
+
     const getRiskLevelInfo = (probability: number, impact: number) => {
         const risk = probability * impact;
         if (risk >= 20) return { level: 'Tinggi', color: 'high', icon: '🔴' };
@@ -405,15 +424,15 @@ export default function Index() {
                                         <Eye /> Detail
                                     </Link>
 
-                                    {/* Submit Action untuk draft */}
-                                    {permissions?.canSubmit && item.validation_status === 'draft' && (
+                                    {/* Submit Action untuk draft, hanya jika boleh tampil */}
+                                    {permissions?.canSubmit && canShowSubmit(item) && (
                                         <button onClick={() => submitItem(item)} className="action-btn submit-btn" title="Kirim untuk Validasi">
                                             <Upload /> Kirim
                                         </button>
                                     )}
 
-                                    {/* Edit Actions */}
-                                    {permissions?.canEdit && (item.validation_status === 'draft' || item.validation_status === 'rejected') && (
+                                    {/* Edit Actions, hanya jika boleh tampil */}
+                                    {permissions?.canEdit && canShowEdit(item) && (
                                         <Link href={route('identify-risk.edit', item.id)} className="action-btn edit-btn" title="Edit">
                                             <Pencil />
                                             Edit

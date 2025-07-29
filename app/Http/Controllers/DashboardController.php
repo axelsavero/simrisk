@@ -15,13 +15,13 @@ class DashboardController extends Controller
     {
         // Filter parameters
         $unit = $request->get('unit');
-        $kategori = $request->get('kategori'); 
+        $kategori = $request->get('kategori');
         $tahun = $request->get('tahun', date('Y'));
         $statusMitigasi = $request->get('status_mitigasi');
 
         // Base query dengan role-based filtering
         $query = $this->getBaseQuery();
-        
+
         // Apply filters
         $risks = $query->byUnit($unit)
             ->byKategori($kategori)
@@ -44,12 +44,12 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $query = IdentifyRisk::query();
-        
+
         // Role-based filtering
         if ($user->hasRole('super-admin')) {
             // Super admin melihat semua kecuali draft
-            return $query->whereNotIn('validation_status', [IdentifyRisk::STATUS_DRAFT])
-                        ->where('is_active', true);
+            return $query->whereNotIn('validation_status', [IdentifyRisk::STATUS_DRAFT, IdentifyRisk::STATUS_REJECTED])
+                ->where('is_active', true);
         } elseif ($user->hasRole('owner-risk')) {
             // Owner-risk melihat semua data mereka
             return $query->where('is_active', true);
@@ -66,7 +66,7 @@ class DashboardController extends Controller
     {
         $riskPointsInherent = [];
         $riskPointsResidual = [];
-        
+
         foreach ($risks as $risk) {
             // Inherent Risk Points (sebelum mitigasi)
             if ($risk->probability && $risk->impact) {
@@ -113,7 +113,7 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $query = Mitigasi::with(['identifyRisk'])
-                         ->where('validation_status', Mitigasi::VALIDATION_STATUS_APPROVED);
+            ->where('validation_status', Mitigasi::VALIDATION_STATUS_APPROVED);
 
         // Filter berdasarkan role
         if ($user->hasRole('owner-risk')) {
@@ -167,7 +167,7 @@ class DashboardController extends Controller
 
         foreach ($mitigasis as $mitigasi) {
             $risk = $mitigasi->identifyRisk;
-            
+
             if ($risk && $risk->probability_residual && $risk->impact_residual) {
                 $mitigasiPoints[] = [
                     'id' => $mitigasi->id,
@@ -203,7 +203,7 @@ class DashboardController extends Controller
             'totalMitigasi' => $mitigasis->count(),
             'statusStats' => $statusStats,
             'strategiStats' => $strategiStats,
-            'completionRate' => $mitigasis->count() > 0 ? 
+            'completionRate' => $mitigasis->count() > 0 ?
                 round(($statusStats['selesai'] / $mitigasis->count()) * 100, 1) : 0,
             'averageProgress' => $mitigasis->avg('progress_percentage') ?? 0
         ];
@@ -211,15 +211,15 @@ class DashboardController extends Controller
 
     private function calculateRiskLevels($risks)
     {
-         $levels = [
-        'Sangat Rendah' => ['inheren' => 0, 'residual' => 0, 'color' => 'bg-green-500'],   // 1-2
-        'Rendah' => ['inheren' => 0, 'residual' => 0, 'color' => 'bg-yellow-300'],         // 3-8
-        'Sedang' => ['inheren' => 0, 'residual' => 0, 'color' => 'bg-orange-400'],         // 9-16
-        'Tinggi' => ['inheren' => 0, 'residual' => 0, 'color' => 'bg-red-500'],            // 17-25
-    ];
+        $levels = [
+            'Sangat Rendah' => ['inheren' => 0, 'residual' => 0, 'color' => 'bg-green-500'],   // 1-2
+            'Rendah' => ['inheren' => 0, 'residual' => 0, 'color' => 'bg-yellow-300'],         // 3-8
+            'Sedang' => ['inheren' => 0, 'residual' => 0, 'color' => 'bg-orange-400'],         // 9-16
+            'Tinggi' => ['inheren' => 0, 'residual' => 0, 'color' => 'bg-red-500'],            // 17-25
+        ];
 
         foreach ($risks as $risk) {
-        // Count inherent risk levels
+            // Count inherent risk levels
             $inherentLevel = $risk->inherent_risk_level;
             if (isset($levels[$inherentLevel])) {
                 $levels[$inherentLevel]['inheren']++;
@@ -233,7 +233,7 @@ class DashboardController extends Controller
         }
 
         // Format for frontend
-        return collect($levels)->map(function($data, $tingkat) {
+        return collect($levels)->map(function ($data, $tingkat) {
             return [
                 'tingkat' => $tingkat,
                 'inheren' => $data['inheren'],
@@ -250,14 +250,14 @@ class DashboardController extends Controller
         $mediumRisks = $risks->whereBetween('level', [9, 16])->count(); // 9-16
         $lowRisks = $risks->whereBetween('level', [3, 8])->count();     // 3-8
         $veryLowRisks = $risks->whereBetween('level', [1, 2])->count(); // 1-2
-        
+
         // Mitigasi statistics
         $mitigasiStats = $risks->groupBy('status_mitigasi')->map->count();
-        
+
         // Unit statistics
         $unitStats = $risks->groupBy('unit_kerja')->map->count()->sortDesc();
-        
-         return [
+
+        return [
             'overview' => [
                 'total_risks' => $totalRisks,
                 'high_risks' => $highRisks,
@@ -278,7 +278,7 @@ class DashboardController extends Controller
 
     private function calculateMitigationEffectiveness($risks)
     {
-        $risksWithMitigation = $risks->filter(function($risk) {
+        $risksWithMitigation = $risks->filter(function ($risk) {
             return $risk->level && $risk->level_residual;
         });
 
@@ -288,7 +288,7 @@ class DashboardController extends Controller
 
         $totalReduction = $risksWithMitigation->sum('risk_reduction');
         $averageReduction = $totalReduction / $risksWithMitigation->count();
-        $effectivenessPercentage = $risksWithMitigation->filter(function($risk) {
+        $effectivenessPercentage = $risksWithMitigation->filter(function ($risk) {
             return $risk->risk_reduction > 0;
         })->count() / $risksWithMitigation->count() * 100;
 
@@ -313,7 +313,7 @@ class DashboardController extends Controller
             ->orderBy('month')
             ->get();
 
-        return $trends->map(function($trend) {
+        return $trends->map(function ($trend) {
             return [
                 'period' => sprintf('%d-%02d', $trend->year, $trend->month),
                 'count' => $trend->count,
@@ -345,7 +345,7 @@ class DashboardController extends Controller
                 ->values(),
             'status_mitigasi' => [
                 'belum_dimulai' => 'Belum Dimulai',
-                'sedang_berjalan' => 'Sedang Berjalan', 
+                'sedang_berjalan' => 'Sedang Berjalan',
                 'selesai' => 'Selesai'
             ]
         ];
@@ -354,7 +354,7 @@ class DashboardController extends Controller
     private function getUserPermissions()
     {
         $user = Auth::user();
-        
+
         return [
             'canViewAll' => $user->hasRole('super-admin'),
             'canViewDraft' => $user->hasRole('owner-risk'),
@@ -370,7 +370,7 @@ class DashboardController extends Controller
     {
         $risk = IdentifyRisk::with(['validationProcessor', 'creator'])
             ->findOrFail($id);
-        
+
         return response()->json([
             'id' => $risk->id,
             'id_identify' => $risk->id_identify,
