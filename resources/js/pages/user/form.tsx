@@ -4,7 +4,6 @@ import { BreadcrumbItem, User } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import React, { useEffect, useState } from 'react';
 
-// ... (Interface Unit, Pegawai, ApiUnit, ApiPegawai, FormProps, FormData tidak berubah) ...
 interface Unit {
     id: number;
     name: string;
@@ -18,21 +17,6 @@ interface Pegawai {
     email?: string;
 }
 
-interface ApiUnit {
-    id: number;
-    nama_unit: string;
-    kode_unit?: string;
-}
-
-interface ApiPegawai {
-    id: number;
-    nama: string;
-    nip?: string;
-    email?: string;
-    unit_id?: number;
-    unit_name?: string;
-}
-
 interface FormProps {
     allRoles: string[];
     user?: User | null;
@@ -44,20 +28,18 @@ interface FormData {
     email: string;
     password: string;
     role: string;
-    [key: string]: string; // Add index signature
+    [key: string]: string;
 }
 
 export default function Form({ allRoles, user = null }: FormProps) {
     const [units, setUnits] = useState<Unit[]>([]);
     const [availableNames, setAvailableNames] = useState<string[]>([]);
-    const [loadingUnits, setLoadingUnits] = useState(false);
-    const [loadingPegawai, setLoadingPegawai] = useState(false);
+    const [loading, setLoading] = useState({ units: false, pegawai: false });
     const [apiError, setApiError] = useState<string>('');
     const [apiStatus, setApiStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
     const [allPegawai, setAllPegawai] = useState<Pegawai[]>([]);
-    // --- PERBAIKAN: Throttle global untuk menangani error 429 ---
     const [throttleUntil, setThrottleUntil] = useState<number>(0);
-    const [pegawaiDebounceTimeout, setPegawaiDebounceTimeout] = useState<NodeJS.Timeout | null>(null);
+    const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(null);
 
     const { data, setData, post, put, processing, errors } = useForm<FormData>({
         unit_id: user?.unit_id?.toString() || '',
@@ -67,37 +49,8 @@ export default function Form({ allRoles, user = null }: FormProps) {
         role: user?.roles?.[0]?.name || '',
     });
 
-    // --- PERBAIKAN: Gabungkan fetch data awal ke dalam satu useEffect ---
-    useEffect(() => {
-        // Fetch all units on mount
-        fetchUnits();
-
-        // Fetch all pegawai for mapping ke unit
-        fetch('/proxy/sipeg/api/pegawai')
-            .then((res) => res.json())
-            .then((data) => {
-                let pegawaiArr = [];
-                if (Array.isArray(data)) {
-                    pegawaiArr = data;
-                } else if (data && Array.isArray(data.data)) {
-                    pegawaiArr = data.data;
-                }
-                setAllPegawai(pegawaiArr);
-
-                // Mapping pegawai ke unit jika units sudah ada
-                setUnits((prevUnits) =>
-                    prevUnits.map((unit) => ({
-                        ...unit,
-                        members: pegawaiArr.filter((p: any) => p.unit_kerja && p.unit_kerja.trim() === unit.name.trim()).map((p: any) => p.nama),
-                    })),
-                );
-            })
-            .catch(() => setAllPegawai([]));
-    }, []);
-
-    // Improved API call function
+    // Fungsi utilitas untuk panggilan API
     const apiCall = async (endpoint: string, options: RequestInit = {}) => {
-        // --- PERBAIKAN: Cek throttle sebelum melakukan panggilan API ---
         if (Date.now() < throttleUntil) {
             const remainingSeconds = Math.ceil((throttleUntil - Date.now()) / 1000);
             throw new Error(`Terlalu banyak permintaan. Coba lagi dalam ${remainingSeconds} detik. (HTTP 429)`);
@@ -107,181 +60,199 @@ export default function Form({ allRoles, user = null }: FormProps) {
             headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
             },
             ...options,
         };
 
-        const url = `/proxy/sipeg/api${endpoint}`;
+        const url = `http://${window.location.host}/api/sipeg${endpoint}`;
 
         try {
             const response = await fetch(url, defaultOptions);
 
             if (!response.ok) {
-                // --- PERBAIKAN: Set throttle jika menerima error 429 ---
                 if (response.status === 429) {
-                    setThrottleUntil(Date.now() + 60 * 1000); // Throttle selama 1 menit
+                    setThrottleUntil(Date.now() + 60 * 1000);
+                    throw new Error(`HTTP 429: Terlalu banyak permintaan.`);
                 }
-                const errorText = await response.text();
-                throw new Error(`HTTP ${response.status}: ${errorText}`);
+                if (response.status === 404) {
+                    throw new Error(`HTTP 404: Endpoint ${endpoint} tidak ditemukan. Silakan hubungi admin API SIPEG.`);
+                }
+                throw new Error(`HTTP ${response.status}: ${await response.text()}`);
             }
 
-            const data = await response.json();
-            return { success: true, data, url };
+            return { success: true, data: await response.json(), url };
         } catch (error) {
-            console.error(`Failed to call ${url}:`, error);
+            console.error(`Gagal memanggil ${url}:`, error);
             throw error;
         }
     };
 
-    // Test API connection
-    const testApiConnection = async () => {
-        setApiStatus('testing');
+    // Fungsi utilitas untuk memproses data API
+    const processApiData = (data: any): any[] => {
+        console.log('Raw API response:', data); // Log untuk debugging
+        if (Array.isArray(data)) return data;
+        if (data?.data && Array.isArray(data.data)) return data.data;
+        if (data?.result && Array.isArray(data.result)) return data.result;
+        if (data?.units && Array.isArray(data.units)) return data.units; // Menangani field "units"
+        if (typeof data === 'object' && data !== null) {
+            const arr = Object.values(data).find((v) => Array.isArray(v));
+            return arr || [];
+        }
+        return [];
+    };
+
+    // Mengambil semua unit
+    const fetchUnits = async () => {
+        setLoading((prev) => ({ ...prev, units: true }));
         setApiError('');
         try {
             const result = await apiCall('/allunit');
-            if (result.success) {
-                setApiStatus('success');
-                setApiError('✅ Koneksi API berhasil');
-                return true;
-            } else {
-                throw new Error('API test failed');
-            }
-        } catch (error) {
-            setApiStatus('error');
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setApiError(`❌ Koneksi API gagal: ${errorMessage}`);
-            return false;
-        }
-    };
 
-    // Fetch units dari API
-    const fetchUnits = async () => {
-        setLoadingUnits(true);
-        setApiError('');
-        try {
-            // Ganti endpoint ke /allhomebase
-            const result = await apiCall('/allhomebase');
-
-            if (!result.success) {
-                throw new Error('Gagal memuat unit');
+            const unitsData = processApiData(result.data);
+            if (!unitsData.length) {
+                throw new Error('Tidak ada data unit yang ditemukan dari respons API. Periksa struktur data API SIPEG.');
             }
 
-            let unitsData: any[] = [];
-            if (Array.isArray(result.data)) {
-                unitsData = result.data;
-            } else if (result.data?.data && Array.isArray(result.data.data)) {
-                unitsData = result.data.data;
-            } else if (result.data?.result && Array.isArray(result.data.result)) {
-                unitsData = result.data.result;
-            } else if (typeof result.data === 'object' && result.data !== null) {
-                const arr = Object.values(result.data).find((v) => Array.isArray(v));
-                if (arr) unitsData = arr as any[];
-            }
-
-            if (!unitsData || unitsData.length === 0) {
-                throw new Error('Tidak ada data unit yang ditemukan dari respons API');
-            }
-
-            // Gunakan ur_homebase sebagai nama unit
             const transformedUnits: Unit[] = unitsData
-                .filter((apiUnit: any) => apiUnit.ur_homebase && apiUnit.ur_homebase.trim() !== '')
+                .filter((apiUnit: any) => {
+                    const name = apiUnit.ur_unit || apiUnit.nama_unit || apiUnit.name || apiUnit.unit_name;
+                    return name && name.trim();
+                })
                 .map((apiUnit: any) => ({
-                    id: apiUnit.id || apiUnit.id_homebase || apiUnit.kode_homebase || apiUnit.kode_unit,
-                    name: apiUnit.ur_homebase,
-                    members: [], // akan diisi setelah fetch pegawai
+                    id: apiUnit.id || apiUnit.id_homebase || apiUnit.kode_homebase || apiUnit.kode_unit || apiUnit.unit_id,
+                    name: apiUnit.ur_unit || apiUnit.nama_unit || apiUnit.name || apiUnit.unit_name,
+                    members: [],
                 }));
 
             setUnits(transformedUnits);
-            setApiError(`✅ ${transformedUnits.length} unit berhasil dimuat dari API SIPEG.`);
+            setApiError(`✅ ${transformedUnits.length} unit berhasil dimuat.`);
             setTimeout(() => setApiError(''), 5000);
         } catch (error: any) {
-            console.error('Error fetching units:', error);
-            let errorMessage = 'Gagal memuat data unit dari API SIPEG. ';
-            if (error.message.includes('429')) {
-                errorMessage = `❌ Gagal: Terlalu banyak permintaan ke SIPEG (HTTP 429). Silakan tunggu beberapa saat sebelum mencoba lagi.`;
-            } else {
-                errorMessage += `Detail: ${error.message}`;
-            }
+            const errorMessage = error.message.includes('429')
+                ? `❌ Terlalu banyak permintaan (HTTP 429). Tunggu beberapa saat.`
+                : error.message.includes('404')
+                ? `❌ Endpoint /allunit tidak ditemukan. Silakan hubungi admin API SIPEG.`
+                : `❌ Gagal memuat unit: ${error.message}`;
             setApiError(errorMessage);
-            // Fallback dummy hanya untuk development
             if (process.env.NODE_ENV === 'development') {
                 setUnits([
                     { id: 1, name: 'Unit HRD (Dummy)', members: [] },
                     { id: 2, name: 'Unit IT (Dummy)', members: [] },
                 ]);
+                setApiError(`${errorMessage} (Menggunakan data dummy untuk pengembangan)`);
             } else {
                 setUnits([]);
             }
         } finally {
-            setLoadingUnits(false);
+            setLoading((prev) => ({ ...prev, units: false }));
         }
     };
 
-    // Fetch pegawai per unit
+    // Mengambil semua pegawai
+    const fetchAllPegawai = async () => {
+        try {
+            const response = await fetch(`http://${window.location.host}/api/sipeg/pegawai`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+            const data = await response.json();
+            console.log('Pegawai API response:', data); // Log untuk debugging
+            const pegawaiArr = processApiData(data);
+            setAllPegawai(pegawaiArr);
+            setUnits((prevUnits) =>
+                prevUnits.map((unit) => ({
+                    ...unit,
+                    members: pegawaiArr
+                        .filter((p: any) => {
+                            const unitKerja = p.unit_kerja || p.unit || p.nama_unit || p.ur_unit;
+                            return unitKerja && unitKerja.trim() === unit.name.trim();
+                        })
+                        .map((p: any) => p.nama || p.name),
+                })),
+            );
+        } catch (error) {
+            console.error('Error fetching pegawai:', error);
+            setAllPegawai([]);
+            setApiError(`❌ Gagal memuat daftar pegawai: ${error.message}`);
+        }
+    };
+
+    // Mengambil pegawai berdasarkan unit
     const fetchPegawaiByUnit = async (unitName: string) => {
-        setLoadingPegawai(true);
+        setLoading((prev) => ({ ...prev, pegawai: true }));
         try {
             const encodedUnitName = encodeURIComponent(unitName);
             const result = await apiCall(`/unit/${encodedUnitName}`);
 
-            if (!result.success) {
-                throw new Error('Gagal memuat pegawai');
-            }
-
-            let pegawaiData: ApiPegawai[] = [];
-            if (result.data.success && result.data.data) {
-                pegawaiData = Array.isArray(result.data.data) ? result.data.data : [];
-            } else if (Array.isArray(result.data)) {
-                pegawaiData = result.data;
-            }
-
-            const pegawaiNames = pegawaiData.map((pegawai: ApiPegawai) => pegawai.nama || `Pegawai ${pegawai.id}`);
+            const pegawaiData = processApiData(result.data);
+            console.log(`Pegawai by unit (${unitName}) response:`, result.data); // Log untuk debugging
+            const pegawaiNames = pegawaiData.map((pegawai: any) => pegawai.nama || pegawai.name || `Pegawai ${pegawai.id}`);
             setAvailableNames(pegawaiNames);
-            setUnits((prevUnits) => prevUnits.map((unit) => (unit.name === unitName ? { ...unit, members: pegawaiNames } : unit)));
+            setUnits((prevUnits) =>
+                prevUnits.map((unit) =>
+                    unit.name === unitName ? { ...unit, members: pegawaiNames } : unit,
+                ),
+            );
         } catch (error: any) {
-            console.error('Error fetching pegawai:', error);
-            let errorMessage = 'Gagal memuat data pegawai dari API SIPEG. ';
-            if (error.message.includes('429')) {
-                errorMessage = `❌ Gagal: Terlalu banyak permintaan ke SIPEG (HTTP 429). Silakan tunggu beberapa saat.`;
-            } else {
-                errorMessage += `Detail: ${error.message}`;
-            }
+            const errorMessage = error.message.includes('429')
+                ? `❌ Terlalu banyak permintaan (HTTP 429). Tunggu beberapa saat.`
+                : error.message.includes('404')
+                ? `❌ Endpoint /unit/${unitName} tidak ditemukan. Silakan hubungi admin API SIPEG.`
+                : `❌ Gagal memuat pegawai: ${error.message}`;
             setApiError(errorMessage);
-
-            // Fallback dummy hanya untuk development
             if (process.env.NODE_ENV === 'development') {
                 const dummyNames = ['John Doe', 'Jane Smith'];
                 setAvailableNames(dummyNames);
-                setUnits((prevUnits) => prevUnits.map((unit) => (unit.name === unitName ? { ...unit, members: dummyNames } : unit)));
+                setUnits((prevUnits) =>
+                    prevUnits.map((unit) =>
+                        unit.name === unitName ? { ...unit, members: dummyNames } : unit,
+                    ),
+                );
+                setApiError(`${errorMessage} (Menggunakan data dummy untuk pengembangan)`);
             } else {
                 setAvailableNames([]);
             }
         } finally {
-            setLoadingPegawai(false);
+            setLoading((prev) => ({ ...prev, pegawai: false }));
         }
     };
 
-    // Debounced fetchPegawaiByUnit
-    const debouncedFetchPegawaiByUnit = (unitName: string) => {
-        if (pegawaiDebounceTimeout) clearTimeout(pegawaiDebounceTimeout);
-        const timeout = setTimeout(() => {
-            fetchPegawaiByUnit(unitName);
-        }, 500); // 500ms debounce
-        setPegawaiDebounceTimeout(timeout);
+    // Tes koneksi API
+    const testApiConnection = async () => {
+        setApiStatus('testing');
+        setApiError('');
+        try {
+            const result = await apiCall('/allunit');
+            setApiStatus('success');
+            setApiError('✅ Koneksi API berhasil');
+            return result.success;
+        } catch (error: any) {
+            setApiStatus('error');
+            const errorMessage = error.message.includes('404')
+                ? `❌ Endpoint /allunit tidak ditemukan. Silakan hubungi admin API SIPEG.`
+                : `❌ Koneksi API gagal: ${error.message}`;
+            setApiError(errorMessage);
+            return false;
+        }
     };
 
-    // Update available names ketika unit berubah
+    // Inisialisasi data
+    useEffect(() => {
+        fetchUnits();
+        fetchAllPegawai();
+    }, []);
+
+    // Perbarui daftar nama pegawai saat unit berubah
     useEffect(() => {
         if (data.unit_id) {
             const selectedUnit = units.find((unit) => unit.id.toString() === data.unit_id);
-            // --- PERBAIKAN: Pastikan selectedUnit ada ---
             if (selectedUnit) {
                 if (selectedUnit.members.length === 0) {
-                    debouncedFetchPegawaiByUnit(selectedUnit.name);
+                    if (debounceTimeout) clearTimeout(debounceTimeout);
+                    const timeout = setTimeout(() => fetchPegawaiByUnit(selectedUnit.name), 500);
+                    setDebounceTimeout(timeout);
                 } else {
                     setAvailableNames(selectedUnit.members);
                 }
-
                 if (!selectedUnit.members.includes(data.name)) {
                     setData('name', '');
                 }
@@ -296,27 +267,28 @@ export default function Form({ allRoles, user = null }: FormProps) {
         const selectedId = e.target.value;
         const pegawai = allPegawai.find((p) => p.id.toString() === selectedId);
         if (pegawai) {
-            const unit = units.find((u) => u.name === pegawai.unit_kerja);
-            if (unit) {
-                setData('unit_id', unit.id.toString());
-            }
-            setData('name', pegawai.nama);
+            const unit = units.find((u) => {
+                const unitKerja = pegawai.unit_kerja || pegawai.unit || pegawai.nama_unit || pegawai.ur_unit;
+                return unitKerja && unitKerja === u.name;
+            });
+            if (unit) setData('unit_id', unit.id.toString());
+            setData('name', pegawai.nama || pegawai.name);
             if (pegawai.email) setData('email', pegawai.email);
         }
     };
 
-    function handleUnitChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const handleUnitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setData('unit_id', e.target.value);
-    }
+    };
 
-    function submit(e: React.FormEvent) {
+    const submit = (e: React.FormEvent) => {
         e.preventDefault();
         if (user) {
             put(`/user/manage/${user.id}`);
         } else {
             post('/user/manage');
         }
-    }
+    };
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
@@ -355,26 +327,23 @@ export default function Form({ allRoles, user = null }: FormProps) {
                                     variant="link"
                                     className="h-auto p-0 text-sm text-red-600 underline hover:text-red-800 disabled:cursor-not-allowed disabled:text-gray-400"
                                     onClick={fetchUnits}
-                                    disabled={loadingUnits || isThrottled}
+                                    disabled={loading.units || isThrottled}
                                 >
-                                    {loadingUnits ? 'Memuat...' : 'Coba Lagi'}
+                                    {loading.units ? 'Memuat...' : 'Coba Lagi'}
                                 </Button>
                             </div>
                         )}
                     </div>
                 )}
 
-                {/* ... (Debug Info tidak berubah) ... */}
-
                 <form onSubmit={submit} className="w-full space-y-6 rounded-xl border-2 border-gray-300 bg-white p-6 shadow-md">
-                    {/* ... (Dropdown Unit, Nama Pegawai, Email, Password, Role tidak berubah, tapi properti `disabled` akan terpengaruh `isThrottled`) ... */}
                     <div>
                         <label className="mb-1 block font-medium">Unit</label>
                         <select
                             value={data.unit_id}
                             onChange={handleUnitChange}
                             className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            disabled={loadingUnits || isThrottled}
+                            disabled={loading.units || isThrottled}
                         >
                             <option value="">-- Pilih Unit --</option>
                             {units.map((unit) => (
@@ -392,7 +361,7 @@ export default function Form({ allRoles, user = null }: FormProps) {
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
                             className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            disabled={!data.unit_id || loadingPegawai || isThrottled}
+                            disabled={!data.unit_id || loading.pegawai || isThrottled}
                         >
                             <option value="">-- Pilih Pegawai --</option>
                             {availableNames.map((nama, idx) => (
@@ -404,13 +373,52 @@ export default function Form({ allRoles, user = null }: FormProps) {
                         {errors.name && <div className="text-sm text-red-500">{errors.name}</div>}
                     </div>
 
-                    {/* ... (Sisa form) ... */}
+                    <div>
+                        <label className="mb-1 block font-medium">Email</label>
+                        <input
+                            type="email"
+                            value={data.email}
+                            onChange={(e) => setData('email', e.target.value)}
+                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            disabled={isThrottled}
+                        />
+                        {errors.email && <div className="text-sm text-red-500">{errors.email}</div>}
+                    </div>
 
-                    {/* Form Actions */}
+                    <div>
+                        <label className="mb-1 block font-medium">Password</label>
+                        <input
+                            type="password"
+                            value={data.password}
+                            onChange={(e) => setData('password', e.target.value)}
+                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            disabled={isThrottled}
+                        />
+                        {errors.password && <div className="text-sm text-red-500">{errors.password}</div>}
+                    </div>
+
+                    <div>
+                        <label className="mb-1 block font-medium">Role</label>
+                        <select
+                            value={data.role}
+                            onChange={(e) => setData('role', e.target.value)}
+                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            disabled={isThrottled}
+                        >
+                            <option value="">-- Pilih Role --</option>
+                            {allRoles.map((role, idx) => (
+                                <option key={idx} value={role}>
+                                    {role}
+                                </option>
+                            ))}
+                        </select>
+                        {errors.role && <div className="text-sm text-red-500">{errors.role}</div>}
+                    </div>
+
                     <div className="mt-6 flex justify-between">
                         <Button
                             type="submit"
-                            disabled={processing || loadingUnits || loadingPegawai || isThrottled}
+                            disabled={processing || loading.units || loading.pegawai || isThrottled}
                             className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
                             variant="outline"
                         >

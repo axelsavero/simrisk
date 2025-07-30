@@ -10,7 +10,6 @@ use App\Http\Controllers\IdentifyRiskController;
 use App\Http\Controllers\MitigasiController;
 use App\Http\Controllers\SipegProxyController;
 use App\Http\Controllers\ReferensiController;
-use League\CommonMark\Reference\Reference;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -18,17 +17,12 @@ Route::get('/', function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/user/manage', [UserManageController::class, 'index'])->name('user.manage.index');
-
-    // Route untuk menampilkan form tambah user
     Route::get('/user/manage/create', [UserManageController::class, 'create'])->name('user.manage.create');
-
-    // Route untuk menyimpan user baru
     Route::post('/user/manage', [UserManageController::class, 'store'])->name('user.manage.store');
-
     Route::get('/user/manage/{user}/edit', [UserManageController::class, 'edit'])->name('user.manage.edit');
     Route::put('/user/manage/{user}', [UserManageController::class, 'update'])->name('user.manage.update');
     Route::delete('/user/manage/{user}', [UserManageController::class, 'destroy'])->name('user.manage.destroy');
-    Route::get('/proxy/sipeg/{any}', [SipegProxyController::class, 'proxy'])->where('any', '.*');
+    Route::get('/api/sipeg/{any}', [SipegProxyController::class, 'proxy'])->where('any', '.*');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -38,69 +32,37 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('identify-risk', IdentifyRiskController::class);
 
-    // Routes untuk workflow dan file handling
     Route::prefix('identify-risk')->name('identify-risk.')->group(function () {
-        // Workflow routes
-        Route::post('{identifyRisk}/submit', [IdentifyRiskController::class, 'submit'])
-              ->name('submit');
-        Route::post('{identifyRisk}/approve', [IdentifyRiskController::class, 'approve'])
-              ->name('approve');
-        Route::post('{identifyRisk}/reject', [IdentifyRiskController::class, 'reject'])
-              ->name('reject');
-
-        // File download route
-        Route::get('{identifyRisk}/download-bukti', [IdentifyRiskController::class, 'downloadBukti'])
-              ->name('download-bukti');
+        Route::post('{identifyRisk}/submit', [IdentifyRiskController::class, 'submit'])->name('submit');
+        Route::post('{identifyRisk}/approve', [IdentifyRiskController::class, 'approve'])->name('approve');
+        Route::post('{identifyRisk}/reject', [IdentifyRiskController::class, 'reject'])->name('reject');
+        Route::get('{identifyRisk}/download-bukti', [IdentifyRiskController::class, 'downloadBukti'])->name('download-bukti');
     });
 
-    // Mitigasi routes
     Route::resource('mitigasi', MitigasiController::class);
 
     Route::prefix('mitigasi')->name('mitigasi.')->group(function () {
-        // Progress update
-        Route::patch('{mitigasi}/progress', [MitigasiController::class, 'updateProgress'])
-              ->name('update-progress');
-
-        // File handling
-        Route::get('{mitigasi}/download-bukti', [MitigasiController::class, 'downloadBukti'])
-              ->name('download-bukti');
-        Route::delete('{mitigasi}/remove-bukti', [MitigasiController::class, 'removeBukti'])
-              ->name('remove-bukti');
-
-        // API endpoints
-        Route::get('statistics', [MitigasiController::class, 'getStatistics'])
-              ->name('statistics');
-
-        // Approval workflow routes
-        Route::post('{mitigasi}/submit', [MitigasiController::class, 'submit'])
-              ->name('submit');
-        Route::post('{mitigasi}/approve', [MitigasiController::class, 'approve'])
-              ->name('approve');
-        Route::post('{mitigasi}/reject', [MitigasiController::class, 'reject'])
-              ->name('reject');
+        Route::patch('{mitigasi}/progress', [MitigasiController::class, 'updateProgress'])->name('update-progress');
+        Route::get('{mitigasi}/download-bukti', [MitigasiController::class, 'downloadBukti'])->name('download-bukti');
+        Route::delete('{mitigasi}/remove-bukti', [MitigasiController::class, 'removeBukti'])->name('remove-bukti');
+        Route::get('statistics', [MitigasiController::class, 'getStatistics'])->name('statistics');
+        Route::post('{mitigasi}/submit', [MitigasiController::class, 'submit'])->name('submit');
+        Route::post('{mitigasi}/approve', [MitigasiController::class, 'approve'])->name('approve');
+        Route::post('{mitigasi}/reject', [MitigasiController::class, 'reject'])->name('reject');
     });
 
-    // API route for getting mitigasi by risk
-    Route::get('api/risk/{identifyRisk}/mitigasi', [MitigasiController::class, 'getByRisk'])
-          ->name('api.risk.mitigasi');
-
+    Route::get('api/risk/{identifyRisk}/mitigasi', [MitigasiController::class, 'getByRisk'])->name('api.risk.mitigasi');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('sasaran-univ', SasaranUnivController::class);
-
-    Route::get('sasaran-univ/{sasaranUniv}/dokumen/{dokumenId}/download',
-        [SasaranUnivController::class, 'downloadDokumen'])
-        ->name('sasaran-univ.download-dokumen');
+    Route::get('sasaran-univ/{sasaranUniv}/dokumen/{dokumenId}/download', [SasaranUnivController::class, 'downloadDokumen'])->name('sasaran-univ.download-dokumen');
 });
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('/api/risk/{id}/detail', [DashboardController::class, 'getRiskDetail'])->name('risk.detail');
 Route::post('/dashboard/export', [DashboardController::class, 'exportDashboard'])->name('dashboard.export');
 
-
-
-// Routes untuk laporan
 Route::prefix('laporan')->name('laporan.')->group(function () {
     Route::get('/', [LaporanController::class, 'index'])->name('index');
     Route::get('/risk-matrix', [LaporanController::class, 'riskMatrix'])->name('risk-matrix');
@@ -109,7 +71,7 @@ Route::prefix('laporan')->name('laporan.')->group(function () {
     Route::get('/export-excel', [LaporanController::class, 'exportExcel'])->name('export-excel');
 });
 
- Route::resource('referensi', ReferensiController::class);
+Route::resource('referensi', ReferensiController::class);
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
