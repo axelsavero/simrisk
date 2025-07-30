@@ -82,7 +82,6 @@ export default function Create() {
         
         const formData = new FormData();
         
-        // Append all form fields
         Object.entries(data).forEach(([key, value]) => {
             if (key === 'bukti_implementasi') {
                 selectedFiles.forEach((file, index) => {
@@ -129,7 +128,7 @@ export default function Create() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Tambah Mitigasi" />
             
-            <div className="max-w-4xl mx-auto">
+            <div className="w-full min-h-screen bg-gray-50 p-6">
                 {/* Header */}
                 <div className="mb-6">
                     <div className="flex items-center justify-between">
@@ -150,14 +149,14 @@ export default function Create() {
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-6 bg-white shadow rounded-lg p-6">
                     {/* Basic Information */}
-                    <div className="bg-white shadow rounded-lg p-6">
+                    <div>
                         <h2 className="text-lg font-medium text-gray-900 mb-4">Informasi Dasar</h2>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
                             {/* Identify Risk */}
-                            <div className="md:col-span-2">
+                            <div className="md:col-span-2 lg:col-span-3">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Risiko Terkait <span className="text-red-500">*</span>
                                 </label>
@@ -182,7 +181,7 @@ export default function Create() {
                             </div>
 
                             {/* Judul Mitigasi */}
-                            <div className="md:col-span-2">
+                            <div className="md:col-span-2 lg:col-span-3">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Judul Mitigasi <span className="text-red-500">*</span>
                                 </label>
@@ -202,7 +201,7 @@ export default function Create() {
                             </div>
 
                             {/* Deskripsi Mitigasi */}
-                            <div className="md:col-span-2">
+                            <div className="md:col-span-2 lg:col-span-3">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Deskripsi Mitigasi <span className="text-red-500">*</span>
                                 </label>
@@ -314,10 +313,10 @@ export default function Create() {
                     </div>
 
                     {/* Status and Progress */}
-                    <div className="bg-white shadow rounded-lg p-6">
+                    <div>
                         <h2 className="text-lg font-medium text-gray-900 mb-4">Status dan Progress</h2>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
                             {/* Status Mitigasi */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -364,7 +363,7 @@ export default function Create() {
                             </div>
 
                             {/* Catatan Progress */}
-                            <div className="md:col-span-2">
+                            <div className="md:col-span-2 lg:col-span-3">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Catatan Progress
                                 </label>
@@ -385,17 +384,17 @@ export default function Create() {
                     </div>
 
                     {/* Files and Documentation */}
-                    <div className="bg-white shadow rounded-lg p-6">
+                    <div>
                         <h2 className="text-lg font-medium text-gray-900 mb-4">Dokumentasi</h2>
                         
-                        <div className="space-y-6">
+                        <div className="space-y-6 w-full">
                             {/* Bukti Implementasi */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Bukti Implementasi
                                 </label>
-                                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                                    <div className="space-y-1 text-center">
+                                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md w-full">
+                                    <div className="space-y-1 text-center w-full">
                                         <Upload className="mx-auto h-12 w-12 text-gray-400" />
                                         <div className="flex text-sm text-gray-600">
                                             <label className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
@@ -422,7 +421,7 @@ export default function Create() {
                                         <h4 className="text-sm font-medium text-gray-700 mb-2">File yang dipilih:</h4>
                                         <div className="space-y-2">
                                             {selectedFiles.map((file, index) => (
-                                                <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                                <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded w-full">
                                                     <div className="flex items-center">
                                                         <FileText className="w-4 h-4 text-gray-400 mr-2" />
                                                         <span className="text-sm text-gray-700">{file.name}</span>
