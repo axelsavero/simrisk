@@ -1,10 +1,16 @@
 import AppLayout from '@/layouts/app-layout';
+import { BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 
 
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'Kategori Risiko', href: '/referensi' },
+];
+
 export default function ReferensiPage() {
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Referensi Risiko" />
 
             <div className="bg-white shadow rounded-lg p-6 space-y-8">

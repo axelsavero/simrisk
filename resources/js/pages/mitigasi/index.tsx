@@ -331,8 +331,9 @@ export default function Index() {
                         <p className="mt-1 text-sm text-gray-600">Kelola rencana mitigasi risiko dan pantau progress implementasi</p>
                     </div>
                     <div className="mt-4 sm:mt-0">
-                       <Link href={route('mitigasi.create')}
-                            className="inline-flex items-center rounded-md border border-transparent bg-[#12745A] px-4 py-2 text-xs font-semibold tracking-widest text-white uppercase transition duration-150 ease-in-out hover:bg-[#37524c] focus:bg-[#37524c] focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none active:bg-[#37524c]"
+                        <Link
+                            href="/mitigasi/create"
+                            className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-xs font-semibold tracking-widest text-white uppercase transition duration-150 ease-in-out hover:bg-blue-700 focus:bg-blue-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none active:bg-blue-900"
                         >
                             <Plus className="mr-2 h-4 w-4" />
                             Tambah Mitigasi
