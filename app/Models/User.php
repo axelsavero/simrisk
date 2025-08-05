@@ -36,6 +36,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'unit_id',
+        'unit',
+        'kode_unit',
     ];
 
     /**
@@ -93,7 +96,7 @@ class User extends Authenticatable
      */
     public function canValidateRisks(): bool
     {
-        return $this->hasRole('super-admin', 'owner-risk');
+        return $this->hasAnyRole(['super-admin', 'owner-risk']);
     }
 
     /**
