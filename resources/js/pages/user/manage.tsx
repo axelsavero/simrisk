@@ -47,8 +47,8 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
                     {isSuperAdmin && (
                         <Button asChild className="rounded-lg border bg-[#12745A] px-4 py-2 font-medium text-white">
                             <Link href="/user/manage/create">
-                            <UserRoundPlus />
-                            Tambah User
+                                <UserRoundPlus />
+                                Tambah User
                             </Link>
                         </Button>
                     )}
@@ -59,23 +59,21 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
                         <table className="min-w-full border border-gray-300 text-left text-sm">
                             <thead className="bg-gray-100">
                                 <tr>
-                                    <th className="border px-4 py-2">No</th>
-                                    <th className="border px-4 py-2">Unit</th>
-                                    <th className="border px-4 py-2">Kode Unit</th>
-                                    <th className="border px-4 py-2">User Admin</th>
-                                    <th className="border px-4 py-2">Aksi</th>
+                                    <th className="w-2 border px-2 py-2 text-center">No</th>
+                                    <th className="w-2/5 border px-4 py-2">Unit</th>
+                                    <th className="w-1/4 border px-2 py-2">User Admin</th>
+                                    <th className="w-2 border px-1 py-2 text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {users && users.length > 0 ? (
                                     users.map((user: User, idx: number) => (
                                         <tr key={user.id} className="hover:bg-gray-50">
-                                            <td className="border px-4 py-2">{idx + 1}</td>
+                                            <td className="border px-2 py-2 text-center">{idx + 1}</td>
                                             <td className="border px-4 py-2">{typeof user.unit === 'string' ? user.unit : ''}</td>
-                                            <td className="border px-4 py-2">{typeof user.kode_unit === 'string' ? user.kode_unit : ''}</td>
-                                            <td className="border px-4 py-2">{user.name}</td>
-                                            <td className="border px-4 py-2">
-                                                <div className="flex items-center gap-2">
+                                            <td className="border px-2 py-2">{user.name}</td>
+                                            <td className="border px-1 py-2 text-center">
+                                                <div className="flex items-center justify-center gap-1">
                                                     <Button
                                                         asChild
                                                         variant="outline"
