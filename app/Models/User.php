@@ -109,7 +109,7 @@ class User extends Authenticatable
 
     public function canManageRisks(): bool
     {
-        return $this->hasAnyRole(['super-admin', 'risk-manager', 'owner-risk']);
+        return $this->hasAnyRole(['super-admin', 'owner-risk']);
     }
 
     /**
