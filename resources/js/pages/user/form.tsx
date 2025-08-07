@@ -24,6 +24,7 @@ interface FormProps {
 
 interface FormData {
     unit_id: string;
+    unit: string;
     name: string;
     email: string;
     password: string;
@@ -43,6 +44,7 @@ export default function Form({ allRoles, user = null }: FormProps) {
 
     const { data, setData, post, put, processing, errors } = useForm<FormData>({
         unit_id: user?.unit_id?.toString() || '',
+        unit: user?.unit?.toString() || '',
         name: user?.name || '',
         email: user?.email || '',
         password: '',
@@ -278,7 +280,16 @@ export default function Form({ allRoles, user = null }: FormProps) {
     };
 
     const handleUnitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setData('unit_id', e.target.value);
+        const selectedUnitId = e.target.value;
+        const selectedUnit = units.find((unit) => unit.id.toString() === selectedUnitId);
+
+        if (selectedUnit) {
+            setData('unit_id', selectedUnitId);
+            setData('unit', selectedUnit.name);
+        } else {
+            setData('unit_id', '');
+            setData('unit', '');
+        }
     };
 
     const submit = (e: React.FormEvent) => {
