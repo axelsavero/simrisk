@@ -24,18 +24,16 @@ class UserManageController extends Controller
             // Jika tidak, tampilkan pesan error 403 Forbidden
             abort(403, 'ANDA TIDAK MEMILIKI HAK AKSES UNTUK MELIHAT HALAMAN INI.');
         }
-        
+
         // Ambil data user beserta relasi rolenya
-        $users = User::with('roles')->get()->map(function ($user) {
-            // return sebuah array 
-            // Ambil ID, nama, email, dan roles dari user
-          
+        $users = User::with(['roles', 'unit'])->get()->map(function ($user) {
             return [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                
-                'roles' => $user->roles->pluck('name')->toArray(), // <-- Ambil nama role sebagai array
+                'unit_nama' => $user->unit?->nama_unit,
+                'unit_kode' => $user->unit?->kode_unit,
+                'roles' => $user->roles->pluck('name')->toArray(),
             ];
         });
 
@@ -58,7 +56,7 @@ class UserManageController extends Controller
         ]);
     }
 
-// Method untuk menyimpan data
+    // Method untuk menyimpan data
     public function store(Request $request)
     {
         if (!Auth::user()->hasRole('super-admin')) {
@@ -78,6 +76,7 @@ class UserManageController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'unit_id' => $validated['unit_id'], // tambahkan ini
         ]);
 
         // Ambil ID dari nama role
@@ -149,10 +148,4 @@ class UserManageController extends Controller
 
         return Redirect::route('user.manage.index')->with('success', 'User berhasil dihapus.');
     }
-
 }
-
-
-    
-
-

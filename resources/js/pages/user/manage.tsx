@@ -71,8 +71,8 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
                                     users.map((user: User, idx: number) => (
                                         <tr key={user.id} className="hover:bg-gray-50">
                                             <td className="border px-4 py-2">{idx + 1}</td>
-                                            <td className="border px-4 py-2">{typeof user.unit === 'string' ? user.unit : ''}</td>
-                                            <td className="border px-4 py-2">{typeof user.kode_unit === 'string' ? user.kode_unit : ''}</td>
+                                            <td className="border px-4 py-2">{user.unit_nama ? String(user.unit_nama) : ''}</td>
+                                            <td className="border px-4 py-2">{user.unit_kode ? String(user.unit_kode) : ''}</td>
                                             <td className="border px-4 py-2">{user.name}</td>
                                             <td className="border px-4 py-2">
                                                 <div className="flex items-center gap-2">

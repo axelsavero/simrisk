@@ -16,9 +16,9 @@ class User extends Authenticatable
     /**
      * Relasi yang mendefinisikan peran yang dimiliki user.
      */
-    
 
-  /**
+
+    /**
      * Method bantuan untuk mengecek apakah user memiliki peran tertentu.
      * @param string $roleName
      * @return bool
@@ -36,6 +36,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'unit_id', // jika ingin tetap simpan id
+        'unit_nama', // untuk menyimpan nama unit dari API
+        'unit_kode', // untuk menyimpan kode unit dari API
     ];
 
     /**
@@ -64,7 +67,7 @@ class User extends Authenticatable
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'hak_akses', 'user_id', 'role_id')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 
     /**
@@ -86,7 +89,7 @@ class User extends Authenticatable
     /**
      * Cek apakah user dapat mengelola risiko
      */
-    
+
 
     /**
      * Cek apakah user dapat memvalidasi risiko
@@ -117,4 +120,11 @@ class User extends Authenticatable
         return $this->hasRole('pimpinan');
     }
 
+    /**
+     * Relasi ke model Unit
+     */
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class, 'unit_id', 'id');
+    }
 }
