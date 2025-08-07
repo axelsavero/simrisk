@@ -70,7 +70,7 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
                                     users.map((user: User, idx: number) => (
                                         <tr key={user.id} className="hover:bg-gray-50">
                                             <td className="border px-2 py-2 text-center">{idx + 1}</td>
-                                            <td className="border px-4 py-2">{typeof user.unit === 'string' ? user.unit : ''}</td>
+                                            <td className="border px-4 py-2">{user.unit || ''}</td>
                                             <td className="border px-2 py-2">{user.name}</td>
                                             <td className="border px-1 py-2 text-center">
                                                 <div className="flex items-center justify-center gap-1">
