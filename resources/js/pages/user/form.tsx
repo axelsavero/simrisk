@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, User } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import React, { useEffect, useState } from 'react';
+import Select from 'react-select';
 
 interface Unit {
     id: number;
@@ -350,37 +351,39 @@ export default function Form({ allRoles, user = null }: FormProps) {
                 <form onSubmit={submit} className="w-full space-y-6 rounded-xl border-2 border-gray-300 bg-white p-6 shadow-md">
                     <div>
                         <label className="mb-1 block font-medium">Unit</label>
-                        <select
-                            value={data.unit_id}
-                            onChange={handleUnitChange}
-                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            disabled={loading.units || isThrottled}
-                        >
-                            <option value="">-- Pilih Unit --</option>
-                            {units.map((unit) => (
-                                <option key={unit.id} value={unit.id}>
-                                    {unit.name}
-                                </option>
-                            ))}
-                        </select>
+                        <Select
+                            options={units.map((unit) => ({ value: unit.id, label: unit.name }))}
+                            value={units.find((unit) => unit.id.toString() === data.unit_id) ? { value: data.unit_id, label: units.find((unit) => unit.id.toString() === data.unit_id)?.name } : null}
+                            onChange={(selected) => {
+                                if (selected) {
+                                    setData('unit_id', selected.value.toString());
+                                    setData('unit', selected.label);
+                                } else {
+                                    setData('unit_id', '');
+                                    setData('unit', '');
+                                }
+                            }}
+                            isLoading={loading.units || isThrottled}
+                            isDisabled={loading.units || isThrottled}
+                            placeholder="-- Pilih Unit --"
+                            classNamePrefix="react-select"
+                        />
                         {errors.unit_id && <div className="text-sm text-red-500">{errors.unit_id}</div>}
                     </div>
 
                     <div>
                         <label className="mb-1 block font-medium">Nama Pegawai</label>
-                        <select
-                            value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
-                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            disabled={!data.unit_id || loading.pegawai || isThrottled}
-                        >
-                            <option value="">-- Pilih Pegawai --</option>
-                            {availableNames.map((nama, idx) => (
-                                <option key={idx} value={nama}>
-                                    {nama}
-                                </option>
-                            ))}
-                        </select>
+                        <Select
+                            options={availableNames.map((nama) => ({ value: nama, label: nama }))}
+                            value={data.name ? { value: data.name, label: data.name } : null}
+                            onChange={(selected) => {
+                                setData('name', selected ? selected.value : '');
+                            }}
+                            isLoading={!data.unit_id || loading.pegawai || isThrottled}
+                            isDisabled={!data.unit_id || loading.pegawai || isThrottled}
+                            placeholder="-- Pilih Pegawai --"
+                            classNamePrefix="react-select"
+                        />
                         {errors.name && <div className="text-sm text-red-500">{errors.name}</div>}
                     </div>
 
