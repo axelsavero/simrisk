@@ -122,6 +122,6 @@ class User extends Authenticatable
 
     public function unit()
     {
-        return $this->belongsTo(\App\Models\Unit::class, 'unit_id', 'id_unit');
+        return $this->belongsTo(Unit::class, 'unit_id', 'id_unit');
     }
 }

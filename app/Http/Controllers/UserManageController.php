@@ -35,7 +35,7 @@ class UserManageController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'unit_id' => $user->unit_id,
-                'unit' => $user->unit ? $user->unit : null,
+                'unit' => $user->unit, // return the whole unit object
                 'kode_unit' => $user->kode_unit,
                 'roles' => $user->roles->pluck('name')->toArray(), // <-- Ambil nama role sebagai array
             ];
