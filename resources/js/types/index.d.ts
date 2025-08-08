@@ -12,6 +12,8 @@ export interface User {
     email_verified_at?: string | null;
     created_at?: string;
     updated_at?: string;
+    unit_id?: string | number;
+    unit?: string;
     roles?: Array<{
         id: number;
         name: string;
