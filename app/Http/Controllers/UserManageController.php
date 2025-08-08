@@ -24,12 +24,12 @@ class UserManageController extends Controller
             // Jika tidak, tampilkan pesan error 403 Forbidden
             abort(403, 'ANDA TIDAK MEMILIKI HAK AKSES UNTUK MELIHAT HALAMAN INI.');
         }
-        
+
         // Ambil data user beserta relasi rolenya
         $users = User::with('roles', 'unit')->get()->map(function ($user) {
             // return sebuah array 
             // Ambil ID, nama, email, unit, kode_unit dan roles dari user
-          
+
             return [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -60,7 +60,7 @@ class UserManageController extends Controller
         ]);
     }
 
-// Method untuk menyimpan data
+    // Method untuk menyimpan data
     public function store(Request $request)
     {
         if (!Auth::user()->hasRole('super-admin')) {
@@ -178,6 +178,3 @@ class UserManageController extends Controller
     }
 
 }
-
-
-    

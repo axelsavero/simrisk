@@ -14,7 +14,6 @@ class Unit extends Model
 
     protected $table = 'unit';
     protected $primaryKey = 'id_unit';
-    
     protected $fillable = [
         'kode_unit',
         'nama_unit',
@@ -47,7 +46,6 @@ class Unit extends Model
     {
         return $this->belongsTo(Unit::class, 'parent_unit_id', 'id_unit');
     }
-
     /**
      * Relasi ke child units
      */

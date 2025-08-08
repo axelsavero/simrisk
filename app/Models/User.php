@@ -119,7 +119,6 @@ class User extends Authenticatable
     {
         return $this->hasRole('pimpinan');
     }
-
     public function unit()
     {
         return $this->belongsTo(Unit::class, 'unit_id', 'id_unit');
