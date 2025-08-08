@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
 
-// Data matriks dan label (tetap sama)
 const riskMatrix = [
     [5, 10, 15, 20, 25],
     [4, 8, 12, 16, 20],
@@ -18,7 +17,6 @@ const riskMatrix = [
 const impactLabels = ['Sangat Berpengaruh', 'Berpengaruh', 'Cukup Berpengaruh', 'Kurang Berpengaruh', 'Tidak Berpengaruh'];
 const probabilityLabels = ['Sangat Jarang Terjadi', 'Jarang Terjadi', 'Kadang Terjadi', 'Sering Terjadi', 'Pasti Terjadi'];
 
-// 🔥 Interface untuk data dari backend
 interface Props {
     riskMatrixData?: {
         riskPointsSebelum: Array<{ x: number; y: number; label: string }>;
@@ -37,10 +35,36 @@ interface Props {
     };
 }
 
+interface RiskDetail {
+    id: number;
+    id_identify: string;
+    description: string;
+    unit_kerja: string;
+    inherent: {
+        probability: number;
+        impact: number;
+        level: number;
+        level_text: string;
+    };
+    residual: {
+        probability: number;
+        impact: number;
+        level: number;
+        level_text: string;
+    };
+    mitigation: {
+        rencana: string;
+        target: string;
+        status: string;
+        reduction: number;
+    };
+}
+
 export default function Dashboard({ riskMatrixData, filterOptions, filters }: Props) {
     const [unit, setUnit] = useState(filters?.unit || '');
     const [kategori, setKategori] = useState(filters?.kategori || '');
     const [tahun, setTahun] = useState(filters?.tahun || '');
+    const [popupData, setPopupData] = useState<{ x: number; y: number; value: number; label: string; detail?: RiskDetail } | null>(null);
 
     const riskPointsSebelum = riskMatrixData?.riskPointsSebelum || [
         { x: 1, y: 3, label: '1' },
@@ -65,12 +89,10 @@ export default function Dashboard({ riskMatrixData, filterOptions, filters }: Pr
         { tingkat: 'Tinggi', inheren: 2, residual: 0, color: 'bg-red-500' },
     ];
 
-    // Ambil role dari props
     const { auth } = usePage().props as any;
     const roles: string[] = auth?.user?.roles || [];
     const isSuperAdmin = roles.includes('super-admin');
 
-    // 🔥 Filter functionality - kirim ke backend
     const handleFilterChange = () => {
         router.get(
             '/dashboard',
@@ -86,7 +108,6 @@ export default function Dashboard({ riskMatrixData, filterOptions, filters }: Pr
         );
     };
 
-    // 🔥 Auto-apply filter dengan debounce
     useEffect(() => {
         const timer = setTimeout(() => {
             if (unit !== filters?.unit || kategori !== filters?.kategori || tahun !== filters?.tahun) {
@@ -96,6 +117,20 @@ export default function Dashboard({ riskMatrixData, filterOptions, filters }: Pr
         return () => clearTimeout(timer);
     }, [unit, kategori, tahun]);
 
+    const handleCellClick = async (x: number, y: number, value: number, label: string) => {
+        try {
+            const response = await fetch(`/dashboard/risk-detail/${label}`);
+            const data = await response.json();
+            setPopupData({ x, y, value, label, detail: data });
+        } catch (error) {
+            setPopupData({ x, y, value, label, detail: undefined });
+        }
+    };
+
+    const closePopup = () => {
+        setPopupData(null);
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
@@ -103,10 +138,8 @@ export default function Dashboard({ riskMatrixData, filterOptions, filters }: Pr
                 <div className="flex flex-1 flex-col gap-4 overflow-auto rounded-xl p-4">
                     <h2 className="mb-2 text-xl font-semibold">Matriks Risiko</h2>
 
-                    {/* Filter hanya untuk super-admin */}
                     {isSuperAdmin && (
                         <div className="mb-2 flex flex-col justify-end gap-4 md:flex-row">
-                            {/* Unit Select */}
                             <Select value={unit} onValueChange={setUnit}>
                                 <SelectTrigger className="rounded border px-3 py-2">
                                     <SelectValue placeholder="Pilih Unit" />
@@ -119,7 +152,6 @@ export default function Dashboard({ riskMatrixData, filterOptions, filters }: Pr
                                     ))}
                                 </SelectContent>
                             </Select>
-                            {/* Kategori Select */}
                             <Select value={kategori} onValueChange={setKategori}>
                                 <SelectTrigger className="rounded border px-3 py-2">
                                     <SelectValue placeholder="Kategori" />
@@ -134,7 +166,6 @@ export default function Dashboard({ riskMatrixData, filterOptions, filters }: Pr
                                     )}
                                 </SelectContent>
                             </Select>
-                            {/* Tahun Select */}
                             <Select value={tahun} onValueChange={setTahun}>
                                 <SelectTrigger className="rounded border px-3 py-2">
                                     <SelectValue placeholder="Tahun" />
@@ -150,23 +181,21 @@ export default function Dashboard({ riskMatrixData, filterOptions, filters }: Pr
                         </div>
                     )}
 
-                    {/* Matriks Risiko Sebelum & Sesudah - format tetap sama */}
                     <div className="flex flex-col gap-6 lg:flex-row">
                         <div className="flex-1 rounded-xl border bg-white p-4">
                             <h3 className="mb-2 text-center text-lg font-semibold">
                                 Peta Risiko <span className="font-normal">(Sebelum)</span>
                             </h3>
-                            <RiskMatrixTable riskPoints={riskPointsSebelum} />
+                            <RiskMatrixTable riskPoints={riskPointsSebelum} onCellClick={handleCellClick} />
                         </div>
                         <div className="flex-1 rounded-xl border bg-white p-4">
                             <h3 className="mb-2 text-center text-lg font-semibold">
                                 Peta Risiko <span className="font-normal">(Sesudah)</span>
                             </h3>
-                            <RiskMatrixTable riskPoints={riskPointsSesudah} />
+                            <RiskMatrixTable riskPoints={riskPointsSesudah} onCellClick={handleCellClick} />
                         </div>
                     </div>
 
-                    {/* Tabel Tingkatan Risiko - format tetap sama */}
                     <div className="mt-6 w-full rounded-xl border bg-white p-4">
                         <h3 className="mb-2 text-center font-semibold">Tingkatan Risiko</h3>
                         <table className="w-full border text-center">
@@ -195,14 +224,65 @@ export default function Dashboard({ riskMatrixData, filterOptions, filters }: Pr
                             </tbody>
                         </table>
                     </div>
+
+                    {popupData && (
+                        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                            <div className="w-3/4 rounded-lg bg-white p-6 shadow-lg">
+                                <h4 className="mb-4 text-xl font-semibold">Detail Risiko</h4>
+                                <table className="w-full border">
+                                    <thead>
+                                        <tr>
+                                            <th className="border px-2 py-1">No</th>
+                                            <th className="border px-2 py-1">Kode Risiko</th>
+                                            <th className="border px-2 py-1">Unit Kerja</th>
+                                            <th className="border px-2 py-1">Deskripsi</th>
+                                            <th className="border px-2 py-1">Penyebab</th>
+                                            <th className="border px-2 py-1">Probabilitas Inherent</th>
+                                            <th className="border px-2 py-1">Impact Inherent</th>
+                                            <th className="border px-2 py-1">Tingkat Risiko Inherent</th>
+                                            <th className="border px-2 py-1">Status</th>
+                                            <th className="border px-2 py-1">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {popupData.detail ? (
+                                            <tr>
+                                                <td className="border px-2 py-1">{popupData.label}</td>
+                                                <td className="border px-2 py-1">{popupData.detail.id_identify}</td>
+                                                <td className="border px-2 py-1">{popupData.detail.unit_kerja}</td>
+                                                <td className="border px-2 py-1">{popupData.detail.description}</td>
+                                                <td className="border px-2 py-1">Penyebab {popupData.label}</td>
+                                                <td className="border px-2 py-1">{probabilityLabels[popupData.detail.inherent.probability - 1]}</td>
+                                                <td className="border px-2 py-1">{impactLabels[popupData.detail.inherent.impact - 1]}</td>
+                                                <td className="border px-2 py-1">{popupData.detail.inherent.level}</td>
+                                                <td className="border px-2 py-1">{popupData.detail.mitigation.status || 'aktif'}</td>
+                                                <td className="border px-2 py-1">
+                                                    <button className="rounded bg-blue-500 px-2 py-1 text-white">Evaluasi</button>
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={10} className="border px-2 py-1 text-center">Tidak ada data</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                                <button
+                                    className="mt-4 rounded bg-red-500 px-4 py-2 text-white"
+                                    onClick={closePopup}
+                                >
+                                    Tutup
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </AppLayout>
     );
 }
 
-// 🔥 Komponen RiskMatrixTable - TIDAK DIUBAH, tetap sama persis
-function RiskMatrixTable({ riskPoints }: { riskPoints: { x: number; y: number; label: string }[] }) {
+function RiskMatrixTable({ riskPoints, onCellClick }: { riskPoints: { x: number; y: number; label: string }[]; onCellClick: (x: number, y: number, value: number, label: string) => void }) {
     return (
         <div className="w-full overflow-x-hidden">
             <table className="w-full border border-black">
@@ -269,17 +349,23 @@ function RiskMatrixTable({ riskPoints }: { riskPoints: { x: number; y: number; l
                                     bg = 'bg-green-500';
                                     text = 'text-black';
                                 }
-                                // Hitung total risiko di cell ini
                                 const totalRisiko = points.length;
+                                const x = colIdx + 1;
+                                const y = 5 - rowIdx;
+                                const label = points.length > 0 ? points[0].label : '';
+
                                 return (
-                                    <td key={colIdx} className={`relative h-10 w-1/5 border border-black p-0 text-center md:h-20 ${bg}`}>
+                                    <td
+                                        key={colIdx}
+                                        className={`relative h-10 w-1/5 border border-black p-0 text-center ${bg}`}
+                                        onClick={() => onCellClick(x, y, cell, label)}
+                                    >
                                         <span
-                                            className={`font-bold ${text} mx-auto my-1 inline-flex h-10 w-10 items-center justify-center rounded-full text-base shadow md:h-16 md:w-16 md:text-xl`}
+                                            className={`font-bold ${text} mx-auto my-1 inline-flex h-10 w-10 items-center justify-center rounded-full text-base shadow md:h-16 md:w-16 md:text-xl cursor-pointer`}
                                             style={{ background: 'rgba(255,255,255,0.18)' }}
                                         >
                                             {cell}
                                         </span>
-                                        {/* Total risiko di bawah lingkaran */}
                                         <div className="mt-1 mb-1 w-full text-center text-xs font-semibold" style={{ minHeight: '1.2em' }}>
                                             {totalRisiko > 0 ? `${totalRisiko} Risiko` : ''}
                                         </div>

@@ -328,7 +328,7 @@ export default function Index() {
                                                     <Eye className="inline" /> Detail
                                                 </Link>
                                                 {permissions?.canSubmit && canShowSubmit(item) && (
-                                                    <button onClick={() => submitItem(item)} className="action-btn bg-[#12745a] text-white px-2 py-1 rounded hover:bg-[#0c4435]">
+                                                    <button onClick={() => submitItem(item)} className="action-btn bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700">
                                                         <Upload className="inline" /> Kirim
                                                     </button>
                                                 )}
