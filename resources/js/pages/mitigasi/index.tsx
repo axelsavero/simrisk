@@ -54,7 +54,7 @@ const Pagination = ({ links }: { links: Array<{ url: string | null; label: strin
                         {link.url ? (
                             <Link
                                 className={`rounded border px-3 py-2 text-sm ${
-                                    link.active ? 'border-blue-500 bg-blue-500 text-white' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                                    link.active ? 'border-[#12745a] bg-[#12745a] text-white' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                                 }`}
                                 href={link.url}
                                 dangerouslySetInnerHTML={{ __html: link.label }}
@@ -333,7 +333,7 @@ export default function Index() {
                     <div className="mt-4 sm:mt-0">
                         <Link
                             href="/mitigasi/create"
-                            className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-xs font-semibold tracking-widest text-white uppercase transition duration-150 ease-in-out hover:bg-blue-700 focus:bg-blue-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none active:bg-blue-900"
+                            className="inline-flex items-center rounded-md border border-transparent bg-[#12745a] px-4 py-2 text-xs font-semibold tracking-widest text-white uppercase transition duration-150 ease-in-out hover:bg-[#0c4435] focus:bg-[#12745a] focus:ring-2 focus:ring-[#0c4435] focus:ring-offset-2 focus:outline-none active:bg-[#0c4435]"
                         >
                             <Plus className="mr-2 h-4 w-4" />
                             Tambah Mitigasi
@@ -353,7 +353,7 @@ export default function Index() {
                                     placeholder="Cari mitigasi..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full rounded-md border border-gray-300 py-2 pr-4 pl-10 focus:border-blue-500 focus:ring-blue-500"
+                                    className="w-full rounded-md border border-gray-300 py-2 pr-4 pl-10 focus:border-[#12745a] focus:ring-[#12745a]"
                                 />
                             </div>
                         </form>
@@ -368,7 +368,7 @@ export default function Index() {
                                 Filter
                             </button>
                             {(filters.status || filters.strategi || filters.validation_status) && (
-                                <button onClick={clearFilters} className="text-sm text-blue-600 hover:text-blue-800">
+                                <button onClick={clearFilters} className="text-sm text-[#12745a] hover:text-[#0c4435]">
                                     Clear Filters
                                 </button>
                             )}
@@ -384,7 +384,7 @@ export default function Index() {
                                     <select
                                         value={filters.status || ''}
                                         onChange={(e) => handleFilter('status', e.target.value)}
-                                        className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+                                        className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#12745a] focus:ring-[#12745a]"
                                     >
                                         <option value="">Semua Status</option>
                                         {Object.entries(statusOptions).map(([key, label]) => (
@@ -399,7 +399,7 @@ export default function Index() {
                                     <select
                                         value={filters.strategi || ''}
                                         onChange={(e) => handleFilter('strategi', e.target.value)}
-                                        className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+                                        className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#12745a] focus:ring-[#12745a]"
                                     >
                                         <option value="">Semua Strategi</option>
                                         {Object.entries(strategiOptions).map(([key, label]) => (
@@ -414,7 +414,7 @@ export default function Index() {
                                     <select
                                         value={filters.validation_status || ''}
                                         onChange={(e) => handleFilter('validation_status', e.target.value)}
-                                        className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+                                        className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#12745a] focus:ring-[#12745a]"
                                     >
                                         <option value="">Semua Status Validasi</option>
                                         <option value="draft">Draft</option>
@@ -531,7 +531,7 @@ export default function Index() {
                                                     <div className="mb-1 text-xs text-gray-600">{mitigasi.progress_percentage}%</div>
                                                     <div className="h-2 w-full rounded-full bg-gray-200">
                                                         <div
-                                                            className="h-2 rounded-full bg-blue-600"
+                                                            className="h-2 rounded-full bg-[#12745a]"
                                                             style={{ width: `${mitigasi.progress_percentage}%` }}
                                                         ></div>
                                                     </div>
@@ -565,7 +565,7 @@ export default function Index() {
                                                 <div className="flex items-center space-x-2">
                                                     <Link
                                                         href={`/mitigasi/${mitigasi.id}`}
-                                                        className="text-blue-600 hover:text-blue-900"
+                                                        className="text-[#12745a] hover:text-[#0c4435]"
                                                         title="Lihat Detail"
                                                     >
                                                         <Eye className="h-4 w-4" />
@@ -582,7 +582,7 @@ export default function Index() {
                                                     {mitigasi.permissions?.canSubmit && (
                                                         <button
                                                             onClick={() => handleSubmit(mitigasi)}
-                                                            className="text-blue-600 hover:text-blue-900"
+                                                            className="text-[#12745a] hover:text-[#0c4435]"
                                                             title="Submit untuk Persetujuan"
                                                         >
                                                             <Send className="h-4 w-4" />
