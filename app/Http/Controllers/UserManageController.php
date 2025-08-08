@@ -26,14 +26,18 @@ class UserManageController extends Controller
         }
 
         // Ambil data user beserta relasi rolenya
-        $users = User::with(['roles', 'unit'])->get()->map(function ($user) {
+        $users = User::with('roles', 'unit')->get()->map(function ($user) {
+            // return sebuah array 
+            // Ambil ID, nama, email, unit, kode_unit dan roles dari user
+
             return [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'unit_nama' => $user->unit?->nama_unit,
-                'unit_kode' => $user->unit?->kode_unit,
-                'roles' => $user->roles->pluck('name')->toArray(),
+                'unit_id' => $user->unit_id,
+                'unit' => $user->unit, // return the whole unit object
+                'kode_unit' => $user->kode_unit,
+                'roles' => $user->roles->pluck('name')->toArray(), // <-- Ambil nama role sebagai array
             ];
         });
 
@@ -65,10 +69,11 @@ class UserManageController extends Controller
 
         // Validasi data
         $validated = $request->validate([
+            'unit_id' => 'required|string',
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'roles' => 'required|array',
+            'role' => 'required|string',
         ]);
 
         // Buat user baru
@@ -76,14 +81,18 @@ class UserManageController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'unit_id' => $validated['unit_id'], // tambahkan ini
+            'unit_id' => $validated['unit_id'],
+            'unit' => $request->input('unit'), // Ambil nama unit dari request
+            'kode_unit' => $request->input('kode_unit'), // Ambil kode unit dari request
         ]);
 
-        // Ambil ID dari nama role
-        $roleIds = Role::whereIn('name', $validated['roles'])->pluck('id');
-
-        // Pasang role ke user
-        $user->roles()->sync($roleIds);
+        // Ambil ID dari nama role (single role)
+        $roleId = Role::where('name', $validated['role'])->first()?->id;
+        
+        if ($roleId) {
+            // Pasang role ke user
+            $user->roles()->sync([$roleId]);
+        }
 
         return Redirect::route('user.manage.index')->with('success', 'User berhasil dibuat.');
     }
@@ -96,9 +105,20 @@ class UserManageController extends Controller
 
         // Muat role yang dimiliki user ini
         $user->load('roles');
+        
+        // Format data user untuk frontend
+        $userData = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'unit_id' => $user->unit_id,
+            'unit' => $user->unit,
+            'kode_unit' => $user->kode_unit,
+            'roles' => $user->roles->pluck('name')->toArray(),
+        ];
 
         return Inertia::render('user/form', [
-            'user' => $user, // Kirim data user yang akan diedit
+            'user' => $userData, // Kirim data user yang akan diedit
             'allRoles' => Role::all()->pluck('name'),
         ]);
     }
@@ -112,23 +132,31 @@ class UserManageController extends Controller
 
         // Validasi, email harus unik kecuali untuk user ini sendiri
         $validated = $request->validate([
+            'unit_id' => 'required|string',
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8', // Password boleh kosong
-            'roles' => 'required|array',
+            'role' => 'required|string',
         ]);
 
         // Update data user
         $user->name = $validated['name'];
         $user->email = $validated['email'];
+        $user->unit_id = $validated['unit_id'];
+        $user->unit = $request->input('unit');
+        $user->kode_unit = $request->input('kode_unit');
+        
         if ($validated['password']) {
             $user->password = Hash::make($validated['password']);
         }
         $user->save();
 
-        // Update roles
-        $roleIds = Role::whereIn('name', $validated['roles'])->pluck('id');
-        $user->roles()->sync($roleIds);
+        // Update role (single role)
+        $roleId = Role::where('name', $validated['role'])->first()?->id;
+        
+        if ($roleId) {
+            $user->roles()->sync([$roleId]);
+        }
 
         return Redirect::route('user.manage.index')->with('success', 'User berhasil diperbarui.');
     }
@@ -148,4 +176,5 @@ class UserManageController extends Controller
 
         return Redirect::route('user.manage.index')->with('success', 'User berhasil dihapus.');
     }
+
 }

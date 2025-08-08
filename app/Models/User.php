@@ -36,9 +36,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'unit_id', // jika ingin tetap simpan id
-        'unit_nama', // untuk menyimpan nama unit dari API
-        'unit_kode', // untuk menyimpan kode unit dari API
+        'unit_id',
+        'unit',
+        'kode_unit',
     ];
 
     /**
@@ -96,7 +96,7 @@ class User extends Authenticatable
      */
     public function canValidateRisks(): bool
     {
-        return $this->hasRole('super-admin', 'owner-risk');
+        return $this->hasAnyRole(['super-admin', 'owner-risk']);
     }
 
     /**
@@ -109,7 +109,7 @@ class User extends Authenticatable
 
     public function canManageRisks(): bool
     {
-        return $this->hasAnyRole(['super-admin', 'risk-manager', 'owner-risk']);
+        return $this->hasAnyRole(['super-admin', 'owner-risk']);
     }
 
     /**
@@ -119,12 +119,8 @@ class User extends Authenticatable
     {
         return $this->hasRole('pimpinan');
     }
-
-    /**
-     * Relasi ke model Unit
-     */
     public function unit()
     {
-        return $this->belongsTo(Unit::class, 'unit_id', 'id');
+        return $this->belongsTo(Unit::class, 'unit_id', 'id_unit');
     }
 }
