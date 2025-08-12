@@ -567,7 +567,7 @@ export default function Index() {
                                                         href={`/mitigasi/${mitigasi.id}`}
                                                         className="text-[#12745a] hover:text-[#0c4435]"
                                                         title="Lihat Detail"
-                                                    >
+                                                        >
                                                         <Eye className="h-4 w-4" />
                                                     </Link>
                                                     {mitigasi.permissions?.canEdit && (

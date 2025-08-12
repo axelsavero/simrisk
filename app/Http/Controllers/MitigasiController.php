@@ -24,7 +24,7 @@ class MitigasiController extends Controller
     {
         $user = Auth::user();
         $query = Mitigasi::with(['identifyRisk', 'identifyRisk.user', 'validationProcessor']);
-    
+
         // Filter berdasarkan role
         if ($user->hasRole('super-admin')) {
             // Super admin melihat mitigasi yang sudah submitted atau lebih tinggi
@@ -141,14 +141,14 @@ class MitigasiController extends Controller
         $user = Auth::user();
         $riskId = $request->get('risk_id');
         $identifyRisk = null;
-        
+
         if ($riskId) {
             $identifyRisk = IdentifyRisk::findOrFail($riskId);
         }
 
         $identifyRisksQuery = IdentifyRisk::select('id', 'id_identify', 'description')
                                          ->where('validation_status', 'approved');
-        
+
         // Filter berdasarkan role
         if ($user->hasRole('owner-risk')) {
             // Owner risk hanya bisa membuat mitigasi dari risiko yang mereka buat dan sudah approved
@@ -158,7 +158,7 @@ class MitigasiController extends Controller
             $identifyRisksQuery->where('unit_kerja', $user->unit_kerja);
         }
         // Super admin bisa membuat mitigasi dari semua risiko yang sudah approved
-        
+
         $identifyRisks = $identifyRisksQuery->orderBy('id_identify')->get();
 
         return Inertia::render('mitigasi/form', [
@@ -175,14 +175,14 @@ class MitigasiController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate(Mitigasi::getValidationRules());
-        
+
         // Handle file uploads
         $buktiFiles = [];
         if ($request->hasFile('bukti_files')) {
             foreach ($request->file('bukti_files') as $file) {
                 $fileName = time() . '_' . $file->getClientOriginalName();
                 $filePath = $file->storeAs('mitigasi-bukti', $fileName, 'public');
-                
+
                 $buktiFiles[] = [
                     'original_name' => $file->getClientOriginalName(),
                     'file_name' => $fileName,
@@ -193,7 +193,7 @@ class MitigasiController extends Controller
                 ];
             }
         }
-        
+
         $validated['bukti_implementasi'] = $buktiFiles;
         $validated['created_by'] = Auth::id();
         $validated['updated_by'] = Auth::id();
@@ -208,14 +208,29 @@ class MitigasiController extends Controller
     /**
      * Display the specified mitigasi.
      */
-    public function show(Mitigasi $mitigasi): Response
-    {
-        $mitigasi->load(['identifyRisk', 'creator', 'updater']);
-
-        return Inertia::render('mitigasi/show', [
-            'mitigasi' => $mitigasi,
-        ]);
+public function show(Mitigasi $mitigasi): Response
+{
+    $user = Auth::user();
+    if ($user->hasRole('super-admin')) {
+        // Super admin can view all
+    } elseif ($user->hasRole('owner-risk')) {
+        if ($mitigasi->identifyRisk->user_id !== $user->id) {
+            abort(403, 'Unauthorized');
+        }
+    } elseif ($user->hasRole('pimpinan')) {
+        if ($mitigasi->identifyRisk->unit_kerja !== $user->unit_kerja) {
+            abort(403, 'Unauthorized');
+        }
+    } else {
+        abort(403, 'Unauthorized');
     }
+
+    $mitigasi->load(['identifyRisk', 'creator', 'updater']);
+
+    return Inertia::render('mitigasi/show', [
+        'mitigasi' => $mitigasi,
+    ]);
+}
 
     /**
      * Show the form for editing the specified mitigasi.
@@ -223,7 +238,7 @@ class MitigasiController extends Controller
     public function edit(Mitigasi $mitigasi): Response
     {
         $mitigasi->load('identifyRisk');
-        
+
         $identifyRisks = IdentifyRisk::select('id', 'id_identify', 'description')
                                    ->where('validation_status', 'approved')
                                    ->orderBy('id_identify')
@@ -245,17 +260,17 @@ class MitigasiController extends Controller
         $rules = Mitigasi::getValidationRules();
         // Make identify_risk_id not required for update
         $rules['identify_risk_id'] = 'sometimes|exists:identify_risks,id';
-        
+
         $validated = $request->validate($rules);
-        
+
         // Handle file uploads
         $existingFiles = $mitigasi->bukti_implementasi ?? [];
-        
+
         if ($request->hasFile('bukti_files')) {
             foreach ($request->file('bukti_files') as $file) {
                 $fileName = time() . '_' . $file->getClientOriginalName();
                 $filePath = $file->storeAs('mitigasi-bukti', $fileName, 'public');
-                
+
                 $existingFiles[] = [
                     'original_name' => $file->getClientOriginalName(),
                     'file_name' => $fileName,
@@ -266,7 +281,7 @@ class MitigasiController extends Controller
                 ];
             }
         }
-        
+
         $validated['bukti_implementasi'] = $existingFiles;
         $validated['updated_by'] = Auth::id();
 
@@ -426,18 +441,18 @@ class MitigasiController extends Controller
     {
         $fileIndex = $request->get('file_index', 0);
         $buktiFiles = $mitigasi->bukti_implementasi ?? [];
-        
+
         if (!isset($buktiFiles[$fileIndex])) {
             return redirect()->back()->with('error', 'File tidak ditemukan.');
         }
-        
+
         $file = $buktiFiles[$fileIndex];
         $filePath = storage_path('app/public/' . $file['file_path']);
-        
+
         if (!file_exists($filePath)) {
             return redirect()->back()->with('error', 'File tidak ditemukan di server.');
         }
-        
+
         return response()->download($filePath, $file['original_name']);
     }
 
@@ -448,27 +463,27 @@ class MitigasiController extends Controller
     {
         $fileIndex = $request->get('file_index');
         $buktiFiles = $mitigasi->bukti_implementasi ?? [];
-        
+
         if (!isset($buktiFiles[$fileIndex])) {
             return response()->json(['success' => false, 'message' => 'File tidak ditemukan.'], 404);
         }
-        
+
         $file = $buktiFiles[$fileIndex];
-        
+
         // Delete file from storage
         if (isset($file['file_path'])) {
             Storage::disk('public')->delete($file['file_path']);
         }
-        
+
         // Remove from array
         unset($buktiFiles[$fileIndex]);
         $buktiFiles = array_values($buktiFiles); // Re-index array
-        
+
         $mitigasi->update([
             'bukti_implementasi' => $buktiFiles,
             'updated_by' => Auth::id(),
         ]);
-        
+
         return response()->json([
             'success' => true,
             'message' => 'File berhasil dihapus.',
@@ -523,7 +538,7 @@ class MitigasiController extends Controller
         }
 
         if ($user->hasRole('owner-risk')) {
-            return $mitigasi->identifyRisk->user_id === $user->id && 
+            return $mitigasi->identifyRisk->user_id === $user->id &&
                    in_array($mitigasi->validation_status, [Mitigasi::VALIDATION_STATUS_DRAFT, Mitigasi::VALIDATION_STATUS_REJECTED]);
         }
 
@@ -540,7 +555,7 @@ class MitigasiController extends Controller
         }
 
         if ($user->hasRole('owner-risk')) {
-            return $mitigasi->identifyRisk->user_id === $user->id && 
+            return $mitigasi->identifyRisk->user_id === $user->id &&
                    $mitigasi->validation_status === Mitigasi::VALIDATION_STATUS_DRAFT;
         }
 
@@ -553,7 +568,7 @@ class MitigasiController extends Controller
     private function canSubmit(Mitigasi $mitigasi, $user): bool
     {
         if ($user->hasRole('owner-risk')) {
-            return $mitigasi->identifyRisk->user_id === $user->id && 
+            return $mitigasi->identifyRisk->user_id === $user->id &&
                    in_array($mitigasi->validation_status, [Mitigasi::VALIDATION_STATUS_DRAFT, Mitigasi::VALIDATION_STATUS_REJECTED]);
         }
 
@@ -565,7 +580,7 @@ class MitigasiController extends Controller
      */
     private function canApprove(Mitigasi $mitigasi, $user): bool
     {
-        return $user->hasRole('super-admin') && 
+        return $user->hasRole('super-admin') &&
                in_array($mitigasi->validation_status, [Mitigasi::VALIDATION_STATUS_SUBMITTED, Mitigasi::VALIDATION_STATUS_PENDING]);
     }
 
@@ -574,7 +589,7 @@ class MitigasiController extends Controller
      */
     private function canReject(Mitigasi $mitigasi, $user): bool
     {
-        return $user->hasRole('super-admin') && 
+        return $user->hasRole('super-admin') &&
                in_array($mitigasi->validation_status, [Mitigasi::VALIDATION_STATUS_SUBMITTED, Mitigasi::VALIDATION_STATUS_PENDING]);
     }
 }

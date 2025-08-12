@@ -1,14 +1,14 @@
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, Mitigasi } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { 
-    ArrowLeft, 
-    Edit, 
-    Trash2, 
-    Download, 
-    Calendar, 
-    DollarSign, 
-    User, 
+import {
+    ArrowLeft,
+    Edit,
+    Trash2,
+    Download,
+    Calendar,
+    DollarSign,
+    User,
     FileText,
     Target,
     AlertCircle,
@@ -24,9 +24,9 @@ import { useState } from 'react';
 import Swal from 'sweetalert2';
 
 interface PageProps {
-    mitigasi: Mitigasi;
-    statusOptions: Record<string, string>;
-    strategiOptions: Record<string, string>;
+    mitigasi: Mitigasi | null;
+    statusOptions?: Record<string, string>; // Make optional with fallback
+    strategiOptions?: Record<string, string>; // Make optional with fallback
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -37,62 +37,47 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const getStatusIcon = (status: string) => {
     switch (status) {
-        case 'belum_dimulai':
-            return <Clock className="w-5 h-5 text-gray-500" />;
-        case 'sedang_berjalan':
-            return <TrendingUp className="w-5 h-5 text-blue-500" />;
-        case 'selesai':
-            return <CheckCircle2 className="w-5 h-5 text-green-500" />;
-        case 'tertunda':
-            return <Pause className="w-5 h-5 text-yellow-500" />;
-        case 'dibatalkan':
-            return <XCircle className="w-5 h-5 text-red-500" />;
-        default:
-            return <Clock className="w-5 h-5 text-gray-500" />;
+        case 'belum_dimulai': return <Clock className="w-5 h-5 text-gray-500" />;
+        case 'sedang_berjalan': return <TrendingUp className="w-5 h-5 text-blue-500" />;
+        case 'selesai': return <CheckCircle2 className="w-5 h-5 text-green-500" />;
+        case 'tertunda': return <Pause className="w-5 h-5 text-yellow-500" />;
+        case 'dibatalkan': return <XCircle className="w-5 h-5 text-red-500" />;
+        default: return <Clock className="w-5 h-5 text-gray-500" />;
     }
 };
 
 const getStatusBadge = (status: string, label: string) => {
     const baseClasses = "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium";
-    
     switch (status) {
-        case 'belum_dimulai':
-            return `${baseClasses} bg-gray-100 text-gray-800`;
-        case 'sedang_berjalan':
-            return `${baseClasses} bg-blue-100 text-blue-800`;
-        case 'selesai':
-            return `${baseClasses} bg-green-100 text-green-800`;
-        case 'tertunda':
-            return `${baseClasses} bg-yellow-100 text-yellow-800`;
-        case 'dibatalkan':
-            return `${baseClasses} bg-red-100 text-red-800`;
-        default:
-            return `${baseClasses} bg-gray-100 text-gray-800`;
+        case 'belum_dimulai': return `${baseClasses} bg-gray-100 text-gray-800`;
+        case 'sedang_berjalan': return `${baseClasses} bg-blue-100 text-blue-800`;
+        case 'selesai': return `${baseClasses} bg-green-100 text-green-800`;
+        case 'tertunda': return `${baseClasses} bg-yellow-100 text-yellow-800`;
+        case 'dibatalkan': return `${baseClasses} bg-red-100 text-red-800`;
+        default: return `${baseClasses} bg-gray-100 text-gray-800`;
     }
 };
 
 const getStrategiBadge = (strategi: string, label: string) => {
     const baseClasses = "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium";
-    
     switch (strategi) {
-        case 'avoid':
-            return `${baseClasses} bg-red-100 text-red-800`;
-        case 'reduce':
-            return `${baseClasses} bg-orange-100 text-orange-800`;
-        case 'transfer':
-            return `${baseClasses} bg-blue-100 text-blue-800`;
-        case 'accept':
-            return `${baseClasses} bg-green-100 text-green-800`;
-        default:
-            return `${baseClasses} bg-gray-100 text-gray-800`;
+        case 'avoid': return `${baseClasses} bg-red-100 text-red-800`;
+        case 'reduce': return `${baseClasses} bg-orange-100 text-orange-800`;
+        case 'transfer': return `${baseClasses} bg-blue-100 text-blue-800`;
+        case 'accept': return `${baseClasses} bg-green-100 text-green-800`;
+        default: return `${baseClasses} bg-gray-100 text-gray-800`;
     }
 };
 
 export default function Show() {
-    const { mitigasi, statusOptions, strategiOptions } = usePage<PageProps>().props;
+    const { mitigasi, statusOptions = {}, strategiOptions = {} } = usePage<PageProps>().props;
+    if (!mitigasi) {
+        return <div className="text-center p-4 text-red-500">Data mitigasi tidak ditemukan.</div>;
+    }
+
     const [showProgressModal, setShowProgressModal] = useState(false);
     const [progressData, setProgressData] = useState({
-        progress_percentage: mitigasi.progress_percentage,
+        progress_percentage: mitigasi.progress_percentage || 0,
         catatan_progress: mitigasi.catatan_progress || ''
     });
 
@@ -188,8 +173,7 @@ export default function Show() {
     };
 
     const isOverdue = (targetDate: string, status: string) => {
-        return new Date(targetDate) < new Date() && 
-               !['selesai', 'dibatalkan'].includes(status);
+        return new Date(targetDate) < new Date() && !['selesai', 'dibatalkan'].includes(status);
     };
 
     const getDaysUntilTarget = (targetDate: string) => {
@@ -200,12 +184,12 @@ export default function Show() {
         return diffDays;
     };
 
-    const daysUntilTarget = getDaysUntilTarget(mitigasi.target_selesai);
+    const daysUntilTarget = mitigasi.target_selesai ? getDaysUntilTarget(mitigasi.target_selesai) : 0;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Detail Mitigasi - ${mitigasi.judul_mitigasi}`} />
-            
+            <Head title={`Detail Mitigasi - ${mitigasi.judul_mitigasi || 'Unknown'}`} />
+
             <div className="max-w-6xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
@@ -218,9 +202,9 @@ export default function Show() {
                             Kembali
                         </Link>
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">{mitigasi.judul_mitigasi}</h1>
+                            <h1 className="text-2xl font-bold text-gray-900">{mitigasi.judul_mitigasi || 'No Title'}</h1>
                             <p className="mt-1 text-sm text-gray-600">
-                                ID Risiko: {mitigasi.identify_risk?.id_identify}
+                                ID Risiko: {mitigasi.identify_risk?.id_identify || 'N/A'}
                             </p>
                         </div>
                     </div>
@@ -253,11 +237,11 @@ export default function Show() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="bg-white p-6 rounded-lg shadow">
                         <div className="flex items-center">
-                            {getStatusIcon(mitigasi.status_mitigasi)}
+                            {getStatusIcon(mitigasi.status_mitigasi || 'belum_dimulai')}
                             <div className="ml-3">
                                 <p className="text-sm font-medium text-gray-500">Status</p>
-                                <span className={getStatusBadge(mitigasi.status_mitigasi, mitigasi.status_label || statusOptions[mitigasi.status_mitigasi])}>
-                                    {mitigasi.status_label || statusOptions[mitigasi.status_mitigasi]}
+                                <span className={getStatusBadge(mitigasi.status_mitigasi || 'belum_dimulai', mitigasi.status_label || statusOptions[mitigasi.status_mitigasi] || 'Unknown')}>
+                                    {mitigasi.status_label || statusOptions[mitigasi.status_mitigasi] || 'Unknown'}
                                 </span>
                             </div>
                         </div>
@@ -272,11 +256,11 @@ export default function Show() {
                                     <div className="flex-1 bg-gray-200 rounded-full h-2">
                                         <div
                                             className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                                            style={{ width: `${mitigasi.progress_percentage}%` }}
+                                            style={{ width: `${mitigasi.progress_percentage || 0}%` }}
                                         ></div>
                                     </div>
                                     <span className="text-sm font-medium text-gray-900">
-                                        {mitigasi.progress_percentage}%
+                                        {mitigasi.progress_percentage || 0}%
                                     </span>
                                 </div>
                             </div>
@@ -289,17 +273,17 @@ export default function Show() {
                             <div className="ml-3">
                                 <p className="text-sm font-medium text-gray-500">Target Selesai</p>
                                 <p className={`text-sm font-medium ${
-                                    isOverdue(mitigasi.target_selesai, mitigasi.status_mitigasi)
+                                    mitigasi.target_selesai && isOverdue(mitigasi.target_selesai, mitigasi.status_mitigasi || 'belum_dimulai')
                                         ? 'text-red-600'
-                                        : daysUntilTarget <= 7
+                                        : (mitigasi.target_selesai && daysUntilTarget <= 7 && daysUntilTarget > 0)
                                         ? 'text-yellow-600'
                                         : 'text-gray-900'
                                 }`}>
-                                    {formatDate(mitigasi.target_selesai)}
+                                    {mitigasi.target_selesai ? formatDate(mitigasi.target_selesai) : 'N/A'}
                                 </p>
-                                {isOverdue(mitigasi.target_selesai, mitigasi.status_mitigasi) ? (
+                                {mitigasi.target_selesai && isOverdue(mitigasi.target_selesai, mitigasi.status_mitigasi || 'belum_dimulai') ? (
                                     <p className="text-xs text-red-500">Terlambat {Math.abs(daysUntilTarget)} hari</p>
-                                ) : daysUntilTarget <= 7 && daysUntilTarget > 0 ? (
+                                ) : mitigasi.target_selesai && daysUntilTarget <= 7 && daysUntilTarget > 0 ? (
                                     <p className="text-xs text-yellow-500">{daysUntilTarget} hari lagi</p>
                                 ) : null}
                             </div>
@@ -325,18 +309,18 @@ export default function Show() {
                         {/* Basic Information */}
                         <div className="bg-white shadow rounded-lg p-6">
                             <h2 className="text-lg font-medium text-gray-900 mb-4">Informasi Mitigasi</h2>
-                            
+
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-500">Deskripsi Mitigasi</label>
-                                    <p className="mt-1 text-sm text-gray-900">{mitigasi.deskripsi_mitigasi}</p>
+                                    <p className="mt-1 text-sm text-gray-900">{mitigasi.deskripsi_mitigasi || 'N/A'}</p>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-500">Strategi Mitigasi</label>
-                                        <span className={`mt-1 ${getStrategiBadge(mitigasi.strategi_mitigasi, mitigasi.strategi_label || strategiOptions[mitigasi.strategi_mitigasi])}`}>
-                                            {mitigasi.strategi_label || strategiOptions[mitigasi.strategi_mitigasi]}
+                                        <span className={`mt-1 ${getStrategiBadge(mitigasi.strategi_mitigasi || 'accept', mitigasi.strategi_label || strategiOptions[mitigasi.strategi_mitigasi] || 'Menerima')}`}>
+                                            {mitigasi.strategi_label || strategiOptions[mitigasi.strategi_mitigasi] || 'Menerima'}
                                         </span>
                                     </div>
 
@@ -344,7 +328,7 @@ export default function Show() {
                                         <label className="block text-sm font-medium text-gray-500">PIC (Person In Charge)</label>
                                         <div className="mt-1 flex items-center">
                                             <User className="w-4 h-4 text-gray-400 mr-2" />
-                                            <span className="text-sm text-gray-900">{mitigasi.pic_mitigasi}</span>
+                                            <span className="text-sm text-gray-900">{mitigasi.pic_mitigasi || 'N/A'}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -375,8 +359,8 @@ export default function Show() {
                         {/* Risk Information */}
                         <div className="bg-white shadow rounded-lg p-6">
                             <h2 className="text-lg font-medium text-gray-900 mb-4">Informasi Risiko Terkait</h2>
-                            
-                            {mitigasi.identify_risk && (
+
+                            {mitigasi.identify_risk ? (
                                 <div className="space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
@@ -388,7 +372,7 @@ export default function Show() {
                                             <p className="mt-1 text-sm text-gray-900">{mitigasi.identify_risk.unit_kerja}</p>
                                         </div>
                                     </div>
-                                    
+
                                     <div>
                                         <label className="block text-sm font-medium text-gray-500">Deskripsi Risiko</label>
                                         <p className="mt-1 text-sm text-gray-900">{mitigasi.identify_risk.description}</p>
@@ -405,14 +389,16 @@ export default function Show() {
                                         </Link>
                                     </div>
                                 </div>
+                            ) : (
+                                <p className="text-sm text-gray-500">Data risiko tidak tersedia.</p>
                             )}
                         </div>
 
                         {/* Files */}
-                        {mitigasi.bukti_implementasi && mitigasi.bukti_implementasi.length > 0 && (
+                        {mitigasi.bukti_implementasi && mitigasi.bukti_implementasi.length > 0 ? (
                             <div className="bg-white shadow rounded-lg p-6">
                                 <h2 className="text-lg font-medium text-gray-900 mb-4">Bukti Implementasi</h2>
-                                
+
                                 <div className="space-y-3">
                                     {mitigasi.bukti_implementasi.map((file, index) => (
                                         <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -427,14 +413,14 @@ export default function Show() {
                                             </div>
                                             <div className="flex items-center space-x-2">
                                                 <button
-                                                    onClick={() => handleDownloadBukti(file.filename)}
+                                                    onClick={() => handleDownloadBukti(file.filename || file.original_name)}
                                                     className="text-blue-600 hover:text-blue-800"
                                                     title="Download"
                                                 >
                                                     <Download className="w-4 h-4" />
                                                 </button>
                                                 <button
-                                                    onClick={() => handleRemoveBukti(file.filename)}
+                                                    onClick={() => handleRemoveBukti(file.filename || file.original_name)}
                                                     className="text-red-600 hover:text-red-800"
                                                     title="Hapus"
                                                 >
@@ -445,7 +431,7 @@ export default function Show() {
                                     ))}
                                 </div>
                             </div>
-                        )}
+                        ) : null}
                     </div>
 
                     {/* Sidebar */}
@@ -453,7 +439,7 @@ export default function Show() {
                         {/* Audit Trail */}
                         <div className="bg-white shadow rounded-lg p-6">
                             <h2 className="text-lg font-medium text-gray-900 mb-4">Audit Trail</h2>
-                            
+
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-500">Dibuat oleh</label>
@@ -464,11 +450,11 @@ export default function Show() {
                                         </span>
                                     </div>
                                     <p className="text-xs text-gray-500 mt-1">
-                                        {formatDateTime(mitigasi.created_at)}
+                                        {mitigasi.created_at ? formatDateTime(mitigasi.created_at) : 'N/A'}
                                     </p>
                                 </div>
 
-                                {mitigasi.updated_at !== mitigasi.created_at && (
+                                {mitigasi.updated_at && mitigasi.updated_at !== mitigasi.created_at && (
                                     <div>
                                         <label className="block text-sm font-medium text-gray-500">Terakhir diperbarui</label>
                                         <div className="mt-1 flex items-center">
@@ -488,18 +474,18 @@ export default function Show() {
                         {/* Quick Actions */}
                         <div className="bg-white shadow rounded-lg p-6">
                             <h2 className="text-lg font-medium text-gray-900 mb-4">Aksi Cepat</h2>
-                            
+
                             <div className="space-y-3">
                                 <Link
-                                    href={`/mitigasi/create?risk_id=${mitigasi.identify_risk_id}`}
+                                    href={`/mitigasi/create?risk_id=${mitigasi.identify_risk_id || ''}`}
                                     className="w-full inline-flex items-center justify-center px-3 py-2 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100"
                                 >
                                     <Plus className="w-4 h-4 mr-2" />
                                     Tambah Mitigasi Lain
                                 </Link>
-                                
+
                                 <Link
-                                    href={`/identifyrisk/${mitigasi.identify_risk_id}`}
+                                    href={`/identifyrisk/${mitigasi.identify_risk_id || ''}`}
                                     className="w-full inline-flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                                 >
                                     <ExternalLink className="w-4 h-4 mr-2" />
@@ -516,7 +502,7 @@ export default function Show() {
                         <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
                             <div className="mt-3">
                                 <h3 className="text-lg font-medium text-gray-900 mb-4">Update Progress</h3>
-                                
+
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -534,7 +520,7 @@ export default function Show() {
                                             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
                                         />
                                     </div>
-                                    
+
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
                                             Catatan Progress
@@ -551,7 +537,7 @@ export default function Show() {
                                         />
                                     </div>
                                 </div>
-                                
+
                                 <div className="flex items-center justify-end space-x-3 mt-6">
                                     <button
                                         onClick={() => setShowProgressModal(false)}
