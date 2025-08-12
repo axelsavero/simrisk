@@ -214,6 +214,8 @@ class MitigasiController extends Controller
 
         return Inertia::render('mitigasi/show', [
             'mitigasi' => $mitigasi,
+            'statusOptions' => Mitigasi::getStatusOptions(),
+            'strategiOptions' => Mitigasi::getStrategiOptions(),
         ]);
     }
 
