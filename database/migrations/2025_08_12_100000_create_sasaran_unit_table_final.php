@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::create('sasaran_unit', function (Blueprint $table) {
@@ -16,19 +19,13 @@ return new class extends Migration
             $table->foreignId('id_unit')
                   ->constrained('unit', 'id_unit')
                   ->onDelete('cascade');
-            $table->decimal('target_unit', 12, 2)->nullable();
-            $table->decimal('bobot_unit', 5, 2)->default(0);
-            $table->enum('status_pelaksanaan', [
-                'belum_mulai', 'sedang_berjalan', 'selesai', 
-                'terhenti', 'ditunda'
-            ])->default('belum_mulai');
-            $table->decimal('progress_persen', 5, 2)->default(0);
-            $table->decimal('capaian_saat_ini', 12, 2)->default(0);
-            $table->date('tanggal_mulai_unit')->nullable();
-            $table->date('tanggal_selesai_unit')->nullable();
-            $table->date('deadline_unit')->nullable();
-            $table->string('pic_unit')->nullable();
-            $table->text('keterangan')->nullable();
+            
+            // New document-related fields
+            $table->string('nama_dokumen')->nullable();
+            $table->string('nomor_dokumen')->nullable();
+            $table->date('tanggal_dokumen')->nullable();
+            $table->string('file_path')->nullable();
+            
             $table->json('metadata')->nullable(); // Untuk data tambahan
             $table->timestamps();
             $table->softDeletes();
@@ -39,11 +36,12 @@ return new class extends Migration
             // Indexes
             $table->index('id_sasaran_univ');
             $table->index('id_unit');
-            $table->index('status_pelaksanaan');
-            $table->index('progress_persen');
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('sasaran_unit');

@@ -10,6 +10,7 @@ use App\Http\Controllers\IdentifyRiskController;
 use App\Http\Controllers\MitigasiController;
 use App\Http\Controllers\SipegProxyController;
 use App\Http\Controllers\ReferensiController;
+use App\Http\Controllers\SasaranUnitController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -57,6 +58,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('sasaran-univ', SasaranUnivController::class);
     Route::get('sasaran-univ/{sasaranUniv}/dokumen/{dokumenId}/download', [SasaranUnivController::class, 'downloadDokumen'])->name('sasaran-univ.download-dokumen');
+    
+    // Routes untuk Sasaran Unit
+    Route::resource('sasaran-unit', SasaranUnitController::class);
+    Route::patch('sasaran-unit/{sasaranUnit}/progress', [SasaranUnitController::class, 'updateProgress'])->name('sasaran-unit.update-progress');
+    Route::get('api/sasaran-unit/statistics', [SasaranUnitController::class, 'getStatistics'])->name('sasaran-unit.statistics');
 });
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
