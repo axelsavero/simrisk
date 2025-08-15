@@ -177,7 +177,7 @@ export default function Index() {
         <div className="risk-index-container w-full px-2 md:px-6 bg-white min-h-screen">
             {/* Header Section */}
             <div className="page-header flex justify-between items-center mb-6">
-                <div className="header-info">
+                <div className="header-info mt-2.5">
                     <h1 className="page-title flex items-center gap-2 text-2xl font-bold">
                         <ShieldAlert size={40} className="title-icon" />
                         Manajemen Risiko
@@ -284,18 +284,8 @@ export default function Index() {
                                         <td className="p-2">{index + 1}</td>
                                         <td className="p-2">
                                             <div className="flex items-center gap-2">
-                                                <IdCard className="id-icon text-gray-500" />
                                                 {item.id_identify}
                                                 {item.validation_status === 'draft' && <span className="draft-badge w-2 h-2 bg-yellow-400 rounded-full"></span>}
-                                            </div>
-                                            <div className={`validation-badge mt-1 px-2 py-1 rounded text-sm ${{
-                                                draft: 'bg-yellow-100 text-yellow-800',
-                                                warning: 'bg-yellow-100 text-yellow-800',
-                                                success: 'bg-green-100 text-green-800',
-                                                danger: 'bg-red-100 text-red-800',
-                                                secondary: 'bg-gray-100 text-gray-800',
-                                            }[validationInfo.color]}`}>
-                                                {validationInfo.icon} {validationInfo.label}
                                             </div>
                                         </td>
                                         <td className="p-2">{item.description.length > 120 ? `${item.description.substring(0, 120)}...` : item.description}</td>
@@ -308,19 +298,27 @@ export default function Index() {
                                             low: 'bg-yellow-200 text-yellow-800',
                                             'very-low': 'bg-green-100 text-green-800',
                                         }[riskInfo.color]}`}>
-                                            {riskInfo.icon} {riskInfo.level} ({item.probability * item.impact}/25)
+                                            {riskInfo.level} ({item.probability * item.impact}/25)
                                         </td>
-                                        <td className="p-2">
-                                            <div className="flex items-center gap-1">
+                                        <td className={`p-2 ${{draft: 'bg-yellow-100 text-yellow-800',
+                                                warning: 'bg-yellow-100 text-yellow-800',
+                                                success: 'bg-green-100 text-green-800',
+                                                danger: 'bg-red-100 text-red-800',
+                                                secondary: 'bg-gray-100 text-gray-800',
+                                            }[validationInfo.color]}`}>
+                                            {/* <div className="flex items-center gap-1">
                                                 <Calendar className="text-gray-500" />
                                                 {new Date(item.identification_date_start).toLocaleDateString('id-ID')} -{' '}
                                                 {new Date(item.identification_date_end).toLocaleDateString('id-ID')}
-                                            </div>
-                                            {item.rejection_reason && item.validation_status === 'rejected' && (
+                                            </div> */}
+                                            {/* {item.rejection_reason && item.validation_status === 'rejected' && (
                                                 <div className="rejection-reason mt-2 text-sm text-red-600">
                                                     <strong>Alasan Penolakan:</strong> {item.rejection_reason}
                                                 </div>
-                                            )}
+                                            )} */}
+
+                                                {validationInfo.icon} {validationInfo.label}
+
                                         </td>
                                         <td className="p-2">
                                             <div className="flex flex-col sm:flex-row gap-2">
