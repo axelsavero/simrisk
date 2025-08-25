@@ -13,6 +13,7 @@ import {
     Hourglass,
     Info,
     Pencil,
+    SearchCheck,
     ShieldCheck,
     TriangleAlert,
     X,
@@ -184,7 +185,7 @@ export default function Show() {
 
                         <div>
                             <label className="mb-1 block text-sm font-medium text-gray-700">Status</label>
-                            <p className="text-gray-900">{identifyRisk.status ? 'Aktif' : 'Non-Aktif'}</p>
+                            <p className="text-gray-900">{identifyRisk.is_active ? 'Aktif' : 'Non-Aktif'}</p>
                         </div>
 
                         {identifyRisk.nama_risiko && (
@@ -386,7 +387,9 @@ export default function Show() {
                 {(identifyRisk.validation_processed_at || identifyRisk.rejection_reason) && (
                     <div className="rounded-lg bg-white p-6 shadow-md">
                         <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
-                            <span>🔍</span>
+                            <span>
+                                <SearchCheck />
+                            </span>
                             Informasi Validasi
                         </h2>
 

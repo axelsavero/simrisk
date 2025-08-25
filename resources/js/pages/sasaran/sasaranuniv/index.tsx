@@ -80,7 +80,7 @@ export default function Index({ sasaranUnivs, flash }: IndexProps) {
         { title: 'Sasaran Universitas', href: '#' },
     ];
 
-    const headerClass = 'cursor-pointer px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase';
+    const headerClass = 'cursor-pointer px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase border border-black';
 
     const renderSortArrow = (field: typeof sortField) => (sortField === field ? (sortOrderAsc ? '▲' : '▼') : '');
 
@@ -137,8 +137,8 @@ export default function Index({ sasaranUnivs, flash }: IndexProps) {
                 ) : (
                     <div className="border-sidebar-border overflow-hidden rounded-xl border bg-white shadow-sm">
                         <div className='overflow-x-auto p-4'>
-                            <div className="overflow-x-auto rounded-xl border-2 border-gray-300 bg-white shadow-md">
-                                <table className="w-full border-separate">
+                            <div className="overflow-x-auto border-2 border-gray-300 bg-white shadow-md">
+                                <table className="w-full border-black">
                                     <thead className="bg-gray-100">
                                         <tr>
                                             <th onClick={() => handleSort('id_sasaran_univ')} className={headerClass}>
@@ -160,21 +160,21 @@ export default function Index({ sasaranUnivs, flash }: IndexProps) {
                                             <th className={headerClass}>Aksi</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-200 bg-white">
+                                    <tbody className="divide-y divide-gray-200 bg-white border border-black">
                                         {sortedData.map((item) => (
                                             <tr key={item.id_sasaran_univ} className="hover:bg-gray-50">
-                                                <td className="px-6 py-4 text-sm text-gray-900">{item.id_sasaran_univ}</td>
-                                                <td className="px-6 py-4 text-sm text-gray-900">
+                                                <td className="px-6 py-4 text-sm text-gray-900 border border-black">{item.id_sasaran_univ}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-900 border border-black">
                                                     <span className="inline-flex rounded-full bg-blue-100 px-2 text-xs font-semibold text-blue-800">
                                                         {item.kategori}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 text-sm text-gray-900">{item.nama_dokumen || '-'}</td>
-                                                <td className="px-6 py-4 text-sm text-gray-900">{item.nomor_dokumen || '-'}</td>
-                                                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
+                                                <td className="px-6 py-4 text-sm text-gray-900 border border-black">{item.nama_dokumen || '-'}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-900 border border-black">{item.nomor_dokumen || '-'}</td>
+                                                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900 border border-black">
                                                     {item.tanggal_dokumen ? new Date(item.tanggal_dokumen).toLocaleDateString('id-ID') : '-'}
                                                 </td>
-                                                <td className="px-6 py-4 text-sm text-blue-600">
+                                                <td className="px-6 py-4 text-sm text-blue-600 border border-black">
                                                     {item.file_path ? (
                                                         <a
                                                             href={`/storage/${item.file_path}`}

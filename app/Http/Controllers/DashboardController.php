@@ -79,7 +79,8 @@ class DashboardController extends Controller
                     'score' => $risk->level,
                     'level' => $risk->inherent_risk_level,
                     'unit_kerja' => $risk->unit_kerja,
-                    'pemilik_risiko' => $risk->pemilik_risiko
+                    'pemilik_risiko' => $risk->pemilik_risiko,
+                    'validation_status' => $risk->validation_status
                 ];
             }
 
@@ -95,7 +96,8 @@ class DashboardController extends Controller
                     'level' => $risk->residual_risk_level,
                     'unit_kerja' => $risk->unit_kerja,
                     'pemilik_risiko' => $risk->pemilik_risiko,
-                    'reduction' => $risk->risk_reduction
+                    'reduction' => $risk->risk_reduction,
+                    'validation_status' => $risk->validation_status
                 ];
             }
         }

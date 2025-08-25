@@ -6,19 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->unsignedBigInteger('unit_id')->nullable()->after('password');
-            $table->foreign('unit_id')->references('id_unit')->on('unit')->onDelete('set null');
+            if (!Schema::hasColumn('users', 'unit_id')) {
+                $table->unsignedBigInteger('unit_id')->nullable()->after('password');
+            }
         });
     }
 
-    public function down(): void
+    public function down()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['unit_id']);
-            $table->dropColumn('unit_id');
+            if (Schema::hasColumn('users', 'unit_id')) {
+                $table->dropColumn('unit_id');
+            }
         });
     }
 };

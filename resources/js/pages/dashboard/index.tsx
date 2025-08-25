@@ -1,8 +1,8 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import ReactSelect from 'react-select';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
 
@@ -19,12 +19,12 @@ const probabilityLabels = ['Sangat Jarang Terjadi', 'Jarang Terjadi', 'Kadang Te
 
 interface Props {
     riskMatrixData?: {
-        riskPointsSebelum: Array<{ x: number; y: number; label: string }>;
-        riskPointsSesudah: Array<{ x: number; y: number; label: string }>;
+        riskPointsSebelum: Array<{ x: number; y: number; label: string; validation_status?: string }>;
+        riskPointsSesudah: Array<{ x: number; y: number; label: string; validation_status?: string }>;
         tingkatRisiko: Array<{ tingkat: string; inheren: number; residual: number; color: string }>;
     };
     filterOptions?: {
-        units: string[];
+        // units: string[]; // This will now be fetched via API
         kategoris: string[];
         tahuns: string[];
     };
@@ -60,27 +60,31 @@ interface RiskDetail {
     };
 }
 
+// Interface for the unit data fetched from the API
+interface Unit {
+    id: number | string;
+    name: string;
+}
+
 export default function Dashboard({ riskMatrixData, filterOptions, filters }: Props) {
     const [unit, setUnit] = useState(filters?.unit || '');
     const [kategori, setKategori] = useState(filters?.kategori || '');
     const [tahun, setTahun] = useState(filters?.tahun || '');
     const [popupData, setPopupData] = useState<{ x: number; y: number; value: number; label: string; detail?: RiskDetail } | null>(null);
 
-    const riskPointsSebelum = riskMatrixData?.riskPointsSebelum || [
-        { x: 1, y: 3, label: '1' },
-        { x: 1, y: 4, label: '2' },
-        { x: 2, y: 4, label: '5' },
-        { x: 2, y: 1, label: '4' },
-        { x: 2, y: 2, label: '3' },
-    ];
+    // State for managing units fetched from API
+    const [units, setUnits] = useState<Unit[]>([]);
+    const [loadingUnits, setLoadingUnits] = useState<boolean>(false);
+    const [apiError, setApiError] = useState<string>('');
 
-    const riskPointsSesudah = riskMatrixData?.riskPointsSesudah || [
-        { x: 1, y: 2, label: '1' },
-        { x: 1, y: 3, label: '2' },
-        { x: 2, y: 2, label: '5' },
-        { x: 2, y: 1, label: '4' },
-        { x: 2, y: 2, label: '3' },
-    ];
+    // Only show validated risks (exclude pending/submitted)
+    const riskPointsSebelum = (riskMatrixData?.riskPointsSebelum || []).filter(
+        (p) => p.validation_status !== 'pending' && p.validation_status !== 'submitted',
+    );
+
+    const riskPointsSesudah = (riskMatrixData?.riskPointsSesudah || []).filter(
+        (p) => p.validation_status !== 'pending' && p.validation_status !== 'submitted',
+    );
 
     const tingkatRisiko = riskMatrixData?.tingkatRisiko || [
         { tingkat: 'Sangat Rendah', inheren: 0, residual: 2, color: 'bg-green-500' },
@@ -92,6 +96,69 @@ export default function Dashboard({ riskMatrixData, filterOptions, filters }: Pr
     const { auth } = usePage().props as any;
     const roles: string[] = auth?.user?.roles || [];
     const isSuperAdmin = roles.includes('super-admin');
+
+    // Utility function to process API data, adapted from form.tsx
+    const processApiData = (data: any): any[] => {
+        if (Array.isArray(data)) return data;
+        if (data?.data && Array.isArray(data.data)) return data.data;
+        if (data?.result && Array.isArray(data.result)) return data.result;
+        if (data?.units && Array.isArray(data.units)) return data.units;
+        if (typeof data === 'object' && data !== null) {
+            const arr = Object.values(data).find((v) => Array.isArray(v));
+            return arr || [];
+        }
+        return [];
+    };
+
+    // Function to fetch units from the API, adapted from form.tsx
+    const fetchUnits = async () => {
+        setLoadingUnits(true);
+        setApiError('');
+        try {
+            const response = await fetch(`http://${window.location.host}/api/sipeg/allunit`);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: Gagal mengambil data unit.`);
+            }
+            const data = await response.json();
+            const unitsData = processApiData(data);
+
+            if (!unitsData.length) {
+                throw new Error('Tidak ada data unit yang ditemukan dari respons API.');
+            }
+
+            const transformedUnits: Unit[] = unitsData
+                .filter((apiUnit: any) => {
+                    const name = apiUnit.ur_unit || apiUnit.nama_unit || apiUnit.name || apiUnit.unit_name;
+                    return name && name.trim();
+                })
+                .map((apiUnit: any) => ({
+                    id: apiUnit.id || apiUnit.id_homebase || apiUnit.kode_homebase || apiUnit.kode_unit || apiUnit.unit_id,
+                    name: apiUnit.ur_unit || apiUnit.nama_unit || apiUnit.name || apiUnit.unit_name,
+                }));
+
+            setUnits(transformedUnits);
+        } catch (error: any) {
+            setApiError(`❌ Gagal memuat unit: ${error.message}`);
+            // Fallback to dummy data in development for UI testing
+            if (process.env.NODE_ENV === 'development') {
+                setUnits([
+                    { id: 1, name: 'Unit HRD (Dummy)' },
+                    { id: 2, name: 'Unit IT (Dummy)' },
+                ]);
+            } else {
+                setUnits([]);
+            }
+        } finally {
+            setLoadingUnits(false);
+        }
+    };
+
+    // Fetch units when the component mounts
+    useEffect(() => {
+        if (isSuperAdmin) {
+            fetchUnits();
+        }
+    }, [isSuperAdmin]);
 
     const handleFilterChange = () => {
         router.get(
@@ -140,47 +207,69 @@ export default function Dashboard({ riskMatrixData, filterOptions, filters }: Pr
 
                     {isSuperAdmin && (
                         <div className="mb-2 flex flex-col justify-end gap-4 md:flex-row">
-                            <Select value={unit} onValueChange={setUnit}>
-                                <SelectTrigger className="rounded border px-3 py-2">
-                                    <SelectValue placeholder="Pilih Unit" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {(filterOptions?.units?.length ? filterOptions.units : ['unit1', 'unit2']).map((unitOption) => (
-                                        <SelectItem key={unitOption} value={unitOption}>
-                                            {unitOption}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <Select value={kategori} onValueChange={setKategori}>
-                                <SelectTrigger className="rounded border px-3 py-2">
-                                    <SelectValue placeholder="Kategori" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {(filterOptions?.kategoris?.length ? filterOptions.kategoris : ['kategori1', 'kategori2']).map(
-                                        (kategoriOption) => (
-                                            <SelectItem key={kategoriOption} value={kategoriOption}>
-                                                {kategoriOption}
-                                            </SelectItem>
-                                        ),
-                                    )}
-                                </SelectContent>
-                            </Select>
-                            <Select value={tahun} onValueChange={setTahun}>
-                                <SelectTrigger className="rounded border px-3 py-2">
-                                    <SelectValue placeholder="Tahun" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {(filterOptions?.tahuns?.length ? filterOptions.tahuns : ['2024', '2025']).map((tahunOption) => (
-                                        <SelectItem key={tahunOption} value={tahunOption}>
-                                            {tahunOption}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            {apiError && <p className="self-center text-sm text-red-500">{apiError}</p>}
+                            <ReactSelect
+                                className="w-full"
+                                styles={{
+                                    control: (base) => ({
+                                        ...base,
+                                        borderColor: '#d1d5db',
+                                        boxShadow: 'none',
+                                        ':hover': { borderColor: '#9ca3af' },
+                                    }),
+                                }}
+                                options={units.map((unitOption) => ({
+                                    value: unitOption.name,
+                                    label: unitOption.name,
+                                }))}
+                                value={unit ? { value: unit, label: unit } : null}
+                                onChange={(selected) => setUnit(selected ? selected.value : '')}
+                                isLoading={loadingUnits}
+                                placeholder={loadingUnits ? 'Memuat unit...' : 'Pilih Unit'}
+                                isClearable
+                            />
+                            <ReactSelect
+                                className="w-full"
+                                styles={{
+                                    control: (base) => ({
+                                        ...base,
+                                        borderColor: '#d1d5db',
+                                        boxShadow: 'none',
+                                        ':hover': { borderColor: '#9ca3af' },
+                                    }),
+                                }}
+                                options={(filterOptions?.kategoris?.length ? filterOptions.kategoris : ['Strategis', 'Operasional', 'Keuangan', 'Kepatuhan', 'Kecurangan']).map((k) => ({
+                                    value: k,
+                                    label: k,
+                                }))}
+                                value={kategori ? { value: kategori, label: kategori } : null}
+                                onChange={(selected) => setKategori(selected ? selected.value : '')}
+                                placeholder="Kategori"
+                                isClearable
+                            />
+                            <ReactSelect
+                                className="w-full"
+                                styles={{
+                                    control: (base) => ({
+                                        ...base,
+                                        borderColor: '#d1d5db',
+                                        boxShadow: 'none',
+                                        ':hover': { borderColor: '#9ca3af' },
+                                    }),
+                                }}
+                                options={(filterOptions?.tahuns?.length ? filterOptions.tahuns : ['2024', '2025']).map((t) => ({
+                                    value: t,
+                                    label: t,
+                                }))}
+                                value={tahun ? { value: tahun, label: tahun } : null}
+                                onChange={(selected) => setTahun(selected ? selected.value : '')}
+                                placeholder="Tahun"
+                                isClearable
+                            />
                         </div>
                     )}
 
+                    {/* ... (rest of the component remains the same) ... */}
                     <div className="flex flex-col gap-6 lg:flex-row">
                         <div className="flex-1 rounded-xl border bg-white p-4">
                             <h3 className="mb-2 text-center text-lg font-semibold">
@@ -226,7 +315,7 @@ export default function Dashboard({ riskMatrixData, filterOptions, filters }: Pr
                     </div>
 
                     {popupData && (
-                        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                        <div className="bg-opacity-50 fixed inset-0 flex items-center justify-center bg-black">
                             <div className="w-3/4 rounded-lg bg-white p-6 shadow-lg">
                                 <h4 className="mb-4 text-xl font-semibold">Detail Risiko</h4>
                                 <table className="w-full border">
@@ -262,15 +351,14 @@ export default function Dashboard({ riskMatrixData, filterOptions, filters }: Pr
                                             </tr>
                                         ) : (
                                             <tr>
-                                                <td colSpan={10} className="border px-2 py-1 text-center">Tidak ada data</td>
+                                                <td colSpan={10} className="border px-2 py-1 text-center">
+                                                    Tidak ada data
+                                                </td>
                                             </tr>
                                         )}
                                     </tbody>
                                 </table>
-                                <button
-                                    className="mt-4 rounded bg-red-500 px-4 py-2 text-white"
-                                    onClick={closePopup}
-                                >
+                                <button className="mt-4 rounded bg-red-500 px-4 py-2 text-white" onClick={closePopup}>
                                     Tutup
                                 </button>
                             </div>
@@ -282,7 +370,23 @@ export default function Dashboard({ riskMatrixData, filterOptions, filters }: Pr
     );
 }
 
-function RiskMatrixTable({ riskPoints, onCellClick }: { riskPoints: { x: number; y: number; label: string }[]; onCellClick: (x: number, y: number, value: number, label: string) => void }) {
+// ... (RiskMatrixTable component remains exactly the same) ...
+
+type RiskPoint = {
+    x: number;
+    y: number;
+    label: string;
+    validation_status?: string;
+    // ...other possible fields
+};
+
+function RiskMatrixTable({
+    riskPoints,
+    onCellClick,
+}: {
+    riskPoints: RiskPoint[];
+    onCellClick: (x: number, y: number, value: number, label: string) => void;
+}) {
     return (
         <div className="w-full overflow-x-hidden">
             <table className="w-full border border-black">
@@ -361,7 +465,7 @@ function RiskMatrixTable({ riskPoints, onCellClick }: { riskPoints: { x: number;
                                         onClick={() => onCellClick(x, y, cell, label)}
                                     >
                                         <span
-                                            className={`font-bold ${text} mx-auto my-1 inline-flex h-10 w-10 items-center justify-center rounded-full text-base shadow md:h-16 md:w-16 md:text-xl cursor-pointer`}
+                                            className={`font-bold ${text} mx-auto my-1 inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-base shadow md:h-16 md:w-16 md:text-xl`}
                                             style={{ background: 'rgba(255,255,255,0.18)' }}
                                         >
                                             {cell}

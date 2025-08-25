@@ -3,7 +3,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, IdentifyRisk } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { Hourglass, Lightbulb, Paperclip, Save, X } from 'lucide-react';
+import { Hourglass, Lightbulb, Paperclip, Save, SquarePen, X } from 'lucide-react';
 import React from 'react';
 
 interface FormProps {
@@ -134,12 +134,14 @@ export default function Form({ identifyRisk = null }: FormProps) {
         };
 
         if (identifyRisk) {
-            put(route('identify-risk.update', identifyRisk.id), submitData, {
-                forceFormData: true, // 🔥 Force FormData untuk file upload
+            put(route('identify-risk.update', identifyRisk.id), {
+                ...submitData,
+                forceFormData: true,
             });
         } else {
-            post(route('identify-risk.store'), submitData, {
-                forceFormData: true, // 🔥 Force FormData untuk file upload
+            post(route('identify-risk.store'), {
+                ...submitData,
+                forceFormData: true,
             });
         }
     }
@@ -179,7 +181,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                     {/* Draft status indicator */}
                     {isEditingDraft && (
                         <div className="flex items-center gap-2 rounded-lg bg-blue-100 px-4 py-2 text-blue-800">
-                            <span className="text-lg">📝</span>
+                            <span className="text-lg"><SquarePen /></span>
                             <span className="font-medium">Mode Draft</span>
                         </div>
                     )}
@@ -190,7 +192,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                     <div className="mb-6 rounded-lg border-l-4 border-yellow-400 bg-yellow-50 p-4">
                         <div className="flex">
                             <div className="flex-shrink-0">
-                                <Lightbulb size={20} className='text-yellow-600' />
+                                <Lightbulb size={20} className="text-yellow-600" />
                             </div>
                             <div className="ml-3">
                                 <p className="text-sm text-yellow-700">
@@ -235,7 +237,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                             <option value="Finansial">Finansial</option>
                             <option value="Kepatuhan">Kepatuhan</option>
                             <option value="Strategis">Strategis</option>
-                            <option value="Reputasi">Reputasi</option>
+                            <option value="Reputasi">Kecurangan</option>
                         </select>
                         {errors.risk_category && <div className="mt-1 text-sm text-red-500">{errors.risk_category}</div>}
                     </div>
@@ -569,8 +571,8 @@ export default function Form({ identifyRisk = null }: FormProps) {
                         <label className="flex items-center gap-2">
                             <input
                                 type="checkbox"
-                                checked={data.status}
-                                onChange={(e) => setData('status', e.target.checked)}
+                                checked={data.is_active}
+                                onChange={(e) => setData('is_active', e.target.checked)}
                                 className="form-check-input rounded"
                             />
                             <span className="font-medium">Status Aktif</span>
@@ -587,7 +589,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                         >
                             {processing ? (
                                 <>
-                                    <Hourglass className='animate-spin' />
+                                    <Hourglass className="animate-spin" />
                                     Menyimpan...
                                 </>
                             ) : (
@@ -600,9 +602,9 @@ export default function Form({ identifyRisk = null }: FormProps) {
 
                         <Link
                             href={route('identify-risk.index')}
-                            className="flex items-center gap-2 rounded-md border border-gray-300 px-8 py-3 font-medium transition bg-red-600 text-white hover:bg-red-700"
+                            className="flex items-center gap-2 rounded-md border border-gray-300 bg-red-600 px-8 py-3 font-medium text-white transition hover:bg-red-700"
                         >
-                            <X/>
+                            <X />
                             Batal
                         </Link>
                     </div>

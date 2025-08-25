@@ -336,7 +336,7 @@ export default function Index() {
                 <div className="rounded-lg bg-white p-6 shadow">
                     <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
                         {/* Search */}
-                        <form onSubmit={handleSearch} className="max-w-lg flex-1">
+                        <form onSubmit={handleSearch} className="w-full mr-3 flex-1">
                             <div className="relative">
                                 <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
                                 <input
@@ -426,15 +426,7 @@ export default function Index() {
                         <div className="py-12 text-center">
                             <AlertTriangle className="mx-auto h-12 w-12 text-gray-400" />
                             <h3 className="mt-2 text-sm font-medium text-gray-900">Tidak ada mitigasi</h3>
-                            <p className="mt-1 text-sm text-gray-500">Belum ada mitigasi yang dibuat. Mulai dengan menambahkan mitigasi baru.</p>
-                            <div className="mt-6">
-                                <Link href={route('mitigasi.create')}
-                                    className="inline-flex items-center rounded-md border border-transparent bg-[#12745A] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#37524c]"
-                                >
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Tambah Mitigasi
-                                </Link>
-                            </div>
+                            <p className="mt-1 text-sm text-gray-500">Belum ada risiko yang disetujui / dikirim.</p>
                         </div>
                     ) : (
                         <div className="w-full overflow-x-auto">
