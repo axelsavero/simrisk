@@ -286,7 +286,7 @@ export default function Index() {
                     <Search size={20} className="absolute top-2 right-3 text-gray-400" />
                 </div>
                 <div className="filter-tabs flex gap-2">
-                    {['all', 'draft', 'pending', 'approved', 'improvement']
+                    {['all', 'draft', 'pending', 'approved', 'rejected']
                         .filter((status) => {
                             // Jika super-admin, hilangkan draft dan pending
                             if (auth?.user?.roles?.includes('super-admin')) {

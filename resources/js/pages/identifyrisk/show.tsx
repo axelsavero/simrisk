@@ -138,7 +138,7 @@ export default function Show() {
 
                     {/* Action Buttons: Edit dan Submit hanya untuk status draft/rejected */}
                     <div className="flex gap-3 border-t pt-4">
-                        {(identifyRisk.validation_status === 'draft' || identifyRisk.validation_status === 'rejected') && (
+                        {(identifyRisk.validation_status === 'draft') && (
                             <>
                                 <Link
                                     href={route('identify-risk.edit', identifyRisk.id)}
