@@ -8,9 +8,8 @@ import {
     CircleCheck,
     CircleHelp,
     CirclePlus,
-    ClipboardX,
+    Cog,
     Eye,
-    FilePlus,
     Hourglass,
     Pencil,
     Search,
@@ -178,7 +177,7 @@ export default function Index() {
             submitted: { label: 'Menunggu Validasi', color: 'warning', icon: <Hourglass /> },
             pending: { label: 'Menunggu Validasi', color: 'warning', icon: <Hourglass /> },
             approved: { label: 'Disetujui', color: 'success', icon: <CheckCircle2 /> },
-            rejected: { label: 'Ditolak', color: 'danger', icon: <X /> },
+            rejected: { label: 'Butuh Perbaikan', color: 'danger', icon: <Cog /> },
             default: { label: 'Unknown', color: 'secondary', icon: <CircleHelp /> },
         })[status] || { label: 'Unknown', color: 'secondary', icon: <CircleHelp /> };
 
@@ -227,27 +226,33 @@ export default function Index() {
                         <span className="stat-label block text-gray-600">Total Risiko</span>
                     </div>
                 </div>
-                <div className="stat-card flex items-center rounded-lg bg-white p-4 shadow">
-                    <SquarePen size={40} className="stat-icon" />
-                    <div className="stat-content ml-4">
-                        <span className="stat-number text-2xl font-bold">
-                            {identifyRisks.data.filter((item) => item.validation_status === 'draft').length}
-                        </span>
-                        <span className="stat-label block text-gray-600">Draft</span>
-                    </div>
-                </div>
-                <div className="stat-card flex items-center rounded-lg bg-white p-4 shadow">
-                    <Hourglass size={40} className="stat-icon text-yellow-500" />
-                    <div className="stat-content ml-4">
-                        <span className="stat-number text-2xl font-bold">
-                            {
-                                identifyRisks.data.filter((item) => item.validation_status === 'pending' || item.validation_status === 'submitted')
-                                    .length
-                            }
-                        </span>
-                        <span className="stat-label block text-gray-600">Pending</span>
-                    </div>
-                </div>
+                {!auth?.user?.roles?.includes('super-admin') && (
+                    <>
+                        <div className="stat-card flex items-center rounded-lg bg-white p-4 shadow">
+                            <SquarePen size={40} className="stat-icon" />
+                            <div className="stat-content ml-4">
+                                <span className="stat-number text-2xl font-bold">
+                                    {identifyRisks.data.filter((item) => item.validation_status === 'draft').length}
+                                </span>
+                                <span className="stat-label block text-gray-600">Draft</span>
+                            </div>
+                        </div>
+                        <div className="stat-card flex items-center rounded-lg bg-white p-4 shadow">
+                            <Hourglass size={40} className="stat-icon text-yellow-500" />
+                            <div className="stat-content ml-4">
+                                <span className="stat-number text-2xl font-bold">
+                                    {
+                                        identifyRisks.data.filter(
+                                            (item) => item.validation_status === 'pending' || item.validation_status === 'submitted',
+                                        ).length
+                                    }
+                                </span>
+                                <span className="stat-label block text-gray-600">Pending</span>
+                            </div>
+                        </div>
+                    </>
+                )}
+
                 <div className="stat-card flex items-center rounded-lg bg-white p-4 shadow">
                     <CircleCheck size={40} className="stat-icon text-green-600" />
                     <div className="stat-content ml-4">
@@ -258,12 +263,12 @@ export default function Index() {
                     </div>
                 </div>
                 <div className="stat-card flex items-center rounded-lg bg-white p-4 shadow">
-                    <ClipboardX size={40} className="stat-icon text-red-600" />
+                    <Cog size={40} className="stat-icon text-red-600" />
                     <div className="stat-content ml-4">
                         <span className="stat-number text-2xl font-bold">
                             {identifyRisks.data.filter((item) => item.validation_status === 'rejected').length}
                         </span>
-                        <span className="stat-label block text-gray-600">Ditolak</span>
+                        <span className="stat-label block text-gray-600">Butuh Perbaikan</span>
                     </div>
                 </div>
             </div>
@@ -303,7 +308,7 @@ export default function Index() {
 
             {/* Risk Table */}
             <div className="risk-table-container w-full">
-                <table className="risk-table w-full border-collapse">
+                <table className="risk-table w-full border border-black">
                     <thead>
                         <tr className="bg-gray-100">
                             <th className="border border-black p-2 text-left">No</th>
@@ -438,16 +443,6 @@ export default function Index() {
                                             ? 'Tidak ada risiko yang sesuai dengan filter atau pencarian Anda.'
                                             : 'Belum ada risiko yang dibuat. Mulai dengan menambah risiko baru.'}
                                     </p>
-                                    {!searchTerm && filterStatus === 'all' && permissions?.canCreate && (
-                                        <div className="mt-4">
-                                            <Link
-                                                href={route('identify-risk.create')}
-                                                className="btn btn-primary flex items-center gap-2 rounded bg-[#12745a] px-4 py-2 text-white hover:bg-[#0c4435]"
-                                            >
-                                                <FilePlus size={28} /> Tambah Risiko Pertama
-                                            </Link>
-                                        </div>
-                                    )}
                                 </td>
                             </tr>
                         )}

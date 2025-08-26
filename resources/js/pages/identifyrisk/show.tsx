@@ -330,7 +330,7 @@ export default function Show() {
                 {identifyRisk.bukti_files && identifyRisk.bukti_files.length > 0 && (
                     <div className="mb-6 rounded-lg bg-white p-6 shadow-md">
                         <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
-                            <span>📎</span>
+                            <span><FileText/></span>
                             Bukti Risiko ({identifyRisk.bukti_files.length})
                         </h2>
 
