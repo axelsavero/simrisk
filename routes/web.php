@@ -10,6 +10,7 @@ use App\Http\Controllers\IdentifyRiskController;
 use App\Http\Controllers\MitigasiController;
 use App\Http\Controllers\SipegProxyController;
 use App\Http\Controllers\ReferensiController;
+use App\Http\Controllers\SasaranUnitController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -37,7 +38,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('{identifyRisk}/approve', [IdentifyRiskController::class, 'approve'])->name('approve');
         Route::post('{identifyRisk}/reject', [IdentifyRiskController::class, 'reject'])->name('reject');
         Route::get('{identifyRisk}/download-bukti', [IdentifyRiskController::class, 'downloadBukti'])->name('download-bukti');
-    });
+    })->name('identify-risk');
 
     Route::resource('mitigasi', MitigasiController::class);
 
@@ -49,7 +50,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('{mitigasi}/submit', [MitigasiController::class, 'submit'])->name('submit');
         Route::post('{mitigasi}/approve', [MitigasiController::class, 'approve'])->name('approve');
         Route::post('{mitigasi}/reject', [MitigasiController::class, 'reject'])->name('reject');
-    });
+    })->name('mitigasi');
 
     Route::get('api/risk/{identifyRisk}/mitigasi', [MitigasiController::class, 'getByRisk'])->name('api.risk.mitigasi');
 });
@@ -69,6 +70,11 @@ Route::prefix('laporan')->name('laporan.')->group(function () {
     Route::get('/risk-detail', [LaporanController::class, 'riskDetail'])->name('risk-detail');
     Route::get('/export-pdf', [LaporanController::class, 'exportPdf'])->name('export-pdf');
     Route::get('/export-excel', [LaporanController::class, 'exportExcel'])->name('export-excel');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('sasaran-unit', SasaranUnitController::class);
+    Route::get('sasaran-unit/{sasaranUnit}/dokumen/{dokumenId}/download', [SasaranUnitController::class, 'downloadDokumen'])->name('sasaran-unit.download-dokumen');
 });
 
 Route::resource('referensi', ReferensiController::class);

@@ -51,7 +51,12 @@ class LaporanController extends Controller
         $periode_end = $request->get('periode_end');
 
         // Base query dengan role-based filtering
-        $query = $this->getBaseQuery();
+        $query = $this->applyRoleScope(IdentifyRisk::query(), [
+            'userColumn' => 'user_id',
+            'unitColumn' => null,
+            'unitViaUser' => true,
+            'userRelation' => 'user',
+        ])->where('is_active', true);
 
         // Apply filters
         $risks = $query->byUnit($unit)
@@ -83,38 +88,47 @@ class LaporanController extends Controller
     /**
      * Laporan Detail Risiko (Tabel lengkap)
      */
-    public function riskDetail(Request $request)
-    {
-        // Filter sama seperti risk matrix
-        $unit = $request->get('unit');
-        $kategori = $request->get('kategori');
-        $tahun = $request->get('tahun', date('Y'));
-        $validation_status = $request->get('validation_status');
+   public function riskDetail(Request $request)
+{
+    // Filter parameters
+    $unit = $request->get('unit');
+    $kategori = $request->get('kategori');
+    $tahun = $request->get('tahun', date('Y'));
+    $validation_status = $request->get('validation_status');
+    $search = $request->get('search', ''); // Default to empty string if not provided
 
-        $query = $this->getBaseQuery();
+    $query = $this->getBaseQuery();
 
+    try {
         $risks = $query->byUnit($unit)
             ->byKategori($kategori)
             ->byTahun($tahun)
-            ->when($validation_status, function($q) use ($validation_status) {
+            ->when($validation_status, function ($q) use ($validation_status) {
                 return $q->where('validation_status', $validation_status);
             })
             ->with(['validationProcessor', 'creator'])
             ->orderBy('level', 'desc') // Urutkan dari risk tertinggi
             ->paginate(50);
-
-        return Inertia::render('laporan/risk-detail', [
-            'risks' => $risks,
-            'statistik' => $this->getDetailStatistik($risks),
-            'filters' => compact('unit', 'kategori', 'tahun', 'validation_status'),
-            'filterOptions' => $this->getFilterOptions(),
-            'metaData' => [
-                'generated_at' => now()->format('d/m/Y H:i:s'),
-                'generated_by' => Auth::user()->name,
-            ]
+    } catch (\Exception $e) {
+        // Log the error and return an empty paginated response
+        \Log::error('Error fetching risks: ' . $e->getMessage());
+        $risks = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 50, 1, [
+            'path' => \Request::url(),
+            'query' => \Request::query(),
         ]);
     }
 
+    return Inertia::render('laporan/risk-detail', [
+        'risks' => $risks,
+        'statistik' => $this->getDetailStatistik($risks),
+        'filters' => compact('search', 'unit', 'kategori', 'tahun', 'validation_status'),
+        'filterOptions' => $this->getFilterOptions(),
+        'metaData' => [
+            'generated_at' => now()->format('d/m/Y H:i:s'),
+            'generated_by' => Auth::user()->name,
+        ]
+    ]);
+}
     /**
      * Export laporan ke PDF
      */
@@ -191,24 +205,12 @@ class LaporanController extends Controller
 
     private function getBaseQuery()
     {
-        $user = Auth::user();
-        $query = IdentifyRisk::query();
-
-        // Role-based filtering
-        if ($user->hasRole('super-admin')) {
-            // Super admin melihat semua kecuali draft
-            return $query->whereNotIn('validation_status', ['draft'])
-                        ->where('is_active', true);
-        } elseif ($user->hasRole('owner-risk')) {
-            // Owner-risk melihat semua data mereka
-            return $query->where('is_active', true);
-        } elseif ($user->hasRole('pimpinan')) {
-            // Pimpinan hanya approved
-            return $query->approved()->where('is_active', true);
-        } else {
-            // User lain hanya approved
-            return $query->approved()->where('is_active', true);
-        }
+        return $this->applyRoleScope(IdentifyRisk::query(), [
+            'userColumn' => 'user_id',
+            'unitColumn' => null,
+            'unitViaUser' => true,
+            'userRelation' => 'user',
+        ])->where('is_active', true);
     }
 
     private function formatRiskMatrixData($risks)
@@ -373,20 +375,20 @@ class LaporanController extends Controller
         ];
     }
 
-    private function getFilterOptions()
-    {
-        return [
-            'units' => IdentifyRisk::distinct()->whereNotNull('unit_kerja')->pluck('unit_kerja')->filter()->sort()->values(),
-            'kategoris' => IdentifyRisk::distinct()->whereNotNull('kategori_risiko')->pluck('kategori_risiko')->filter()->sort()->values(),
-            'tahuns' => IdentifyRisk::distinct()->whereNotNull('tahun')->pluck('tahun')->filter()->sort()->values(),
-            'validation_statuses' => [
-                'draft' => 'Draft',
-                'pending' => 'Menunggu Validasi',
-                'approved' => 'Disetujui',
-                'rejected' => 'Ditolak'
-            ]
-        ];
-    }
+   private function getFilterOptions()
+{
+    return [
+        'units' => IdentifyRisk::distinct()->whereNotNull('unit_kerja')->pluck('unit_kerja')->filter()->sort()->values()->all() ?: [],
+        'kategoris' => IdentifyRisk::distinct()->whereNotNull('kategori_risiko')->pluck('kategori_risiko')->filter()->sort()->values()->all() ?: [],
+        'tahuns' => IdentifyRisk::distinct()->whereNotNull('tahun')->pluck('tahun')->filter()->sort()->values()->all() ?: [],
+        'validation_statuses' => [
+            'draft' => 'Draft',
+            'pending' => 'Menunggu Validasi',
+            'approved' => 'Disetujui',
+            'rejected' => 'Ditolak'
+        ]
+    ];
+}
 
     private function getPeriodeText($start, $end)
     {

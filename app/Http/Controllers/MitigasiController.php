@@ -25,19 +25,14 @@ class MitigasiController extends Controller
         $user = Auth::user();
         $query = Mitigasi::with(['identifyRisk', 'identifyRisk.user', 'validationProcessor']);
 
-        // Filter berdasarkan role
-        if ($user->hasRole('super-admin')) {
-            // Super admin melihat mitigasi yang sudah submitted atau lebih tinggi
-            $query->whereNotIn('validation_status', [Mitigasi::VALIDATION_STATUS_DRAFT]);
-        } elseif ($user->hasRole('owner-risk')) {
-            // Owner risk hanya bisa melihat mitigasi dari risiko yang mereka buat
-            $query->whereHas('identifyRisk', function ($q) use ($user) {
-                $q->where('user_id', $user->id);
-            });
-        } elseif ($user->hasRole('pimpinan')) {
-            // Pimpinan bisa melihat semua mitigasi dari unit kerja mereka
+        // Terapkan aturan akses generik
+        if ($this->isAdmin($user)) {
             $query->whereHas('identifyRisk', function ($q) use ($user) {
                 $q->where('unit_kerja', $user->unit_kerja);
+            });
+        } elseif ($this->isOwnerRisk($user)) {
+            $query->whereHas('identifyRisk', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
             });
         }
         // Super admin bisa melihat semua mitigasi
@@ -116,10 +111,10 @@ class MitigasiController extends Controller
 
         // Get identify risks for filter (based on user role)
         $identifyRisksQuery = IdentifyRisk::query();
-        if ($user->hasRole('owner-risk')) {
-            $identifyRisksQuery->where('user_id', $user->id);
-        } elseif ($user->hasRole('pimpinan')) {
+        if ($this->isAdmin($user)) {
             $identifyRisksQuery->where('unit_kerja', $user->unit_kerja);
+        } elseif ($this->isOwnerRisk($user)) {
+            $identifyRisksQuery->where('user_id', $user->id);
         }
         $identifyRisks = $identifyRisksQuery->get();
 
@@ -211,13 +206,13 @@ class MitigasiController extends Controller
 public function show(Mitigasi $mitigasi): Response
 {
     $user = Auth::user();
-    if ($user->hasRole('super-admin')) {
-        // Super admin can view all
-    } elseif ($user->hasRole('owner-risk')) {
+    if ($user->hasRole('super-admin') || $user->hasRole('pimpinan')) {
+        // Full access
+    } elseif ($this->isOwnerRisk($user)) {
         if ($mitigasi->identifyRisk->user_id !== $user->id) {
             abort(403, 'Unauthorized');
         }
-    } elseif ($user->hasRole('pimpinan')) {
+    } elseif ($this->isAdmin($user)) {
         if ($mitigasi->identifyRisk->unit_kerja !== $user->unit_kerja) {
             abort(403, 'Unauthorized');
         }

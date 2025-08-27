@@ -20,7 +20,13 @@ class DashboardController extends Controller
         $statusMitigasi = $request->get('status_mitigasi');
 
         // Base query dengan role-based filtering
-        $query = $this->getBaseQuery();
+        $query = $this->applyRoleScope(IdentifyRisk::query(), [
+            'userColumn' => 'user_id',
+            // IdentifyRisk tidak punya unit_id; gunakan unit via relasi user.unit_id
+            'unitColumn' => null,
+            'unitViaUser' => true,
+            'userRelation' => 'user',
+        ])->where('is_active', true);
 
         // Apply filters
         $risks = $query->byUnit($unit)
@@ -42,24 +48,13 @@ class DashboardController extends Controller
 
     private function getBaseQuery()
     {
-        $user = Auth::user();
-        $query = IdentifyRisk::query();
-
-        // Role-based filtering
-        if ($user->hasRole('super-admin')) {
-            // Super admin melihat semua kecuali draft
-            return $query->whereNotIn('validation_status', [IdentifyRisk::STATUS_DRAFT, IdentifyRisk::STATUS_REJECTED])
-                ->where('is_active', true);
-        } elseif ($user->hasRole('owner-risk')) {
-            // Owner-risk melihat semua data mereka
-            return $query->where('is_active', true);
-        } elseif ($user->hasRole('pimpinan')) {
-            // Pimpinan hanya approved
-            return $query->approved()->where('is_active', true);
-        } else {
-            // User lain hanya approved
-            return $query->approved()->where('is_active', true);
-        }
+        // Ke belakang untuk kompatibilitas, gunakan aturan umum + aktif saja
+        return $this->applyRoleScope(IdentifyRisk::query(), [
+            'userColumn' => 'user_id',
+            'unitColumn' => null,
+            'unitViaUser' => true,
+            'userRelation' => 'user',
+        ])->where('is_active', true);
     }
 
     private function formatRiskMatrixData($risks)
