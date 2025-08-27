@@ -16,15 +16,28 @@ class SasaranUnit extends Model
     protected $fillable = [
         'id_sasaran_univ',
         'id_unit',
-        'kategori',
-        'nama_dokumen',
-        'nomor_dokumen',
-        'tanggal_dokumen',
-        'file_path'
+        'target_unit',
+        'bobot_unit',
+        'status_pelaksanaan',
+        'progress_persen',
+        'capaian_saat_ini',
+        'tanggal_mulai_unit',
+        'tanggal_selesai_unit',
+        'deadline_unit',
+        'pic_unit',
+        'keterangan',
+        'metadata',
     ];
 
     protected $casts = [
-        'tanggal_dokumen' => 'date'
+        'target_unit' => 'decimal:2',
+        'bobot_unit' => 'decimal:2',
+        'progress_persen' => 'decimal:2',
+        'capaian_saat_ini' => 'decimal:2',
+        'tanggal_mulai_unit' => 'date',
+        'tanggal_selesai_unit' => 'date',
+        'deadline_unit' => 'date',
+        'metadata' => 'array',
     ];
 
     public function getRouteKeyName()

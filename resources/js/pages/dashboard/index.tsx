@@ -23,6 +23,30 @@ interface Props {
         riskPointsSesudah: Array<{ x: number; y: number; label: string; validation_status?: string }>;
         tingkatRisiko: Array<{ tingkat: string; inheren: number; residual: number; color: string }>;
     };
+    mitigasiMatrixData?: {
+        mitigasiPoints: Array<{
+            id: number;
+            x: number;
+            y: number;
+            label: string;
+            judul_mitigasi: string;
+            kode_risiko: string;
+            nama_risiko: string;
+            strategi_mitigasi: string;
+            status_mitigasi: string;
+            progress_percentage: number;
+            pic_mitigasi: string;
+            target_selesai?: string | null;
+            unit_kerja: string;
+            level: number;
+            level_text: string;
+        }>;
+        totalMitigasi: number;
+        statusStats: Record<string, number>;
+        strategiStats: Record<string, number>;
+        completionRate: number;
+        averageProgress: number;
+    };
     filterOptions?: {
         // units: string[]; // This will now be fetched via API
         kategoris: string[];
@@ -66,11 +90,26 @@ interface Unit {
     name: string;
 }
 
-export default function Dashboard({ riskMatrixData, filterOptions, filters }: Props) {
+export default function Dashboard({ riskMatrixData, mitigasiMatrixData, filterOptions, filters }: Props) {
     const [unit, setUnit] = useState(filters?.unit || '');
     const [kategori, setKategori] = useState(filters?.kategori || '');
     const [tahun, setTahun] = useState(filters?.tahun || '');
-    const [popupData, setPopupData] = useState<{ x: number; y: number; value: number; label: string; detail?: RiskDetail } | null>(null);
+    const [popupData, setPopupData] = useState<
+        | {
+              x: number;
+              y: number;
+              value: number;
+              type: 'sebelum' | 'sesudah';
+              items: Array<
+                  RiskPoint & {
+                      kode_risiko?: string;
+                      nama_risiko?: string;
+                      unit_kerja?: string;
+                  }
+              >;
+          }
+        | null
+    >(null);
 
     // State for managing units fetched from API
     const [units, setUnits] = useState<Unit[]>([]);
@@ -184,14 +223,21 @@ export default function Dashboard({ riskMatrixData, filterOptions, filters }: Pr
         return () => clearTimeout(timer);
     }, [unit, kategori, tahun]);
 
-    const handleCellClick = async (x: number, y: number, value: number, label: string) => {
-        try {
-            const response = await fetch(`/dashboard/risk-detail/${label}`);
-            const data = await response.json();
-            setPopupData({ x, y, value, label, detail: data });
-        } catch (error) {
-            setPopupData({ x, y, value, label, detail: undefined });
+    const openPopupForCell = (type: 'sebelum' | 'sesudah', x: number, y: number, value: number) => {
+        if (type === 'sesudah' && mitigasiMatrixData?.mitigasiPoints) {
+            let items = mitigasiMatrixData.mitigasiPoints.filter((p) => p.x === x && p.y === y) as any[];
+            // Fallback: if unit_kerja missing on mitigasi points, enrich from residual risk points of the same cell
+            const residualCellRisks = riskPointsSesudah.filter((p) => p.x === x && p.y === y);
+            const fallbackUnit = residualCellRisks.length > 0 ? (residualCellRisks[0] as any).unit_kerja : undefined;
+            if (fallbackUnit) {
+                items = items.map((it) => ({ ...it, unit_kerja: it.unit_kerja || fallbackUnit }));
+            }
+            setPopupData({ x, y, value, type, items });
+            return;
         }
+        const source = type === 'sebelum' ? riskPointsSebelum : riskPointsSesudah;
+        const items = source.filter((p) => p.x === x && p.y === y);
+        setPopupData({ x, y, value, type, items });
     };
 
     const closePopup = () => {
@@ -275,13 +321,19 @@ export default function Dashboard({ riskMatrixData, filterOptions, filters }: Pr
                             <h3 className="mb-2 text-center text-lg font-semibold">
                                 Peta Risiko <span className="font-normal">(Sebelum)</span>
                             </h3>
-                            <RiskMatrixTable riskPoints={riskPointsSebelum} onCellClick={handleCellClick} />
+                            <RiskMatrixTable
+                                riskPoints={riskPointsSebelum}
+                                onCellClick={(x, y, value) => openPopupForCell('sebelum', x, y, value)}
+                            />
                         </div>
                         <div className="flex-1 rounded-xl border bg-white p-4">
                             <h3 className="mb-2 text-center text-lg font-semibold">
                                 Peta Risiko <span className="font-normal">(Sesudah)</span>
                             </h3>
-                            <RiskMatrixTable riskPoints={riskPointsSesudah} onCellClick={handleCellClick} />
+                            <RiskMatrixTable
+                                riskPoints={riskPointsSesudah}
+                                onCellClick={(x, y, value) => openPopupForCell('sesudah', x, y, value)}
+                            />
                         </div>
                     </div>
 
@@ -314,53 +366,49 @@ export default function Dashboard({ riskMatrixData, filterOptions, filters }: Pr
                         </table>
                     </div>
 
+                    {mitigasiMatrixData && (
+                        <></>
+                    )}
+
                     {popupData && (
-                        <div className="bg-opacity-50 fixed inset-0 flex items-center justify-center bg-black">
-                            <div className="w-3/4 rounded-lg bg-white p-6 shadow-lg">
-                                <h4 className="mb-4 text-xl font-semibold">Detail Risiko</h4>
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                            <div className="w-full max-w-5xl max-h-[85vh] overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+                                <h4 className="mb-4 text-xl font-semibold">{popupData.type === 'sebelum' ? 'Detail Risiko (Inheren)' : 'Detail Mitigasi (Residual)'} • Bobot {popupData.value}</h4>
                                 <table className="w-full border">
                                     <thead>
                                         <tr>
                                             <th className="border px-2 py-1">No</th>
                                             <th className="border px-2 py-1">Kode Risiko</th>
                                             <th className="border px-2 py-1">Unit Kerja</th>
-                                            <th className="border px-2 py-1">Deskripsi</th>
-                                            <th className="border px-2 py-1">Penyebab</th>
-                                            <th className="border px-2 py-1">Probabilitas Inherent</th>
-                                            <th className="border px-2 py-1">Impact Inherent</th>
-                                            <th className="border px-2 py-1">Tingkat Risiko Inherent</th>
-                                            <th className="border px-2 py-1">Status</th>
-                                            <th className="border px-2 py-1">Aksi</th>
+                                            <th className="border px-2 py-1">{popupData.type === 'sebelum' ? 'Deskripsi Risiko' : 'Judul Mitigasi'}</th>
+                                            {popupData.type === 'sesudah' && <th className="border px-2 py-1">Strategi</th>}
+                                            {popupData.type === 'sesudah' && <th className="border px-2 py-1">Status</th>}
+                                            {popupData.type === 'sesudah' && <th className="border px-2 py-1">Progress</th>}
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {popupData.detail ? (
-                                            <tr>
-                                                <td className="border px-2 py-1">{popupData.label}</td>
-                                                <td className="border px-2 py-1">{popupData.detail.id_identify}</td>
-                                                <td className="border px-2 py-1">{popupData.detail.unit_kerja}</td>
-                                                <td className="border px-2 py-1">{popupData.detail.description}</td>
-                                                <td className="border px-2 py-1">Penyebab {popupData.label}</td>
-                                                <td className="border px-2 py-1">{probabilityLabels[popupData.detail.inherent.probability - 1]}</td>
-                                                <td className="border px-2 py-1">{impactLabels[popupData.detail.inherent.impact - 1]}</td>
-                                                <td className="border px-2 py-1">{popupData.detail.inherent.level}</td>
-                                                <td className="border px-2 py-1">{popupData.detail.mitigation.status || 'aktif'}</td>
-                                                <td className="border px-2 py-1">
-                                                    <button className="rounded bg-blue-500 px-2 py-1 text-white">Evaluasi</button>
-                                                </td>
-                                            </tr>
+                                        {popupData.items.length > 0 ? (
+                                            popupData.items.map((item: any, idx: number) => (
+                                                <tr key={`${item.label || item.id}-${idx}`}>
+                                                    <td className="border px-2 py-1">{idx + 1}</td>
+                                                    <td className="border px-2 py-1">{item.kode_risiko || item.label}</td>
+                                                    <td className="border px-2 py-1">{item.unit_kerja || '-'}</td>
+                                                    <td className="border px-2 py-1">{popupData.type === 'sebelum' ? (item.nama_risiko || '-') : (item.judul_mitigasi || '-')}</td>
+                                                    {popupData.type === 'sesudah' && <td className="border px-2 py-1 capitalize">{item.strategi_mitigasi}</td>}
+                                                    {popupData.type === 'sesudah' && <td className="border px-2 py-1 capitalize">{item.status_mitigasi}</td>}
+                                                    {popupData.type === 'sesudah' && <td className="border px-2 py-1">{typeof item.progress_percentage === 'number' ? `${item.progress_percentage}%` : '-'}</td>}
+                                                </tr>
+                                            ))
                                         ) : (
                                             <tr>
-                                                <td colSpan={10} className="border px-2 py-1 text-center">
-                                                    Tidak ada data
-                                                </td>
+                                                <td colSpan={popupData.type === 'sebelum' ? 4 : 7} className="border px-2 py-4 text-center">Tidak ada data pada sel ini</td>
                                             </tr>
                                         )}
                                     </tbody>
                                 </table>
-                                <button className="mt-4 rounded bg-red-500 px-4 py-2 text-white" onClick={closePopup}>
-                                    Tutup
-                                </button>
+                                <div className="mt-4 flex justify-end">
+                                    <button className="rounded bg-red-500 px-4 py-2 text-white" onClick={closePopup}>Tutup</button>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -378,6 +426,9 @@ type RiskPoint = {
     label: string;
     validation_status?: string;
     // ...other possible fields
+    unit_kerja?: string;
+    kode_risiko?: string;
+    nama_risiko?: string;
 };
 
 function RiskMatrixTable({
@@ -385,7 +436,7 @@ function RiskMatrixTable({
     onCellClick,
 }: {
     riskPoints: RiskPoint[];
-    onCellClick: (x: number, y: number, value: number, label: string) => void;
+    onCellClick: (x: number, y: number, value: number) => void;
 }) {
     return (
         <div className="w-full overflow-x-hidden">
@@ -462,7 +513,7 @@ function RiskMatrixTable({
                                     <td
                                         key={colIdx}
                                         className={`relative h-10 w-1/5 border border-black p-0 text-center ${bg}`}
-                                        onClick={() => onCellClick(x, y, cell, label)}
+                                        onClick={() => onCellClick(x, y, cell)}
                                     >
                                         <span
                                             className={`font-bold ${text} mx-auto my-1 inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-base shadow md:h-16 md:w-16 md:text-xl`}

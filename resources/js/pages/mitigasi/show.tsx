@@ -70,7 +70,11 @@ const getStrategiBadge = (strategi: string, label: string) => {
 };
 
 export default function Show() {
-    const { mitigasi, statusOptions = {}, strategiOptions = {} } = usePage<PageProps>().props;
+    const { mitigasi, statusOptions = {}, strategiOptions = {}, auth }: any = usePage<any>().props;
+    const roles: string[] = auth?.user?.roles || [];
+    const isSuperAdmin = roles.includes('super-admin');
+    const isAdmin = roles.includes('admin');
+    const isOwnerRisk = roles.includes('owner-risk');
     if (!mitigasi) {
         return <div className="text-center p-4 text-red-500">Data mitigasi tidak ditemukan.</div>;
     }
@@ -209,27 +213,34 @@ export default function Show() {
                         </div>
                     </div>
                     <div className="mt-4 sm:mt-0 flex items-center space-x-3">
-                        <button
-                            onClick={() => setShowProgressModal(true)}
-                            className="inline-flex items-center px-3 py-2 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100"
-                        >
-                            <Target className="w-4 h-4 mr-2" />
-                            Update Progress
-                        </button>
-                        <Link
-                            href={`/mitigasi/${mitigasi.id}/edit`}
-                            className="inline-flex items-center px-3 py-2 border border-yellow-300 rounded-md shadow-sm text-sm font-medium text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
-                        >
-                            <Edit className="w-4 h-4 mr-2" />
-                            Edit
-                        </Link>
-                        <button
-                            onClick={handleDelete}
-                            className="inline-flex items-center px-3 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100"
-                        >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Hapus
-                        </button>
+                        {/* Owner Risk can update progress, edit, delete */}
+                        {isOwnerRisk && (
+                            <>
+                                <button
+                                    onClick={() => setShowProgressModal(true)}
+                                    className="inline-flex items-center px-3 py-2 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100"
+                                >
+                                    <Target className="w-4 h-4 mr-2" />
+                                    Update Progress
+                                </button>
+                                <Link
+                                    href={`/mitigasi/${mitigasi.id}/edit`}
+                                    className="inline-flex items-center px-3 py-2 border border-yellow-300 rounded-md shadow-sm text-sm font-medium text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
+                                >
+                                    <Edit className="w-4 h-4 mr-2" />
+                                    Edit
+                                </Link>
+                                <button
+                                    onClick={handleDelete}
+                                    className="inline-flex items-center px-3 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100"
+                                >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Hapus
+                                </button>
+                            </>
+                        )}
+                        {/* Super Admin: no edit/delete here; approvals happen in list */}
+                        {/* Admin: no action buttons */}
                     </div>
                 </div>
 

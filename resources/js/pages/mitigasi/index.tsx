@@ -161,7 +161,11 @@ const getValidationStatusLabel = (status: string) => {
 };
 
 export default function Index() {
-    const { mitigasis, filters, statusOptions, strategiOptions } = usePage<PageProps>().props;
+    const { mitigasis, filters, statusOptions, strategiOptions, auth }: any = usePage<any>().props;
+    const roles: string[] = auth?.user?.roles || [];
+    const isSuperAdmin = roles.includes('super-admin');
+    const isAdmin = roles.includes('admin');
+    const isOwnerRisk = roles.includes('owner-risk');
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const [showFilters, setShowFilters] = useState(false);
 
@@ -553,50 +557,61 @@ export default function Index() {
                                                         >
                                                         <Eye className="h-4 w-4" />
                                                     </Link>
-                                                    {mitigasi.permissions?.canEdit && (
-                                                        <Link
-                                                            href={`/mitigasi/${mitigasi.id}/edit`}
-                                                            className="text-yellow-600 hover:text-yellow-900"
-                                                            title="Edit"
-                                                        >
-                                                            <Edit className="h-4 w-4" />
-                                                        </Link>
-                                                    )}
-                                                    {mitigasi.permissions?.canSubmit && (
-                                                        <button
-                                                            onClick={() => handleSubmit(mitigasi)}
-                                                            className="text-[#12745a] hover:text-[#0c4435]"
-                                                            title="Submit untuk Persetujuan"
-                                                        >
-                                                            <Send className="h-4 w-4" />
-                                                        </button>
-                                                    )}
-                                                    {mitigasi.permissions?.canApprove && (
-                                                        <button
-                                                            onClick={() => handleApprove(mitigasi)}
-                                                            className="text-green-600 hover:text-green-900"
-                                                            title="Setujui"
-                                                        >
-                                                            <CheckCircle className="h-4 w-4" />
-                                                        </button>
-                                                    )}
-                                                    {mitigasi.permissions?.canReject && (
-                                                        <button
-                                                            onClick={() => handleReject(mitigasi)}
-                                                            className="text-red-600 hover:text-red-900"
-                                                            title="Tolak"
-                                                        >
-                                                            <XCircle className="h-4 w-4" />
-                                                        </button>
-                                                    )}
-                                                    {mitigasi.permissions?.canDelete && (
-                                                        <button
-                                                            onClick={() => handleDelete(mitigasi)}
-                                                            className="text-red-600 hover:text-red-900"
-                                                            title="Hapus"
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </button>
+                                                    {/* Admin: read-only */}
+                                                    {!isAdmin && (
+                                                        <>
+                                                            {/* Owner Risk full actions */}
+                                                            {isOwnerRisk && mitigasi.permissions?.canEdit && (
+                                                                <Link
+                                                                    href={`/mitigasi/${mitigasi.id}/edit`}
+                                                                    className="text-yellow-600 hover:text-yellow-900"
+                                                                    title="Edit"
+                                                                >
+                                                                    <Edit className="h-4 w-4" />
+                                                                </Link>
+                                                            )}
+                                                            {isOwnerRisk && mitigasi.permissions?.canSubmit && (
+                                                                <button
+                                                                    onClick={() => handleSubmit(mitigasi)}
+                                                                    className="text-[#12745a] hover:text-[#0c4435]"
+                                                                    title="Submit untuk Persetujuan"
+                                                                >
+                                                                    <Send className="h-4 w-4" />
+                                                                </button>
+                                                            )}
+                                                            {isOwnerRisk && mitigasi.permissions?.canDelete && (
+                                                                <button
+                                                                    onClick={() => handleDelete(mitigasi)}
+                                                                    className="text-red-600 hover:text-red-900"
+                                                                    title="Hapus"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </button>
+                                                            )}
+                                                            {/* Super Admin: only approve/reject */}
+                                                            {isSuperAdmin && mitigasi.validation_status && ['submitted','pending'].includes(mitigasi.validation_status) && (
+                                                                <>
+                                                                    {mitigasi.permissions?.canApprove && (
+                                                                        <button
+                                                                            onClick={() => handleApprove(mitigasi)}
+                                                                            className="text-green-600 hover:text-green-900"
+                                                                            title="Setujui"
+                                                                        >
+                                                                            <CheckCircle className="h-4 w-4" />
+                                                                        </button>
+                                                                    )}
+                                                                    {mitigasi.permissions?.canReject && (
+                                                                        <button
+                                                                            onClick={() => handleReject(mitigasi)}
+                                                                            className="text-red-600 hover:text-red-900"
+                                                                            title="Tolak"
+                                                                        >
+                                                                            <XCircle className="h-4 w-4" />
+                                                                        </button>
+                                                                    )}
+                                                                </>
+                                                            )}
+                                                        </>
                                                     )}
                                                 </div>
                                             </td>

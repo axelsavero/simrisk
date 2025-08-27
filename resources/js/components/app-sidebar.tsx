@@ -57,12 +57,6 @@ export function AppSidebar() {
       role: ['admin', 'owner-risk'],
     },
     {
-      title: 'Sasaran',
-      href: '/sasaran',
-      icon: Target,
-      role: ['admin'],
-    },
-    {
       title: 'Sasaran Unit',
       href: '/sasaran-unit',
       icon: Target,
@@ -72,7 +66,7 @@ export function AppSidebar() {
       title: 'Kelola Risiko',
       href: '/kelola-risiko',
       icon: ListChecks,
-      role: ['owner-risk'],
+      role: ['owner-risk', 'admin'],
       children: [
         {
           title: 'Identifikasi Risiko',

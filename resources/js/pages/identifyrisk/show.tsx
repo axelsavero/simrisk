@@ -38,7 +38,11 @@ interface ShowProps {
 }
 
 export default function Show() {
-    const { identifyRisk } = usePage<ShowProps>().props;
+    const { identifyRisk, auth }: any = usePage<any>().props;
+    const roles: string[] = auth?.user?.roles || [];
+    const isSuperAdmin = roles.includes('super-admin');
+    const isAdmin = roles.includes('admin');
+    const isOwnerRisk = roles.includes('owner-risk');
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
@@ -136,9 +140,10 @@ export default function Show() {
                         </div>
                     </div>
 
-                    {/* Action Buttons: Edit dan Submit hanya untuk status draft/rejected */}
+                    {/* Action Buttons by role */}
                     <div className="flex gap-3 border-t pt-4">
-                        {(identifyRisk.validation_status === 'draft') && (
+                        {/* Owner Risk: edit + submit saat draft */}
+                        {isOwnerRisk && identifyRisk.validation_status === 'draft' && (
                             <>
                                 <Link
                                     href={route('identify-risk.edit', identifyRisk.id)}
@@ -147,17 +152,34 @@ export default function Show() {
                                     <Pencil />
                                     Edit
                                 </Link>
-                                {identifyRisk.validation_status === 'draft' && (
-                                    <button
-                                        onClick={() => router.post(route('identify-risk.submit', identifyRisk.id))}
-                                        className="inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-white transition-colors hover:bg-green-700"
-                                    >
-                                        <CheckCircle2 />
-                                        Submit
-                                    </button>
-                                )}
+                                <button
+                                    onClick={() => router.post(route('identify-risk.submit', identifyRisk.id))}
+                                    className="inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-white transition-colors hover:bg-green-700"
+                                >
+                                    <CheckCircle2 />
+                                    Submit
+                                </button>
                             </>
                         )}
+                        {/* Super Admin: hanya setuju/tolak di show page jika status submitted/pending (opsional jika ada endpoint) */}
+                        {isSuperAdmin && ['submitted','pending'].includes(identifyRisk.validation_status) && (
+                            <>
+                                <button
+                                    onClick={() => router.post(route('identify-risk.approve', identifyRisk.id))}
+                                    className="inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-white transition-colors hover:bg-green-700"
+                                >
+                                    <CheckCircle2 />
+                                    Setujui
+                                </button>
+                                <Link
+                                    href={route('identify-risk.index')}
+                                    className="inline-flex items-center gap-2 rounded-md border border-red-300 px-4 py-2 text-red-700 transition-colors hover:bg-red-50"
+                                >
+                                    Tolak di daftar
+                                </Link>
+                            </>
+                        )}
+                        {/* Admin: tidak ada tombol aksi */}
                         <Link
                             href={route('identify-risk.index')}
                             className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-50"

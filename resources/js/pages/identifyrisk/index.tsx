@@ -61,6 +61,10 @@ const Pagination = ({ links }: { links: Array<{ url: string | null; label: strin
 
 export default function Index() {
     const { identifyRisks, flash, auth, permissions } = usePage<PageProps>().props;
+    const roles: string[] = auth?.user?.roles || [];
+    const isSuperAdmin = roles.includes('super-admin');
+    const isAdmin = roles.includes('admin');
+    const isOwnerRisk = roles.includes('owner-risk');
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -182,6 +186,10 @@ export default function Index() {
         })[status] || { label: 'Unknown', color: 'secondary', icon: <CircleHelp /> };
 
     const filteredRisks = identifyRisks.data.filter((item: IdentifyRisk) => {
+        // Role-based visibility: super-admin & admin cannot see drafts
+        if ((isSuperAdmin || isAdmin) && item.validation_status === 'draft') {
+            return false;
+        }
         const matchesSearch = [item.id_identify, item.risk_category, item.description].some((field) =>
             field.toLowerCase().includes(searchTerm.toLowerCase()),
         );
@@ -206,7 +214,7 @@ export default function Index() {
                     </h1>
                     <p className="page-subtitle text-gray-600">Kelola dan pantau identifikasi risiko organisasi Anda</p>
                 </div>
-                {permissions?.canCreate && (
+                {permissions?.canCreate && isOwnerRisk && (
                     <Link
                         href={route('identify-risk.create')}
                         className="btn btn-primary flex items-center gap-2 rounded bg-[#12745a] px-4 py-2 text-white hover:bg-[#0c4435]"
@@ -384,51 +392,58 @@ export default function Index() {
                                                     >
                                                         <Eye className="inline" /> Detail
                                                     </Link>
-                                                    {permissions?.canSubmit && canShowSubmit(item) && (
-                                                        <button
-                                                            onClick={() => submitItem(item)}
-                                                            className="action-btn rounded bg-blue-600 px-2 py-1 text-white hover:bg-blue-700"
-                                                        >
-                                                            <Upload className="inline" /> Kirim
-                                                        </button>
-                                                    )}
-                                                    {permissions?.canEdit && canShowEdit(item) && (
-                                                        <Link
-                                                            href={route('identify-risk.edit', item.id)}
-                                                            className="action-btn rounded bg-green-500 px-2 py-1 text-white hover:bg-green-600"
-                                                        >
-                                                            <Pencil className="inline" /> Edit
-                                                        </Link>
-                                                    )}
-                                                    {permissions?.canDelete && item.validation_status === 'draft' && (
-                                                        <button
-                                                            onClick={() => deleteItem(item)}
-                                                            className="action-btn rounded bg-red-500 px-2 py-1 text-white hover:bg-red-600"
-                                                        >
-                                                            <Trash2 className="inline" /> Hapus
-                                                        </button>
-                                                    )}
-                                                    {showValidationActions &&
-                                                        (item.validation_status === 'submitted' || item.validation_status === 'pending') && (
-                                                            <>
-                                                                {permissions?.canApprove && (
-                                                                    <button
-                                                                        onClick={() => approveItem(item)}
-                                                                        className="action-btn rounded bg-green-500 px-2 py-1 text-white hover:bg-green-600"
-                                                                    >
-                                                                        <CircleCheck className="inline" /> Setujui
-                                                                    </button>
+                                                    {/* Admin: hanya lihat detail */}
+                                                    {!isAdmin && (
+                                                        <>
+                                                            {/* Owner Risk: kirim/edit/hapus sesuai permission */}
+                                                            {isOwnerRisk && permissions?.canSubmit && canShowSubmit(item) && (
+                                                                <button
+                                                                    onClick={() => submitItem(item)}
+                                                                    className="action-btn rounded bg-blue-600 px-2 py-1 text-white hover:bg-blue-700"
+                                                                >
+                                                                    <Upload className="inline" /> Kirim
+                                                                </button>
+                                                            )}
+                                                            {isOwnerRisk && permissions?.canEdit && canShowEdit(item) && (
+                                                                <Link
+                                                                    href={route('identify-risk.edit', item.id)}
+                                                                    className="action-btn rounded bg-green-500 px-2 py-1 text-white hover:bg-green-600"
+                                                                >
+                                                                    <Pencil className="inline" /> Edit
+                                                                </Link>
+                                                            )}
+                                                            {isOwnerRisk && permissions?.canDelete && item.validation_status === 'draft' && (
+                                                                <button
+                                                                    onClick={() => deleteItem(item)}
+                                                                    className="action-btn rounded bg-red-500 px-2 py-1 text-white hover:bg-red-600"
+                                                                >
+                                                                    <Trash2 className="inline" /> Hapus
+                                                                </button>
+                                                            )}
+                                                            {/* Super Admin: hanya setujui/tolak */}
+                                                            {isSuperAdmin && showValidationActions &&
+                                                                (item.validation_status === 'submitted' || item.validation_status === 'pending') && (
+                                                                    <>
+                                                                        {permissions?.canApprove && (
+                                                                            <button
+                                                                                onClick={() => approveItem(item)}
+                                                                                className="action-btn rounded bg-green-500 px-2 py-1 text-white hover:bg-green-600"
+                                                                            >
+                                                                                <CircleCheck className="inline" /> Setujui
+                                                                            </button>
+                                                                        )}
+                                                                        {permissions?.canReject && (
+                                                                            <button
+                                                                                onClick={() => rejectItem(item)}
+                                                                                className="action-btn rounded bg-red-500 px-2 py-1 text-white hover:bg-red-600"
+                                                                            >
+                                                                                <X className="inline" /> Tolak
+                                                                            </button>
+                                                                        )}
+                                                                    </>
                                                                 )}
-                                                                {permissions?.canReject && (
-                                                                    <button
-                                                                        onClick={() => rejectItem(item)}
-                                                                        className="action-btn rounded bg-red-500 px-2 py-1 text-white hover:bg-red-600"
-                                                                    >
-                                                                        <X className="inline" /> Tolak
-                                                                    </button>
-                                                                )}
-                                                            </>
-                                                        )}
+                                                        </>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>

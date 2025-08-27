@@ -45,7 +45,7 @@ export interface NavItem {
     href: string;
     icon?: LucideIcon | null;
     isActive?: boolean;
-    role?: string;
+    role?: string | string[];
     children?: NavItem[];
 }
 
