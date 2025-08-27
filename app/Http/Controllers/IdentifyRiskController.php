@@ -32,25 +32,15 @@ class IdentifyRiskController extends Controller
 
     public function index()
     {
-        $query = IdentifyRisk::with(['penyebab', 'dampakKualitatif', 'penangananRisiko'])->oldest(); 
+        $query = IdentifyRisk::with(['penyebab', 'dampakKualitatif', 'penangananRisiko'])->latest();
 
-        $user = Auth::user();
-        
-        // Logic filtering yang lebih fleksibel untuk semua role
-        if ($user->hasRole('super-admin')) {
-            // Super admin melihat semua data )
-            $query = $query->whereNotIn('validation_status', [IdentifyRisk::STATUS_DRAFT])
-                      ->where('is_active', true);
-        } elseif ($user->hasRole('owner-risk')) {
-            // Owner-risk melihat semua risiko mereka (termasuk draft)
-            $query = $query->where('is_active', true);
-        } elseif ($user->hasRole('pimpinan')) {
-            // Pimpinan hanya melihat yang sudah approved
-            $query = $query->approved()->where('is_active', true);
-        } else {
-            // User lain hanya melihat yang sudah approved dan aktif
-            $query = $query->approved()->where('is_active', true);
-        }
+        // Terapkan scope akses data: super-admin & pimpinan -> semua, admin -> unit, owner-risk -> miliknya
+        $query = $this->applyRoleScope($query, [
+            'userColumn' => 'user_id',
+            'unitColumn' => null,
+            'unitViaUser' => true,
+            'userRelation' => 'user',
+        ])->where('is_active', true);
 
         $identifyRisks = $query->paginate(12)->through(fn ($risk) => [
             'id' => $risk->id,
@@ -97,15 +87,15 @@ class IdentifyRiskController extends Controller
         return Inertia::render('identifyrisk/index', [
             'identifyRisks' => $identifyRisks,
             'permissions' => [
-                'canCreate' => $user->hasRole('super-admins') || $user->hasRole('owner-risk'),
-                'canEdit' => $user->hasRole('super-admins') || $user->hasRole('owner-risk'),
-                'canDelete' => $user->hasRole('super-admins') || $user->hasRole('owner-risk'),
-                'canSubmit' => $user->hasRole('owner-risk'),
-                'canValidate' => $user->hasRole('super-admin'),
-                'canApprove' => $user->hasRole('super-admin'),
-                'canReject' => $user->hasRole('super-admin'),
+                'canCreate' => Auth::user()->hasAnyRole(['super-admin', 'owner-risk']),
+                'canEdit' => Auth::user()->hasAnyRole(['super-admin', 'owner-risk']),
+                'canDelete' => Auth::user()->hasAnyRole(['super-admin', 'owner-risk']),
+                'canSubmit' => Auth::user()->hasRole('owner-risk'),
+                'canValidate' => Auth::user()->hasRole('super-admin'),
+                'canApprove' => Auth::user()->hasRole('super-admin'),
+                'canReject' => Auth::user()->hasRole('super-admin'),
             ],
-            'userRole' => $user->getRoleNames(),
+            'userRole' => Auth::user()->getRoleNames(),
         ]);
     }
 
