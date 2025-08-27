@@ -70,7 +70,7 @@ class MitigasiController extends Controller
             });
         }
 
-        $mitigasis = $query->orderBy('created_at', 'desc')->paginate(10);
+        $mitigasis = $query->orderBy('created_at', 'asc')->paginate(10);
 
         // Add permissions to each mitigasi
         $mitigasis->getCollection()->transform(function ($mitigasi) use ($user) {
@@ -517,7 +517,7 @@ public function show(Mitigasi $mitigasi): Response
     {
         $mitigasis = $identifyRisk->mitigasis()
                                  ->with(['creator', 'updater'])
-                                 ->orderBy('created_at', 'desc')
+                                 ->orderBy('created_at', 'asc')
                                  ->get();
 
         return response()->json($mitigasis);

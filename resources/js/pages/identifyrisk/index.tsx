@@ -160,9 +160,7 @@ export default function Index() {
             ? item.validation_status === 'draft' || item.validation_status === 'rejected'
             : item.validation_status === 'draft' || item.validation_status === 'rejected';
     const canShowSubmit = (item: IdentifyRisk) =>
-        auth?.user?.roles?.includes('super-admin')
-            ? item.validation_status === 'draft' || item.validation_status === 'rejected'
-            : item.validation_status === 'draft' || item.validation_status === 'rejected';
+        auth?.user?.roles?.includes('super-admin') ? item.validation_status === 'draft' : item.validation_status === 'draft';
     const getRiskLevelInfo = (probability: number, impact: number) => {
         const risk = probability * impact;
         return risk >= 20
@@ -326,113 +324,116 @@ export default function Index() {
                     </thead>
                     <tbody>
                         {filteredRisks.length > 0 ? (
-                            filteredRisks.map((item, index) => {
-                                const riskInfo = getRiskLevelInfo(item.probability, item.impact);
-                                const validationInfo = getValidationStatusInfo(item.validation_status);
-                                return (
-                                    <tr key={item.id} className={`risk-row ${item.validation_status === 'draft' ? 'bg-yellow-50' : ''}`}>
-                                        <td className="border border-black p-2">{index + 1}</td>
-                                        <td className="border border-black p-2">
-                                            <div className="flex items-center gap-2">
-                                                {item.id_identify}
-                                                {item.validation_status === 'draft' && (
-                                                    <span className="draft-badge h-2 w-2 rounded-full bg-yellow-400"></span>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="border border-black p-2">
-                                            {item.description.length > 120 ? `${item.description.substring(0, 120)}...` : item.description}
-                                        </td>
-                                        <td className="border border-black p-2">
-                                            {item.penyebab && Array.isArray(item.penyebab)
-                                                ? item.penyebab.map((p: any) => p.description).join(', ')
-                                                : '-'}
-                                        </td>
-                                        <td className="border border-black p-2">{item.probability}/5</td>
-                                        <td className="border border-black p-2">{item.impact}/5</td>
-                                        <td
-                                            className={`border border-black p-2 ${
-                                                {
-                                                    high: 'bg-red-100 text-red-800',
-                                                    medium: 'bg-yellow-100 text-yellow-800',
-                                                    low: 'bg-yellow-200 text-yellow-800',
-                                                    'very-low': 'bg-green-100 text-green-800',
-                                                }[riskInfo.color]
-                                            }`}
-                                        >
-                                            {riskInfo.level} ({item.probability * item.impact}/25)
-                                        </td>
-                                        <td
-                                            className={`border border-black p-2 ${
-                                                {
-                                                    draft: 'bg-yellow-100 text-yellow-800',
-                                                    warning: 'bg-yellow-100 text-yellow-800',
-                                                    success: 'bg-green-100 text-green-800',
-                                                    danger: 'bg-red-100 text-red-800',
-                                                    secondary: 'bg-gray-100 text-gray-800',
-                                                }[validationInfo.color]
-                                            }`}
-                                        >
-                                            {validationInfo.icon} {validationInfo.label}
-                                        </td>
-                                        <td className="border border-black p-2">
-                                            <div className="flex flex-col gap-2 sm:flex-row">
-                                                <Link
-                                                    href={route('identify-risk.show', item.id)}
-                                                    className="action-btn rounded bg-[#12745a] px-2 py-1 text-white hover:bg-[#0c4435]"
-                                                >
-                                                    <Eye className="inline" /> Detail
-                                                </Link>
-                                                {permissions?.canSubmit && canShowSubmit(item) && (
-                                                    <button
-                                                        onClick={() => submitItem(item)}
-                                                        className="action-btn rounded bg-blue-600 px-2 py-1 text-white hover:bg-blue-700"
-                                                    >
-                                                        <Upload className="inline" /> Kirim
-                                                    </button>
-                                                )}
-                                                {permissions?.canEdit && canShowEdit(item) && (
-                                                    <Link
-                                                        href={route('identify-risk.edit', item.id)}
-                                                        className="action-btn rounded bg-green-500 px-2 py-1 text-white hover:bg-green-600"
-                                                    >
-                                                        <Pencil className="inline" /> Edit
-                                                    </Link>
-                                                )}
-                                                {permissions?.canDelete && item.validation_status === 'draft' && (
-                                                    <button
-                                                        onClick={() => deleteItem(item)}
-                                                        className="action-btn rounded bg-red-500 px-2 py-1 text-white hover:bg-red-600"
-                                                    >
-                                                        <Trash2 className="inline" /> Hapus
-                                                    </button>
-                                                )}
-                                                {showValidationActions &&
-                                                    (item.validation_status === 'submitted' || item.validation_status === 'pending') && (
-                                                        <>
-                                                            {permissions?.canApprove && (
-                                                                <button
-                                                                    onClick={() => approveItem(item)}
-                                                                    className="action-btn rounded bg-green-500 px-2 py-1 text-white hover:bg-green-600"
-                                                                >
-                                                                    <CircleCheck className="inline" /> Setujui
-                                                                </button>
-                                                            )}
-                                                            {permissions?.canReject && (
-                                                                <button
-                                                                    onClick={() => rejectItem(item)}
-                                                                    className="action-btn rounded bg-red-500 px-2 py-1 text-white hover:bg-red-600"
-                                                                >
-                                                                    <X className="inline" /> Tolak
-                                                                </button>
-                                                            )}
-                                                        </>
+                            filteredRisks
+                                .slice() // Create a shallow copy to avoid mutating the original array
+                                .sort((a, b) => a.id - b.id) // Sort risks by ID in ascending order
+                                .map((item, index) => {
+                                    const riskInfo = getRiskLevelInfo(item.probability, item.impact);
+                                    const validationInfo = getValidationStatusInfo(item.validation_status);
+                                    return (
+                                        <tr key={item.id} className={`risk-row ${item.validation_status === 'draft' ? 'bg-yellow-50' : ''}`}>
+                                            <td className="border border-black p-2">{index + 1}</td>
+                                            <td className="border border-black p-2">
+                                                <div className="flex items-center gap-2">
+                                                    {item.id_identify}
+                                                    {item.validation_status === 'draft' && (
+                                                        <span className="draft-badge h-2 w-2 rounded-full bg-yellow-400"></span>
                                                     )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })
+                                                </div>
+                                            </td>
+                                            <td className="border border-black p-2">
+                                                {item.description.length > 120 ? `${item.description.substring(0, 120)}...` : item.description}
+                                            </td>
+                                            <td className="border border-black p-2">
+                                                {item.penyebab && Array.isArray(item.penyebab)
+                                                    ? item.penyebab.map((p: any) => p.description).join(', ')
+                                                    : '-'}
+                                            </td>
+                                            <td className="border border-black p-2">{item.probability}/5</td>
+                                            <td className="border border-black p-2">{item.impact}/5</td>
+                                            <td
+                                                className={`border border-black p-2 ${
+                                                    {
+                                                        high: 'bg-red-100 text-red-800',
+                                                        medium: 'bg-yellow-100 text-yellow-800',
+                                                        low: 'bg-yellow-200 text-yellow-800',
+                                                        'very-low': 'bg-green-100 text-green-800',
+                                                    }[riskInfo.color]
+                                                }`}
+                                            >
+                                                {riskInfo.level} ({item.probability * item.impact}/25)
+                                            </td>
+                                            <td
+                                                className={`border border-black p-2 ${
+                                                    {
+                                                        draft: 'bg-yellow-100 text-yellow-800',
+                                                        warning: 'bg-yellow-100 text-yellow-800',
+                                                        success: 'bg-green-100 text-green-800',
+                                                        danger: 'bg-red-100 text-red-800',
+                                                        secondary: 'bg-gray-100 text-gray-800',
+                                                    }[validationInfo.color]
+                                                }`}
+                                            >
+                                                {validationInfo.icon} {validationInfo.label}
+                                            </td>
+                                            <td className="border border-black p-2">
+                                                <div className="flex flex-col gap-2 sm:flex-row">
+                                                    <Link
+                                                        href={route('identify-risk.show', item.id)}
+                                                        className="action-btn rounded bg-[#12745a] px-2 py-1 text-white hover:bg-[#0c4435]"
+                                                    >
+                                                        <Eye className="inline" /> Detail
+                                                    </Link>
+                                                    {permissions?.canSubmit && canShowSubmit(item) && (
+                                                        <button
+                                                            onClick={() => submitItem(item)}
+                                                            className="action-btn rounded bg-blue-600 px-2 py-1 text-white hover:bg-blue-700"
+                                                        >
+                                                            <Upload className="inline" /> Kirim
+                                                        </button>
+                                                    )}
+                                                    {permissions?.canEdit && canShowEdit(item) && (
+                                                        <Link
+                                                            href={route('identify-risk.edit', item.id)}
+                                                            className="action-btn rounded bg-green-500 px-2 py-1 text-white hover:bg-green-600"
+                                                        >
+                                                            <Pencil className="inline" /> Edit
+                                                        </Link>
+                                                    )}
+                                                    {permissions?.canDelete && item.validation_status === 'draft' && (
+                                                        <button
+                                                            onClick={() => deleteItem(item)}
+                                                            className="action-btn rounded bg-red-500 px-2 py-1 text-white hover:bg-red-600"
+                                                        >
+                                                            <Trash2 className="inline" /> Hapus
+                                                        </button>
+                                                    )}
+                                                    {showValidationActions &&
+                                                        (item.validation_status === 'submitted' || item.validation_status === 'pending') && (
+                                                            <>
+                                                                {permissions?.canApprove && (
+                                                                    <button
+                                                                        onClick={() => approveItem(item)}
+                                                                        className="action-btn rounded bg-green-500 px-2 py-1 text-white hover:bg-green-600"
+                                                                    >
+                                                                        <CircleCheck className="inline" /> Setujui
+                                                                    </button>
+                                                                )}
+                                                                {permissions?.canReject && (
+                                                                    <button
+                                                                        onClick={() => rejectItem(item)}
+                                                                        className="action-btn rounded bg-red-500 px-2 py-1 text-white hover:bg-red-600"
+                                                                    >
+                                                                        <X className="inline" /> Tolak
+                                                                    </button>
+                                                                )}
+                                                            </>
+                                                        )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                         ) : (
                             <tr>
                                 <td colSpan={10} className="empty-state p-4 text-center text-gray-500">
