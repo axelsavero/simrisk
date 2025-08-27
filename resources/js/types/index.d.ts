@@ -8,6 +8,9 @@ export interface User {
     id: number;
     name: string;
     email: string;
+    unit_id?: string | number;
+    unit?: string;
+    kode_unit?: string;
     avatar?: string;
     email_verified_at?: string | null;
     created_at?: string;
@@ -102,20 +105,20 @@ export interface Mitigasi {
     created_at: string;
     updated_at: string;
     deleted_at?: string;
-    
+
     // Relationships
     identify_risk?: IdentifyRisk;
     creator?: User;
     updater?: User;
     validation_processor?: User;
-    
+
     // Computed attributes
     status_label?: string;
     strategi_label?: string;
     is_overdue?: boolean;
     is_upcoming?: boolean;
     days_remaining?: number;
-    
+
     // Permissions
     permissions?: {
         canEdit: boolean;

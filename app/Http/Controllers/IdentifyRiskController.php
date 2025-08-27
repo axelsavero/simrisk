@@ -12,6 +12,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage; 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class IdentifyRiskController extends Controller
@@ -31,7 +32,7 @@ class IdentifyRiskController extends Controller
 
     public function index()
     {
-        $query = IdentifyRisk::with(['penyebab', 'dampakKualitatif', 'penangananRisiko'])->latest(); 
+        $query = IdentifyRisk::with(['penyebab', 'dampakKualitatif', 'penangananRisiko'])->oldest(); 
 
         $user = Auth::user();
         
@@ -332,107 +333,121 @@ class IdentifyRiskController extends Controller
 
     public function update(Request $request, IdentifyRisk $identifyRisk)
     {
-        // Validasi untuk update
-        $validated = $request->validate([
-            'id_identify' => ['required', 'string', 'max:255', Rule::unique('identify_risks')->ignore($identifyRisk->id)],
-            'is_active' => 'required|boolean',
-            'risk_category' => 'required|string|max:255',
-            'identification_date_start' => 'required|date',
-            'identification_date_end' => 'required|date|after_or_equal:identification_date_start',
-            'description' => 'required|string',
-            'nama_risiko' => 'nullable|string|max:255',
-            'jabatan_risiko' => 'nullable|string|max:255',
-            'no_kontak' => 'nullable|string|max:255',
-            'strategi' => 'nullable|string|max:255',
-            'pengendalian_internal' => 'nullable|string|max:255',
-            'biaya_penangan' => 'nullable|numeric|min:0',
-            'probability' => 'required|integer|min:1|max:5',
-            'impact' => 'required|integer|min:1|max:5',
-            'penyebab' => 'required|array|min:1',
-            'penyebab.*.description' => 'required|string|max:1000',
-            'dampak_kualitatif' => 'required|array|min:1', 
-            'dampak_kualitatif.*.description' => 'required|string|max:1000',
-            'penanganan_risiko' => 'required|array|min:1',
-            'penanganan_risiko.*.description' => 'required|string|max:1000',
-            'bukti_risiko_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png|max:10240',
-            'bukti_risiko_nama' => 'nullable|string|max:255',
-            'unit_kerja' => 'nullable|string|max:255',
-            'kategori_risiko' => 'nullable|string|max:255', 
-            'tahun' => 'nullable|integer|min:2020|max:' . (date('Y') + 5),
-            'probability_residual' => 'nullable|integer|min:1|max:5',
-            'impact_residual' => 'nullable|integer|min:1|max:5',
-        ]);
+        if (!$identifyRisk->canBeEdited()) {
+            return Redirect::back()->with('error', 'Risiko ini tidak dapat diedit karena statusnya.');
+        }
 
-        // Recalculate level
-        $validated['level'] = (int)$validated['probability'] * (int)$validated['impact'];
+        DB::beginTransaction();
+        try {
+            // Validasi untuk update
+            $validated = $request->validate([
+                'id_identify' => ['required', 'string', 'max:255', Rule::unique('identify_risks', 'id_identify')->ignore($identifyRisk->id)],
+                'is_active' => 'required|boolean',
+                'risk_category' => 'required|string|max:255',
+                'identification_date_start' => 'required|date',
+                'identification_date_end' => 'required|date|after_or_equal:identification_date_start',
+                'description' => 'required|string',
+                'nama_risiko' => 'required|string|max:255',
+                'jabatan_risiko' => 'required|string|max:255',
+                'no_kontak' => 'required|string|max:255',
+                'strategi' => 'required|string|max:255',
+                'pengendalian_internal' => 'required|string|max:255',
+                'biaya_penangan' => 'required|numeric|min:0',
+                'probability' => 'required|integer|min:1|max:5',
+                'impact' => 'required|integer|min:1|max:5',
+                'penyebab' => 'required|array|min:1',
+                'penyebab.*.description' => 'required|string|max:1000',
+                'dampak_kualitatif' => 'required|array|min:1', 
+                'dampak_kualitatif.*.description' => 'required|string|max:1000',
+                'penanganan_risiko' => 'required|array|min:1',
+                'penanganan_risiko.*.description' => 'required|string|max:1000',
+                'bukti_risiko_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png|max:10240',
+                'bukti_risiko_nama' => 'nullable|string|max:255',
+                'unit_kerja' => 'nullable|string|max:255',
+                'kategori_risiko' => 'nullable|string|max:255', 
+                'tahun' => 'nullable|integer|min:2020|max:' . (date('Y') + 5),
+                'probability_residual' => 'nullable|integer|min:1|max:5',
+                'impact_residual' => 'nullable|integer|min:1|max:5',
+            ]);
 
-        // Pisahkan data relationships
-        $penyebabData = $validated['penyebab'] ?? [];
-        $dampakData = $validated['dampak_kualitatif'] ?? [];
-        $penangananData = $validated['penanganan_risiko'] ?? [];
+            // Recalculate level
+            $validated['level'] = (int)$validated['probability'] * (int)$validated['impact'];
 
-        // Data untuk update main record
-        $identifyRiskData = collect($validated)->except([
-            'penyebab', 'dampak_kualitatif', 'penanganan_risiko',
-            'bukti_risiko_file', 'bukti_risiko_nama'
-        ])->toArray();
+            // Pisahkan data relationships
+            $penyebabData = $validated['penyebab'] ?? [];
+            $dampakData = $validated['dampak_kualitatif'] ?? [];
+            $penangananData = $validated['penanganan_risiko'] ?? [];
 
-        // Update main record
-        $identifyRisk->update($identifyRiskData);
+            // Data untuk update main record
+            $identifyRiskData = collect($validated)->except([
+                'penyebab', 'dampak_kualitatif', 'penanganan_risiko',
+                'bukti_risiko_file', 'bukti_risiko_nama'
+            ])->toArray();
 
-        //  Handle file upload di update
-        if ($request->hasFile('bukti_risiko_file')) {
-            try {
-                $file = $request->file('bukti_risiko_file');
-                $fileName = time() . '_' . $file->getClientOriginalName();
-                $filePath = $file->storeAs('bukti-risiko', $fileName, 'public');
+            // Update main record
+            $identifyRisk->update($identifyRiskData);
 
-                $buktiFileData = [
-                    'nama_bukti' => $validated['bukti_risiko_nama'] ?? $file->getClientOriginalName(),
-                    'file_name' => $file->getClientOriginalName(),
-                    'file_path' => $filePath,
-                    'file_size' => $file->getSize(),
-                    'file_extension' => strtolower($file->getClientOriginalExtension()),
-                    'uploaded_by' => Auth::user()->name ?? 'System',
-                    'uploaded_at' => now()->toDateTimeString(),
-                ];
+            //  Handle file upload di update
+            if ($request->hasFile('bukti_risiko_file')) {
+                try {
+                    $file = $request->file('bukti_risiko_file');
+                    $fileName = time() . '_' . $file->getClientOriginalName();
+                    $filePath = $file->storeAs('bukti-risiko', $fileName, 'public');
 
-                // Append ke existing bukti files atau buat baru
-                $existingBukti = $identifyRisk->bukti_files ?? [];
-                $existingBukti[] = $buktiFileData;
-                $identifyRisk->update(['bukti_files' => $existingBukti]);
+                    $buktiFileData = [
+                        'nama_bukti' => $validated['bukti_risiko_nama'] ?? $file->getClientOriginalName(),
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_path' => $filePath,
+                        'file_size' => $file->getSize(),
+                        'file_extension' => strtolower($file->getClientOriginalExtension()),
+                        'uploaded_by' => Auth::user()->name ?? 'System',
+                        'uploaded_at' => now()->toDateTimeString(),
+                    ];
 
-            } catch (\Exception $e) {
-                return Redirect::back()
-                    ->withInput()
-                    ->with('error', 'Gagal mengupload bukti: ' . $e->getMessage());
+                    // Append ke existing bukti files atau buat baru
+                    $existingBukti = $identifyRisk->bukti_files ?? [];
+                    $existingBukti[] = $buktiFileData;
+                    $identifyRisk->update(['bukti_files' => $existingBukti]);
+
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    return Redirect::back()
+                        ->withInput()
+                        ->with('error', 'Gagal mengupload bukti: ' . $e->getMessage());
+                }
             }
+
+            // if ($validated['probability_residual'] && $validated['impact_residual']) {
+            // $validated['level_residual'] = (int)$validated['probability_residual'] * (int)$validated['impact_residual'];
+            //  }
+
+            // Update relationships - hapus lama, buat baru
+            $identifyRisk->penyebab()->delete();
+            $identifyRisk->dampakKualitatif()->delete();
+            $identifyRisk->penangananRisiko()->delete();
+            
+            // Buat relationships baru
+            if (!empty($penyebabData)) {
+                $identifyRisk->penyebab()->createMany($penyebabData);
+            }
+
+            if (!empty($dampakData)) {
+                $identifyRisk->dampakKualitatif()->createMany($dampakData);
+            }
+
+            if (!empty($penangananData)) {
+                $identifyRisk->penangananRisiko()->createMany($penangananData);
+            }
+
+            DB::commit();
+            return Redirect::route('identify-risk.index')
+                ->with('success', 'Identifikasi Risiko berhasil diperbarui.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return Redirect::back()
+                ->withInput()
+                ->with('error', 'Gagal memperbarui risiko: ' . $e->getMessage());
         }
-
-        // if ($validated['probability_residual'] && $validated['impact_residual']) {
-        // $validated['level_residual'] = (int)$validated['probability_residual'] * (int)$validated['impact_residual'];
-        //  }
-
-        // Update relationships - hapus lama, buat baru
-        $identifyRisk->penyebab()->delete();
-        $identifyRisk->dampakKualitatif()->delete();
-        $identifyRisk->penangananRisiko()->delete();
-        
-        // Buat relationships baru
-        if (!empty($penyebabData)) {
-            $identifyRisk->penyebab()->createMany($penyebabData);
-        }
-
-        if (!empty($dampakData)) {
-            $identifyRisk->dampakKualitatif()->createMany($dampakData);
-        }
-
-        if (!empty($penangananData)) {
-            $identifyRisk->penangananRisiko()->createMany($penangananData);
-        }
-
-        return Redirect::route('identify-risk.index')
-            ->with('success', 'Identifikasi Risiko berhasil diperbarui.');
     }
 
     public function destroy(IdentifyRisk $identifyRisk)
@@ -467,15 +482,18 @@ class IdentifyRiskController extends Controller
             abort(403, 'Anda tidak memiliki izin untuk mengirim risiko.');
         }
 
-        // Cek apakah risiko bisa dikirim (harus draft)
+        // Cek apakah risiko bisa dikirim (draft atau rejected)
         if (!$identifyRisk->canBeSubmitted()) {
             return Redirect::route('identify-risk.index')
                 ->with('error', 'Risiko ini tidak dapat dikirim karena sudah dalam proses validasi.');
         }
 
-        // Update status menjadi pending untuk konsistensi dengan UI
+        // Update status menjadi pending dan bersihkan rejection jika ada
         $identifyRisk->update([
-            'validation_status' => IdentifyRisk::STATUS_PENDING, // Ubah ke PENDING bukan SUBMITTED
+            'validation_status' => IdentifyRisk::STATUS_PENDING,
+            'validation_processed_at' => null,
+            'validation_processed_by' => null,
+            'rejection_reason' => null,
         ]);
 
         return Redirect::route('identify-risk.index')

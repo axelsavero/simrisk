@@ -36,13 +36,17 @@ export default function Login({ status, canResetPassword }: LoginProps) {
     };
 
     return (
-        <AuthSplitLayout title="Log in to your account" description="Enter your email and password below to log in">
+        <AuthSplitLayout title="Login (Super Admi" description="">
             <Head title="Log in" />
 
-            <form className="flex flex-col gap-6" onSubmit={submit}>
-                <div className="grid gap-6">
-                    <div className="grid gap-2">
-                        <Label htmlFor="email">Alamat Email</Label>
+            <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">Masuk</h2>
+                <p className="text-gray-600">Sistem Informasi Manajemen Risiko</p>
+            </div>
+
+            <form className="space-y-6" onSubmit={submit}>
+                <div className="space-y-5">
+                    <div className="space-y-2">
                         <Input
                             id="email"
                             type="email"
@@ -52,20 +56,13 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             autoComplete="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
-                            placeholder="email@example.com"
+                            placeholder="Email"
+                            className="bg-gray-100 border-2 border-gray-200 focus:border-green-500 focus:bg-white rounded-xl px-4 py-4 text-base transition-all duration-200 shadow-sm"
                         />
                         <InputError message={errors.email} />
                     </div>
 
-                    <div className="grid gap-2">
-                        <div className="flex items-center">
-                            <Label htmlFor="password">Password</Label>
-                            {canResetPassword && (
-                                <TextLink href={route('password.request')} className="ml-auto text-sm" tabIndex={5}>
-                                    Lupa password?
-                                </TextLink>
-                            )}
-                        </div>
+                    <div className="space-y-2">
                         <Input
                             id="password"
                             type="password"
@@ -75,32 +72,38 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
                             placeholder="Password"
+                            className="bg-gray-100 border-2 border-gray-200 focus:border-green-500 focus:bg-white rounded-xl px-4 py-4 text-base transition-all duration-200 shadow-sm"
                         />
                         <InputError message={errors.password} />
                     </div>
 
-                    <div className="flex items-center space-x-3">
-                        <Checkbox
-                            id="remember"
-                            name="remember"
-                            checked={data.remember}
-                            onClick={() => setData('remember', !data.remember)}
-                            tabIndex={3}
-                        />
-                        <Label htmlFor="remember">Ingat saya</Label>
+                    <div className="flex items-center justify-between text-sm pt-2">
+                        {canResetPassword && (
+                            <TextLink href={route('password.request')} className="text-green-600 hover:text-green-700 font-medium transition-colors" tabIndex={4}>
+                                Lupa Password?
+                            </TextLink>
+                        )}
+                        <div className="flex items-center space-x-3">
+                            <Checkbox
+                                id="remember"
+                                name="remember"
+                                checked={data.remember}
+                                onClick={() => setData('remember', !data.remember)}
+                                tabIndex={3}
+                                className="border-2 border-gray-300 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                            />
+                            <Label htmlFor="remember" className="text-gray-700 font-medium cursor-pointer">Ingat saya</Label>
+                        </div>
                     </div>
 
-                    <Button type="submit" className="mt-4 w-full bg-green-800" tabIndex={4} disabled={processing}>
-                        {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
-                        Masuk
+                    <Button type="submit" className="mt-6 w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl py-4 text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]" tabIndex={5} disabled={processing}>
+                        {processing && <LoaderCircle className="h-5 w-5 animate-spin mr-2" />}
+                        MASUK
                     </Button>
                 </div>
 
-                <div className="text-muted-foreground text-center text-sm">
-                    Belum terdaftar?{' '}
-                    <TextLink href={route('register')} tabIndex={5}>
-                        Sign up
-                    </TextLink>
+                <div className="text-center text-sm text-gray-600 mt-6">
+                    Belum terdaftar ?
                 </div>
             </form>
 

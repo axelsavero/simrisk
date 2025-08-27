@@ -134,13 +134,11 @@ export default function Form({ identifyRisk = null }: FormProps) {
         };
 
         if (identifyRisk) {
-            put(route('identify-risk.update', identifyRisk.id), {
-                ...submitData,
+            put(route('identify-risk.update', identifyRisk.id), submitData, {
                 forceFormData: true,
             });
         } else {
-            post(route('identify-risk.store'), {
-                ...submitData,
+            post(route('identify-risk.store'), submitData, {
                 forceFormData: true,
             });
         }
@@ -181,7 +179,9 @@ export default function Form({ identifyRisk = null }: FormProps) {
                     {/* Draft status indicator */}
                     {isEditingDraft && (
                         <div className="flex items-center gap-2 rounded-lg bg-blue-100 px-4 py-2 text-blue-800">
-                            <span className="text-lg"><SquarePen /></span>
+                            <span className="text-lg">
+                                <SquarePen />
+                            </span>
                             <span className="font-medium">Mode Draft</span>
                         </div>
                     )}

@@ -26,7 +26,7 @@ class UserManageController extends Controller
         }
 
         // Ambil data user beserta relasi rolenya
-        $users = User::with('roles', 'unit')->get()->map(function ($user) {
+        $users = User::with('roles')->get()->map(function ($user) {
             // return sebuah array 
             // Ambil ID, nama, email, unit, kode_unit dan roles dari user
 
@@ -35,7 +35,7 @@ class UserManageController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'unit_id' => $user->unit_id,
-                'unit' => $user->unit, // return the whole unit object
+                'unit' => $user->unit,
                 'kode_unit' => $user->kode_unit,
                 'roles' => $user->roles->pluck('name')->toArray(), // <-- Ambil nama role sebagai array
             ];
@@ -178,3 +178,8 @@ class UserManageController extends Controller
     }
 
 }
+
+
+    
+
+
