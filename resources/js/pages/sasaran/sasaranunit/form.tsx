@@ -1,15 +1,17 @@
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem, SasaranUnit } from '@/types';
+import { BreadcrumbItem, SasaranUniv } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import React from 'react';
 import { FileText, Hourglass, Lightbulb, Paperclip, Save } from 'lucide-react';
 
 interface FormProps {
-    sasaranUnit?: SasaranUnit | null;
+    sasaranUnit?: any | null;
+    sasaranUnivs?: Pick<SasaranUniv, 'id_sasaran_univ' | 'kategori' | 'nama_dokumen'>[];
 }
 
 interface FormData {
     [key: string]: any;
+    id_sasaran_univ: number | '';
     kategori: string;
     nama_dokumen: string;
     nomor_dokumen: string;
@@ -18,8 +20,9 @@ interface FormData {
     _method?: string;
 }
 
-export default function Form({ sasaranUnit = null }: FormProps) {
+export default function Form({ sasaranUnit = null, sasaranUnivs = [] }: FormProps) {
     const { data, setData, post, processing, errors } = useForm<FormData>({
+        id_sasaran_univ: (sasaranUnit as any)?.id_sasaran_univ ?? '',
         kategori: sasaranUnit?.kategori || '',
         nama_dokumen: sasaranUnit?.nama_dokumen || '',
         nomor_dokumen: sasaranUnit?.nomor_dokumen || '',
@@ -108,6 +111,24 @@ export default function Form({ sasaranUnit = null }: FormProps) {
                     encType="multipart/form-data"
                 >
                     {sasaranUnit && <input type="hidden" name="_method" value="PUT" />}
+
+                    <div>
+                        <label className="mb-1 block font-medium">Sasaran Universitas Terkait *</label>
+                        <select
+                            value={data.id_sasaran_univ}
+                            onChange={(e) => setData('id_sasaran_univ', e.target.value ? Number(e.target.value) : '')}
+                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            required
+                        >
+                            <option value="">Pilih Sasaran Universitas</option>
+                            {sasaranUnivs.map((su) => (
+                                <option key={su.id_sasaran_univ} value={su.id_sasaran_univ}>
+                                    {su.id_sasaran_univ} - {su.kategori} {su.nama_dokumen ? `(${su.nama_dokumen})` : ''}
+                                </option>
+                            ))}
+                        </select>
+                        {errors.id_sasaran_univ && <div className="mt-1 text-sm text-red-500">{String(errors.id_sasaran_univ)}</div>}
+                    </div>
 
                     <div>
                         <label className="mb-1 block font-medium">Kategori Dokumen *</label>

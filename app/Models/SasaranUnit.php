@@ -14,6 +14,8 @@ class SasaranUnit extends Model
     protected $primaryKey = 'id_sasaran_unit';
 
     protected $fillable = [
+        'id_sasaran_univ',
+        'id_unit',
         'kategori',
         'nama_dokumen',
         'nomor_dokumen',

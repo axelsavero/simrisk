@@ -63,6 +63,12 @@ export function AppSidebar() {
       role: ['admin'],
     },
     {
+      title: 'Sasaran Unit',
+      href: '/sasaran-unit',
+      icon: Target,
+      role: ['admin'],
+    },
+    {
       title: 'Kelola Risiko',
       href: '/kelola-risiko',
       icon: ListChecks,

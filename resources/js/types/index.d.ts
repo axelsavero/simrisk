@@ -235,6 +235,19 @@ export interface SasaranUniv {
     updated_at: string;
 }
 
+export interface SasaranUnit {
+    id_sasaran_unit: number;
+    id_sasaran_univ: number;
+    id_unit: number;
+    kategori: string;
+    nama_dokumen?: string;
+    nomor_dokumen?: string;
+    tanggal_dokumen?: string;
+    file_path?: string;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface BreadcrumbItem {
     title: string;
     href: string;
