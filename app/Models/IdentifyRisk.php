@@ -304,8 +304,7 @@ class IdentifyRisk extends Model
      */
     public function canBeSubmitted(): bool
     {
-        // Izinkan submit untuk draft maupun yang sudah ditolak (revisi)
-        return in_array($this->validation_status, [self::STATUS_DRAFT, self::STATUS_REJECTED]);
+        return $this->validation_status === self::STATUS_DRAFT;
     }
 
     /**

@@ -540,10 +540,10 @@ class IdentifyRiskController extends Controller
         ]);
 
         // Cek status saat ini
-        if ($identifyRisk->validation_status === IdentifyRisk::STATUS_REJECTED) {
-            return Redirect::route('identify-risk.index')
-                ->with('error', 'Risiko ini sudah ditolak sebelumnya.');
-        }
+        // if ($identifyRisk->validation_status === IdentifyRisk::STATUS_REJECTED) {
+        //     return Redirect::route('identify-risk.index')
+        //         ->with('error', 'Risiko ini sudah ditolak sebelumnya.');
+        // }
 
         // Update status ke rejected
         $identifyRisk->update([

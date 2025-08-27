@@ -189,7 +189,7 @@ export default function Index({ sasaranUnivs, flash }: IndexProps) {
                                                         <span className="text-gray-400">Tidak ada file</span>
                                                     )}
                                                 </td>
-                                                <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
+                                                <td className="px-6 py-4 text-sm font-medium whitespace-nowrap border border-black">
                                                     <div className="flex items-center gap-2">
                                                         <Link
                                                             href={route('sasaran-univ.show', item.id_sasaran_univ)}
