@@ -6,14 +6,14 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up()
-    {
+   public function up()
+{
+    if (!Schema::hasColumn('users', 'unit_id')) {
         Schema::table('users', function (Blueprint $table) {
-            if (!Schema::hasColumn('users', 'unit_id')) {
-                $table->unsignedBigInteger('unit_id')->nullable()->after('password');
-            }
+            $table->bigInteger('unit_id')->unsigned()->nullable()->after('password');
         });
     }
+}
 
     public function down()
     {
