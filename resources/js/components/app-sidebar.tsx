@@ -52,6 +52,12 @@ export function AppSidebar() {
       icon: LayoutGrid,
     },
     {
+      title: 'User Operator',
+      href: '/user/operator',
+      icon: UserCog2Icon,
+      role: ['admin'],
+    },
+    {
       title: 'Referensi',
       href: '/referensi',
       icon: Folder,
@@ -61,12 +67,6 @@ export function AppSidebar() {
       title: 'Sasaran Unit',
       href: '/sasaran-unit',
       icon: Target,
-      role: ['admin'],
-    },
-    {
-      title: 'User Operator',
-      href: '/user/operator',
-      icon: UserCog2Icon,
       role: ['admin'],
     },
     {

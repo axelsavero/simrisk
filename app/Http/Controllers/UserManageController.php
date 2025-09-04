@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash; // <-- Import Hash
 use Illuminate\Support\Facades\Redirect; // <-- Import Redirect
 use Inertia\Inertia; // <-- Import Inertia
 use App\Models\Role; // <-- Import Role
+use App\Models\Unit;
 use Illuminate\Validation\Rule;
 
 class UserManageController extends Controller
@@ -173,6 +174,7 @@ class UserManageController extends Controller
     }
 
     // Method untuk menyimpan data
+
     public function store(Request $request)
     {
         if (!Auth::user()->hasRole('super-admin')) {
@@ -182,11 +184,19 @@ class UserManageController extends Controller
         // Validasi data
         $validated = $request->validate([
             'unit_id' => 'required|string',
+            'unit' => 'required|string',
+            'kode_unit' => 'nullable|string',
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
             'role' => 'required|string',
         ]);
+
+        // Simpan unit ke tabel unit jika belum ada
+        Unit::firstOrCreate(
+            ['id_unit' => $validated['unit_id']],
+            ['nama_unit' => $validated['unit'], 'kode_unit' => '']
+        );
 
         // Buat user baru
         $user = User::create([
@@ -194,15 +204,12 @@ class UserManageController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'unit_id' => $validated['unit_id'],
-            'unit' => $request->input('unit'), // Ambil nama unit dari request
-            'kode_unit' => $request->input('kode_unit'), // Ambil kode unit dari request
+            'unit' => $validated['unit'],
         ]);
 
-        // Ambil ID dari nama role (single role)
+        // Role
         $roleId = Role::where('name', $validated['role'])->first()?->id;
-
         if ($roleId) {
-            // Pasang role ke user
             $user->roles()->sync([$roleId]);
         }
 

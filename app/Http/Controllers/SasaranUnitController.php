@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use App\Models\SasaranUnit;
 use App\Models\SasaranUniv;
+use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -43,6 +44,7 @@ class SasaranUnitController extends Controller
 		]);
 	}
 
+
 	public function store(Request $request)
 	{
 		$user = auth()->user();
@@ -64,6 +66,12 @@ class SasaranUnitController extends Controller
 			$validated['file_path'] = $filePath;
 		}
 
+		// LOGIKA TAMBAHAN: pastikan unit sudah ada di tabel unit
+		Unit::firstOrCreate(
+			['id_unit' => $user->unit_id],
+			['nama_unit' => $user->unit]
+		);
+
 		$payload = array_merge($validated, [
 			'id_unit' => $user->unit_id,
 		]);
@@ -71,7 +79,7 @@ class SasaranUnitController extends Controller
 		SasaranUnit::create($payload);
 
 		return redirect()->route('sasaran-unit.index')
-						 ->with('success', 'Data berhasil ditambahkan');
+			->with('success', 'Data berhasil ditambahkan');
 	}
 
 	public function show(SasaranUnit $sasaranUnit)
@@ -164,8 +172,7 @@ class SasaranUnitController extends Controller
 			$sasaranUnit->update($payload);
 
 			return redirect()->route('sasaran-unit.index')
-							->with('success', 'Data berhasil diperbarui');
-
+				->with('success', 'Data berhasil diperbarui');
 		} catch (\Illuminate\Validation\ValidationException $e) {
 			Log::error('Validation failed', ['errors' => $e->errors()]);
 			throw $e;
@@ -173,8 +180,8 @@ class SasaranUnitController extends Controller
 			Log::error('Update failed', ['error' => $e->getMessage()]);
 
 			return redirect()->back()
-							->withInput()
-							->with('error', 'Gagal memperbarui data: ' . $e->getMessage());
+				->withInput()
+				->with('error', 'Gagal memperbarui data: ' . $e->getMessage());
 		}
 	}
 
@@ -196,6 +203,6 @@ class SasaranUnitController extends Controller
 		$sasaranUnit->delete();
 
 		return redirect()->route('sasaran-unit.index')
-						 ->with('success', 'Data berhasil dihapus');
+			->with('success', 'Data berhasil dihapus');
 	}
 }
