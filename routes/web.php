@@ -77,6 +77,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('sasaran-unit/{sasaranUnit}/dokumen/{dokumenId}/download', [SasaranUnitController::class, 'downloadDokumen'])->name('sasaran-unit.download-dokumen');
 });
 
+Route::middleware(['auth'])->group(function () {
+    Route::get('/user/operator', [UserManageController::class, 'operatorIndex'])->name('user.operator.index');
+    Route::get('/user/operator/create', [UserManageController::class, 'createOperator'])->name('user.operator.create');
+    Route::post('/user/operator', [UserManageController::class, 'storeOperator'])->name('user.operator.store');
+    Route::get('/user/operator/{user}/edit', [UserManageController::class, 'editOperator'])->name('user.operator.edit');
+    Route::put('/user/operator/{user}', [UserManageController::class, 'updateOperator'])->name('user.operator.update');
+    Route::delete('/user/operator/{user}', [UserManageController::class, 'destroyOperator'])->name('user.operator.destroy');
+});
+
 Route::resource('referensi', ReferensiController::class);
 
 require __DIR__.'/settings.php';

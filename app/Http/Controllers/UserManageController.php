@@ -47,7 +47,19 @@ class UserManageController extends Controller
         ]);
     }
 
+    public function createOperator()
+    {
+        $authUser = Auth::user();
+        if (!$authUser || !$authUser->hasRole('admin')) {
+            abort(403);
+        }
 
+        // Kirim hanya role operator untuk pilihan
+        return Inertia::render('user/operator-form', [
+            'allRoles' => ['operator'],
+            'user' => null,
+        ]);
+    }
 
     public function create()
     {
@@ -58,6 +70,106 @@ class UserManageController extends Controller
         return Inertia::render('user/form', [
             'allRoles' => Role::all()->pluck('name'), // Kirim semua role yang ada
         ]);
+    }
+
+    public function editOperator(User $user)
+    {
+        $authUser = Auth::user();
+        if (!$authUser || !$authUser->hasRole('admin')) {
+            abort(403);
+        }
+        // Pastikan hanya bisa edit operator di unit yang sama
+        if ($user->unit_id !== $authUser->unit_id || !$user->hasRole('operator')) {
+            abort(403);
+        }
+
+        $user->load('roles');
+        $userData = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'unit_id' => $user->unit_id,
+            'unit' => $user->unit,
+            'kode_unit' => $user->kode_unit,
+            'roles' => $user->roles->pluck('name')->toArray(),
+        ];
+
+        return Inertia::render('user/operator-form', [
+            'user' => $userData,
+            'allRoles' => ['operator'], // Hanya role operator
+        ]);
+    }
+
+    public function updateOperator(Request $request, User $user)
+    {
+        $authUser = Auth::user();
+        if (!$authUser || !$authUser->hasRole('admin')) {
+            abort(403);
+        }
+        if ($user->unit_id !== $authUser->unit_id || !$user->hasRole('operator')) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'password' => 'nullable|string|min:8',
+        ]);
+
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        if ($validated['password']) {
+            $user->password = Hash::make($validated['password']);
+        }
+        $user->save();
+
+        // Pastikan role tetap operator
+        $roleId = \App\Models\Role::where('name', 'operator')->first()?->id;
+        if ($roleId) {
+            $user->roles()->sync([$roleId]);
+        }
+
+        return redirect()->route('user.operator.index')->with('success', 'User operator berhasil diperbarui.');
+    }
+
+    public function storeOperator(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user || !$user->hasRole('admin')) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8',
+        ]);
+
+        // Set unit dan role operator
+        $validated['unit_id'] = $user->unit_id;
+        $validated['roles'] = json_encode(['operator']);
+
+        User::create($validated);
+
+        return redirect()->route('user.operator.index')->with('success', 'User operator berhasil ditambahkan.');
+    }
+
+    public function destroyOperator(User $user)
+    {
+        $authUser = Auth::user();
+        if (!$authUser || !$authUser->hasRole('admin')) {
+            abort(403);
+        }
+        if ($user->unit_id !== $authUser->unit_id || !$user->hasRole('operator')) {
+            abort(403);
+        }
+        if ($authUser->id === $user->id) {
+            return redirect()->route('user.operator.index')->with('error', 'Anda tidak bisa menghapus diri sendiri.');
+        }
+
+        $user->delete();
+
+        return redirect()->route('user.operator.index')->with('success', 'User operator berhasil dihapus.');
     }
 
     // Method untuk menyimpan data
@@ -88,7 +200,7 @@ class UserManageController extends Controller
 
         // Ambil ID dari nama role (single role)
         $roleId = Role::where('name', $validated['role'])->first()?->id;
-        
+
         if ($roleId) {
             // Pasang role ke user
             $user->roles()->sync([$roleId]);
@@ -105,7 +217,7 @@ class UserManageController extends Controller
 
         // Muat role yang dimiliki user ini
         $user->load('roles');
-        
+
         // Format data user untuk frontend
         $userData = [
             'id' => $user->id,
@@ -145,7 +257,7 @@ class UserManageController extends Controller
         $user->unit_id = $validated['unit_id'];
         $user->unit = $request->input('unit');
         $user->kode_unit = $request->input('kode_unit');
-        
+
         if ($validated['password']) {
             $user->password = Hash::make($validated['password']);
         }
@@ -153,7 +265,7 @@ class UserManageController extends Controller
 
         // Update role (single role)
         $roleId = Role::where('name', $validated['role'])->first()?->id;
-        
+
         if ($roleId) {
             $user->roles()->sync([$roleId]);
         }
@@ -177,9 +289,35 @@ class UserManageController extends Controller
         return Redirect::route('user.manage.index')->with('success', 'User berhasil dihapus.');
     }
 
+    public function operatorIndex()
+    {
+        $user = Auth::user();
+
+        // Hanya admin yang bisa akses
+        if (!$user || !$user->hasRole('admin')) {
+            abort(403);
+        }
+
+        // Ambil user operator di unit yang sama menggunakan relasi roles
+        $users = User::whereHas('roles', function ($q) {
+            $q->where('name', 'operator');
+        })
+            ->where('unit_id', $user->unit_id)
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'unit_id' => $user->unit_id,
+                    'unit' => $user->unit,
+                    'kode_unit' => $user->kode_unit,
+                    'roles' => $user->roles->pluck('name')->toArray(),
+                ];
+            });
+
+        return Inertia::render('user/operator', [
+            'users' => $users,
+        ]);
+    }
 }
-
-
-    
-
-

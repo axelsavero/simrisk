@@ -17,6 +17,7 @@ import {
   User,
   Target,
   ListChecks,
+  UserCog2Icon,
 } from 'lucide-react';
 import AppLogo from './app-logo';
 import React, { useState } from 'react';
@@ -60,6 +61,12 @@ export function AppSidebar() {
       title: 'Sasaran Unit',
       href: '/sasaran-unit',
       icon: Target,
+      role: ['admin'],
+    },
+    {
+      title: 'User Operator',
+      href: '/user/operator',
+      icon: UserCog2Icon,
       role: ['admin'],
     },
     {
