@@ -8,7 +8,7 @@ use App\Models\DampakKualitatif;
 use App\Models\PenangananRisiko;
 use App\Models\Mitigasi;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder; 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,11 +16,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class IdentifyRisk extends Model
 {
-    use HasFactory, SoftDeletes; 
+    use HasFactory, SoftDeletes;
 
     // Status constants
     const STATUS_DRAFT = 'draft';
-    const STATUS_SUBMITTED = 'submitted'; 
+    const STATUS_SUBMITTED = 'submitted';
     const STATUS_PENDING = 'pending';
     const STATUS_APPROVED = 'approved';
     const STATUS_REJECTED = 'rejected';
@@ -40,14 +40,14 @@ class IdentifyRisk extends Model
         'biaya_penangan',
         'probability',
         'impact',
-        'level', 
-        'validation_status',          
-        'validation_processed_by',    
-        'validation_processed_at',    
-        'rejection_reason', 
+        'level',
+        'validation_status',
+        'validation_processed_by',
+        'validation_processed_at',
+        'rejection_reason',
         'bukti_files',
         'unit_kerja',
-        'kategori_risiko', 
+        'kategori_risiko',
         'tahun',
         'probability_residual',
         'impact_residual',
@@ -57,7 +57,7 @@ class IdentifyRisk extends Model
         'rencana_mitigasi',
         'target_mitigasi',
         'created_by',
-        'user_id',  
+        'user_id',
     ];
 
     protected $casts = [
@@ -74,7 +74,7 @@ class IdentifyRisk extends Model
         'target_mitigasi' => 'date',
         'deleted_at' => 'datetime',
         'biaya_penangan' => 'decimal:2',
-        'bukti_files' => 'array', 
+        'bukti_files' => 'array',
     ];
 
     // RELATIONSHIPS
@@ -114,7 +114,7 @@ class IdentifyRisk extends Model
     }
 
     // SCOPES FOR VALIDATION STATUS
-    
+
     /**
      * Scope untuk risiko draft
      */
@@ -155,7 +155,7 @@ class IdentifyRisk extends Model
     public function scopeInProcess(Builder $query): Builder
     {
         return $query->whereIn('validation_status', [
-            self::STATUS_SUBMITTED, 
+            self::STATUS_SUBMITTED,
             self::STATUS_PENDING,
             self::STATUS_APPROVED,
             self::STATUS_REJECTED
@@ -195,7 +195,7 @@ class IdentifyRisk extends Model
         if ($status === 'pending') {
             return $query->whereIn('validation_status', [self::STATUS_SUBMITTED, self::STATUS_PENDING]);
         }
-        
+
         return $query->where('validation_status', $status);
     }
 
@@ -206,7 +206,7 @@ class IdentifyRisk extends Model
     {
         return $query->select('validation_status')
                      ->selectRaw('
-                         CASE 
+                         CASE
                              WHEN validation_status IN ("submitted", "pending") THEN "pending"
                              ELSE validation_status
                          END as display_status
@@ -263,7 +263,7 @@ class IdentifyRisk extends Model
      * Filter by risk level range
      */
     public function scopeByRiskLevel(Builder $query, string $level): Builder
-    {   
+    {
     return match($level) {
         'high' => $query->where('level', '>=', 17),           // 17-25
         'medium' => $query->whereBetween('level', [9, 16]),   // 9-16
@@ -300,11 +300,11 @@ class IdentifyRisk extends Model
     }
 
     /**
-     * Cek apakah bisa dikirim (hanya draft)
+     * Cek apakah bisa dikirim (draft atau rejected)
      */
     public function canBeSubmitted(): bool
     {
-        return $this->validation_status === self::STATUS_DRAFT;
+        return in_array($this->validation_status, [self::STATUS_DRAFT, self::STATUS_REJECTED]);
     }
 
     /**
@@ -422,10 +422,10 @@ class IdentifyRisk extends Model
     if (!$score) {
         return 'Tidak Diketahui';
     }
-    
+
     return match(true) {
         $score >= 17 => 'Tinggi',        // 17-25 (was >= 20)
-        $score >= 9 => 'Sedang',         // 9-16 (was >= 8) 
+        $score >= 9 => 'Sedang',         // 9-16 (was >= 8)
         $score >= 3 => 'Rendah',         // 3-8 (was >= 4)
         default => 'Sangat Rendah'       // 1-2 (was default)
     };
@@ -439,10 +439,10 @@ class IdentifyRisk extends Model
     public static function getCountByStatus(): array
     {
         $counts = self::selectRaw('
-                CASE 
+                CASE
                     WHEN validation_status IN ("submitted", "pending") THEN "pending"
                     ELSE validation_status
-                END as display_status, 
+                END as display_status,
                 COUNT(*) as count
             ')
             ->groupBy('display_status')
@@ -568,7 +568,7 @@ class IdentifyRisk extends Model
             if ($model->probability_residual && $model->impact_residual) {
                 $model->level_residual = $model->probability_residual * $model->impact_residual;
             }
-            
+
             // Set default validation status
             if (!$model->validation_status) {
                 $model->validation_status = self::STATUS_DRAFT;

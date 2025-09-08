@@ -58,4 +58,37 @@ class SipegProxyController extends Controller
             ], 500);
         }
     }
+
+    public function sinkronUnit()
+    {
+        try {
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Authorization' => 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6ImQ3YmUzOTkxNTczZDIxOWQ4NzdmNjNjNTVjYWY2YjMzNWM4Nzc2N2Nh',
+            ])->withoutVerifying()->get('http://10.255.0.143/apisipeg/api/allunit');
+
+            if ($response->failed()) {
+                return response()->json(['error' => 'Gagal ambil data dari SIPEG'], 500);
+            }
+
+            $units = $response->json();
+            $count = 0;
+            foreach ($units as $unit) {
+                \App\Models\Unit::updateOrCreate(
+                    ['id_unit' => $unit['id_unit'] ?? $unit['unit_id'] ?? null],
+                    [
+                        'nama_unit' => $unit['nama_unit'] ?? $unit['ur_unit'] ?? '',
+                        'jenis_unit' => $unit['jenis_unit'] ?? null,
+                        'level_unit' => $unit['level_unit'] ?? null,
+                        'kode_unit' => $unit['kode_unit'] ?? $unit['id_unit'] ?? null,
+                        // ...tambahkan kolom lain sesuai kebutuhan
+                    ]
+                );
+                $count++;
+            }
+            return response()->json(['message' => "Sinkronisasi unit selesai. Total: $count unit."]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Gagal sinkronisasi unit', 'message' => $e->getMessage()], 500);
+        }
+    }
 }

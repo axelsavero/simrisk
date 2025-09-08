@@ -164,7 +164,7 @@ export default function Index() {
             ? item.validation_status === 'draft' || item.validation_status === 'rejected'
             : item.validation_status === 'draft' || item.validation_status === 'rejected';
     const canShowSubmit = (item: IdentifyRisk) =>
-        auth?.user?.roles?.includes('super-admin') ? item.validation_status === 'draft' : item.validation_status === 'draft';
+        item.validation_status === 'draft' || item.validation_status === 'rejected';
     const getRiskLevelInfo = (probability: number, impact: number) => {
         const risk = probability * impact;
         return risk >= 20

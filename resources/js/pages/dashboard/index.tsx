@@ -253,6 +253,23 @@ export default function Dashboard({ riskMatrixData, mitigasiMatrixData, filterOp
 
                     {isSuperAdmin && (
                         <div className="mb-2 flex flex-col justify-end gap-4 md:flex-row">
+                            {/* Tombol Sinkron Data Unit */}
+                            <button
+                                className="rounded bg-green-700 px-4 py-2 text-white font-semibold hover:bg-green-800 transition"
+                                onClick={async () => {
+                                    if (confirm('Sinkronisasi data unit dari SIPEG?')) {
+                                        try {
+                                            const res = await fetch('/api/sinkron-unit', { method: 'POST', credentials: 'include' });
+                                            const data = await res.json();
+                                            alert(data.message || 'Sinkronisasi selesai');
+                                        } catch (err) {
+                                            alert('Gagal sinkronisasi unit!');
+                                        }
+                                    }
+                                }}
+                            >
+                                Sycn
+                            </button>
                             {apiError && <p className="self-center text-sm text-red-500">{apiError}</p>}
                             <ReactSelect
                                 className="w-full"
