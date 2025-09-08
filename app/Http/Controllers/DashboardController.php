@@ -109,6 +109,10 @@ class DashboardController extends Controller
     private function formatMitigasiMatrixData($unit = null, $kategori = null, $tahun = null)
     {
         $user = Auth::user();
+        if (!$user) {
+            abort(401, 'Unauthenticated');
+        }
+
         $query = Mitigasi::with(['identifyRisk'])
             ->where('validation_status', Mitigasi::VALIDATION_STATUS_APPROVED);
 

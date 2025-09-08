@@ -137,46 +137,30 @@ export default function Dashboard({ riskMatrixData, mitigasiMatrixData, filterOp
     const isSuperAdmin = roles.includes('super-admin');
 
     // Utility function to process API data, adapted from form.tsx
-    const processApiData = (data: any): any[] => {
-        if (Array.isArray(data)) return data;
-        if (data?.data && Array.isArray(data.data)) return data.data;
-        if (data?.result && Array.isArray(data.result)) return data.result;
-        if (data?.units && Array.isArray(data.units)) return data.units;
-        if (typeof data === 'object' && data !== null) {
-            const arr = Object.values(data).find((v) => Array.isArray(v));
-            return arr || [];
-        }
-        return [];
-    };
+    // We no longer need processApiData since we're using a simpler API response structure
 
-    // Function to fetch units from the API, adapted from form.tsx
+    // Function to fetch units from local database
     const fetchUnits = async () => {
         setLoadingUnits(true);
         setApiError('');
         try {
-            const response = await fetch(`http://${window.location.host}/api/sipeg/allunit`);
+            const response = await fetch(`/api/units`);
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: Gagal mengambil data unit.`);
             }
             const data = await response.json();
-            const unitsData = processApiData(data);
-
-            if (!unitsData.length) {
-                throw new Error('Tidak ada data unit yang ditemukan dari respons API.');
+            
+            if (!data.success || !data.units || !data.units.length) {
+                throw new Error('Tidak ada data unit yang ditemukan.');
             }
 
-            const transformedUnits: Unit[] = unitsData
-                .filter((apiUnit: any) => {
-                    const name = apiUnit.ur_unit || apiUnit.nama_unit || apiUnit.name || apiUnit.unit_name;
-                    return name && name.trim();
-                })
-                .map((apiUnit: any) => ({
-                    id: apiUnit.id || apiUnit.id_homebase || apiUnit.kode_homebase || apiUnit.kode_unit || apiUnit.unit_id,
-                    name: apiUnit.ur_unit || apiUnit.nama_unit || apiUnit.name || apiUnit.unit_name,
-                }));
-
+            const transformedUnits = data.units.map((unit: { id: number; nama_unit: string }) => ({
+                id: unit.id,
+                name: unit.nama_unit,
+            }));
+            
             setUnits(transformedUnits);
-        } catch (error: any) {
+        } catch (error) {
             setApiError(`❌ Gagal memuat unit: ${error.message}`);
             // Fallback to dummy data in development for UI testing
             if (process.env.NODE_ENV === 'development') {
