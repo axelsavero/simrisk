@@ -14,6 +14,12 @@ return [
     |
     */
 
+    'sipeg' => [
+        'base_url' => env('SIPEG_API_URL', 'http://10.255.0.143/apisipeg/api'),
+        'token' => env('SIPEG_API_TOKEN'),
+        'verify_ssl' => env('SIPEG_VERIFY_SSL', false),
+    ],
+
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],

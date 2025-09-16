@@ -300,8 +300,8 @@ class MitigasiController extends Controller
             $message = 'Mitigasi berhasil dibuat.';
         }
 
-        return to_route('mitigasi.show', $mitigasi)
-                 ->with('success', $message);
+        return redirect()->route('mitigasi.show', $mitigasi)
+                        ->with('success', 'Mitigasi berhasil dibuat.');
     }
 
     /**

@@ -68,8 +68,12 @@ class SasaranUnitController extends Controller
 
 		// LOGIKA TAMBAHAN: pastikan unit sudah ada di tabel unit
 		Unit::firstOrCreate(
-			['id_unit' => $user->unit_id],
-			['nama_unit' => $user->unit]
+			[
+				'id_unit' => $user->unit_id
+			],
+			[
+				'nama_unit' => $user->unit
+			]
 		);
 
 		$payload = array_merge($validated, [

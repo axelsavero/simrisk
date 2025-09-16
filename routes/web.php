@@ -27,9 +27,9 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/api/risk/{id}/detail', [DashboardController::class, 'getRiskDetail'])->name('risk.detail');
+    Route::post('/dashboard/export', [DashboardController::class, 'exportDashboard'])->name('dashboard.export');
 
     Route::resource('identify-risk', IdentifyRiskController::class);
 
@@ -60,9 +60,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('sasaran-univ/{sasaranUniv}/dokumen/{dokumenId}/download', [SasaranUnivController::class, 'downloadDokumen'])->name('sasaran-univ.download-dokumen');
 });
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-Route::get('/api/risk/{id}/detail', [DashboardController::class, 'getRiskDetail'])->name('risk.detail');
-Route::post('/dashboard/export', [DashboardController::class, 'exportDashboard'])->name('dashboard.export');
+
 
 Route::prefix('laporan')->name('laporan.')->group(function () {
     Route::get('/', [LaporanController::class, 'index'])->name('index');

@@ -1,7 +1,18 @@
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, IdentifyRisk } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { ArrowLeft, Calendar, DollarSign, FileText, Save, Target, Upload, User, X } from 'lucide-react';
+import {
+    ArrowLeft,
+    Save,
+    Upload,
+    X,
+    Calendar,
+    DollarSign,
+    User,
+    FileText,
+    Target,
+    AlertCircle
+} from 'lucide-react';
 import { useState } from 'react';
 import Swal from 'sweetalert2';
 
@@ -77,8 +88,8 @@ export default function Create() {
         progress_percentage: mitigasi?.progress_percentage || 0,
         catatan_progress: mitigasi?.catatan_progress || '',
         bukti_implementasi: [],
-        evaluasi_efektivitas: mitigasi?.evaluasi_efektivitas || '',
-        rekomendasi_lanjutan: mitigasi?.rekomendasi_lanjutan || '',
+        evaluasi_efektivitas: '',
+        rekomendasi_lanjutan: ''
     });
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,15 +154,15 @@ export default function Create() {
     const currentBreadcrumbs = getBreadcrumbs(isEdit);
 
     return (
-        <AppLayout breadcrumbs={currentBreadcrumbs}>
-            <Head title={mitigasi ? 'Edit Mitigasi' : 'Tambah Mitigasi'} />
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title="Tambah Mitigasi" />
 
-            <div className="min-h-screen w-full bg-gray-50 p-6">
+            <div className="w-full min-h-screen bg-gray-50 p-6">
                 {/* Header */}
                 <div className="mb-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">{mitigasi ? 'Edit Mitigasi' : 'Tambah Mitigasi Baru'}</h1>
+                            <h1 className="text-2xl font-bold text-gray-900">Tambah Mitigasi Baru</h1>
                             <p className="mt-1 text-sm text-gray-600">
                                 {mitigasi
                                     ? 'Ubah rencana mitigasi yang sudah ada'
@@ -172,9 +183,9 @@ export default function Create() {
                 <form onSubmit={handleSubmit} className="space-y-6 rounded-lg bg-white p-6 shadow">
                     {/* Basic Information */}
                     <div>
-                        <h2 className="mb-4 text-lg font-medium text-gray-900">Informasi Dasar</h2>
+                        <h2 className="text-lg font-medium text-gray-900 mb-4">Informasi Dasar</h2>
 
-                        <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
                             {/* Identify Risk */}
                             <div className="md:col-span-2 lg:col-span-3">
                                 <label className="mb-1 block text-sm font-medium text-gray-700">
@@ -318,9 +329,9 @@ export default function Create() {
 
                     {/* Status and Progress */}
                     <div>
-                        <h2 className="mb-4 text-lg font-medium text-gray-900">Status dan Progress</h2>
+                        <h2 className="text-lg font-medium text-gray-900 mb-4">Status dan Progress</h2>
 
-                        <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
                             {/* Status Mitigasi */}
                             <div>
                                 <label className="mb-1 block text-sm font-medium text-gray-700">Status Mitigasi</label>
@@ -379,9 +390,9 @@ export default function Create() {
 
                     {/* Files and Documentation */}
                     <div>
-                        <h2 className="mb-4 text-lg font-medium text-gray-900">Dokumentasi</h2>
+                        <h2 className="text-lg font-medium text-gray-900 mb-4">Dokumentasi</h2>
 
-                        <div className="w-full space-y-6">
+                        <div className="space-y-6 w-full">
                             {/* Bukti Implementasi */}
                             <div>
                                 <label className="mb-1 block text-sm font-medium text-gray-700">Bukti Implementasi</label>
@@ -432,7 +443,9 @@ export default function Create() {
                                     </div>
                                 )}
 
-                                {errors.bukti_implementasi && <p className="mt-1 text-sm text-red-600">{errors.bukti_implementasi}</p>}
+                                {errors.bukti_implementasi && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.bukti_implementasi}</p>
+                                )}
                             </div>
 
                             {/* Evaluasi Efektivitas */}
