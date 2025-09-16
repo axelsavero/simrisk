@@ -133,7 +133,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
             biaya_penangan: data.biaya_penangan ? parseFloat(data.biaya_penangan) : null,
         };
 
-        if (identifyRisk) {
+        if (identifyRisk && identifyRisk.id) {
             put(route('identify-risk.update', identifyRisk.id), submitData, {
                 forceFormData: true,
             });
@@ -234,7 +234,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                         >
                             <option value="">Pilih Kategori</option>
                             <option value="Operasional">Operasional</option>
-                            <option value="Finansial">Finansial</option>
+                            <option value="Finansial">Keuangan</option>
                             <option value="Kepatuhan">Kepatuhan</option>
                             <option value="Strategis">Strategis</option>
                             <option value="Reputasi">Kecurangan</option>

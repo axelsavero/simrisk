@@ -49,7 +49,7 @@ export default function Form({ allRoles, user = null }: FormProps) {
         name: user?.name || '',
         email: user?.email || '',
         password: '',
-        role: 'admin',
+        role: user?.roles?.[0]?.name || 'admin',
     });
 
     // Fungsi utilitas untuk panggilan API
@@ -135,8 +135,8 @@ export default function Form({ allRoles, user = null }: FormProps) {
             const errorMessage = error.message.includes('429')
                 ? `❌ Terlalu banyak permintaan (HTTP 429). Tunggu beberapa saat.`
                 : error.message.includes('404')
-                ? `❌ Endpoint /allunit tidak ditemukan. Silakan hubungi admin API SIPEG.`
-                : `❌ Gagal memuat unit: ${error.message}`;
+                  ? `❌ Endpoint /allunit tidak ditemukan. Silakan hubungi admin API SIPEG.`
+                  : `❌ Gagal memuat unit: ${error.message}`;
             setApiError(errorMessage);
             if (process.env.NODE_ENV === 'development') {
                 setUnits([
@@ -190,26 +190,18 @@ export default function Form({ allRoles, user = null }: FormProps) {
             console.log(`Pegawai by unit (${unitName}) response:`, result.data); // Log untuk debugging
             const pegawaiNames = pegawaiData.map((pegawai: any) => pegawai.nama || pegawai.name || `Pegawai ${pegawai.id}`);
             setAvailableNames(pegawaiNames);
-            setUnits((prevUnits) =>
-                prevUnits.map((unit) =>
-                    unit.name === unitName ? { ...unit, members: pegawaiNames } : unit,
-                ),
-            );
+            setUnits((prevUnits) => prevUnits.map((unit) => (unit.name === unitName ? { ...unit, members: pegawaiNames } : unit)));
         } catch (error: any) {
             const errorMessage = error.message.includes('429')
                 ? `❌ Terlalu banyak permintaan (HTTP 429). Tunggu beberapa saat.`
                 : error.message.includes('404')
-                ? `❌ Endpoint /unit/${unitName} tidak ditemukan. Silakan hubungi admin API SIPEG.`
-                : `❌ Gagal memuat pegawai: ${error.message}`;
+                  ? `❌ Endpoint /unit/${unitName} tidak ditemukan. Silakan hubungi admin API SIPEG.`
+                  : `❌ Gagal memuat pegawai: ${error.message}`;
             setApiError(errorMessage);
             if (process.env.NODE_ENV === 'development') {
                 const dummyNames = ['John Doe', 'Jane Smith'];
                 setAvailableNames(dummyNames);
-                setUnits((prevUnits) =>
-                    prevUnits.map((unit) =>
-                        unit.name === unitName ? { ...unit, members: dummyNames } : unit,
-                    ),
-                );
+                setUnits((prevUnits) => prevUnits.map((unit) => (unit.name === unitName ? { ...unit, members: dummyNames } : unit)));
                 setApiError(`${errorMessage} (Menggunakan data dummy untuk pengembangan)`);
             } else {
                 setAvailableNames([]);
@@ -353,7 +345,11 @@ export default function Form({ allRoles, user = null }: FormProps) {
                         <label className="mb-1 block font-medium">Unit</label>
                         <Select
                             options={units.map((unit) => ({ value: unit.id, label: unit.name }))}
-                            value={units.find((unit) => unit.id.toString() === data.unit_id) ? { value: data.unit_id, label: units.find((unit) => unit.id.toString() === data.unit_id)?.name } : null}
+                            value={
+                                units.find((unit) => unit.id.toString() === data.unit_id)
+                                    ? { value: data.unit_id, label: units.find((unit) => unit.id.toString() === data.unit_id)?.name }
+                                    : null
+                            }
                             onChange={(selected) => {
                                 if (selected) {
                                     setData('unit_id', selected.value.toString());
@@ -411,7 +407,7 @@ export default function Form({ allRoles, user = null }: FormProps) {
                         {errors.password && <div className="text-sm text-red-500">{errors.password}</div>}
                     </div>
 
-                    <div>
+                    {/* <div>
                         <label className="mb-1 block font-medium">Role</label>
                         <input
                             type='text'
@@ -420,6 +416,24 @@ export default function Form({ allRoles, user = null }: FormProps) {
                             disabled
                             className='w-full rounded-md border border-gray-300 p-2 bg-gray-100 cursor-not-allowed focus:outline-none' 
                             />
+                    </div> */}
+                    <div>
+                                                <label className="mb-1 block font-medium">Role</label>                       {' '}
+                        <select
+                            value={data.role}
+                            onChange={(e) => setData('role', e.target.value)}
+                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            disabled={isThrottled}
+                        >
+                                                        <option value="">-- Pilih Role --</option>                           {' '}
+                            {allRoles.map((role, idx) => (
+                                <option key={idx} value={role}>
+                                                                           {role}                               {' '}
+                                </option>
+                            ))}
+                                                   {' '}
+                        </select>
+                                                {errors.role && <div className="text-sm text-red-500">{errors.role}</div>}                   {' '}
                     </div>
 
                     <div className="mt-6 flex justify-between">

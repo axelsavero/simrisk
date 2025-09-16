@@ -166,10 +166,10 @@ export default function Index({ sasaranUnits, flash }: IndexProps) {
                                                         {item.kategori}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 text-sm text-gray-900 border border-black">{item.nama_dokumen || '-'}</td>
-                                                <td className="px-6 py-4 text-sm text-gray-900 border border-black">{item.nomor_dokumen || '-'}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-900 border border-black">{item.nama_dokumen}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-900 border border-black">{item.nomor_dokumen}</td>
                                                 <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900 border border-black">
-                                                    {item.tanggal_dokumen ? new Date(item.tanggal_dokumen).toLocaleDateString('id-ID') : '-'}
+                                                    {item.tanggal_dokumen ? new Date(item.tanggal_dokumen).toLocaleDateString('id-ID') : ''}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-blue-600 border border-black">
                                                     {item.file_path ? (

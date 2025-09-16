@@ -1,8 +1,8 @@
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, SasaranUniv } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import React from 'react';
-import { FileText, Hourglass, Lightbulb, Paperclip, Save } from 'lucide-react';
+import { CircleCheck, FileText, Hourglass, Lightbulb, Paperclip, Save, X } from 'lucide-react';
 
 interface FormProps {
     sasaranUnit?: any | null;
@@ -21,6 +21,7 @@ interface FormData {
 }
 
 export default function Form({ sasaranUnit = null, sasaranUnivs = [] }: FormProps) {
+    const { flash } = usePage().props as any;
     const { data, setData, post, processing, errors } = useForm<FormData>({
         id_sasaran_univ: (sasaranUnit as any)?.id_sasaran_univ ?? '',
         kategori: sasaranUnit?.kategori || '',
@@ -82,6 +83,22 @@ export default function Form({ sasaranUnit = null, sasaranUnivs = [] }: FormProp
                 <div className="mb-6 flex items-center justify-between">
                     <h2 className="text-2xl font-semibold">{sasaranUnit ? 'Edit Sasaran Unit' : 'Tambah Sasaran Unit Baru'}</h2>
                 </div>
+                {flash?.success && (
+                    <div className="mb-6 rounded-lg border-l-4 border-green-400 bg-green-50 p-4">
+                        <div className="flex">
+                            <CircleCheck className="text-green-600" />
+                            <p className="ml-3 text-sm text-green-700">{flash.success}</p>
+                        </div>
+                    </div>
+                )}
+                {flash?.error && (
+                    <div className="mb-6 rounded-lg border-l-4 border-red-400 bg-red-50 p-4">
+                        <div className="flex">
+                            <X className="text-red-600" />
+                            <p className="ml-3 text-sm text-red-700">{flash.error}</p>
+                        </div>
+                    </div>
+                )}
 
                 {sasaranUnit && (
                     <div className="mb-4 rounded border border-yellow-300 bg-yellow-100 p-3 text-sm">

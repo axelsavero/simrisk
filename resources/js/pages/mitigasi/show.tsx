@@ -452,7 +452,7 @@ export default function Show() {
                             <h2 className="text-lg font-medium text-gray-900 mb-4">Audit Trail</h2>
 
                             <div className="space-y-4">
-                                <div>
+                                {/* <div>
                                     <label className="block text-sm font-medium text-gray-500">Dibuat oleh</label>
                                     <div className="mt-1 flex items-center">
                                         <User className="w-4 h-4 text-gray-400 mr-2" />
@@ -463,7 +463,7 @@ export default function Show() {
                                     <p className="text-xs text-gray-500 mt-1">
                                         {mitigasi.created_at ? formatDateTime(mitigasi.created_at) : 'N/A'}
                                     </p>
-                                </div>
+                                </div> */}
 
                                 {mitigasi.updated_at && mitigasi.updated_at !== mitigasi.created_at && (
                                     <div>

@@ -26,7 +26,7 @@ class DashboardController extends Controller
             'unitColumn' => null,
             'unitViaUser' => true,
             'userRelation' => 'user',
-        ])->where('is_active', true);
+        ])->where('is_active', true)->where('validation_status', 'approved');
 
         // Apply filters
         $risks = $query->byUnit($unit)
@@ -54,7 +54,7 @@ class DashboardController extends Controller
             'unitColumn' => null,
             'unitViaUser' => true,
             'userRelation' => 'user',
-        ])->where('is_active', true);
+        ])->where('is_active', true)->where('validation_status', 'approved');
     }
 
     private function formatRiskMatrixData($risks)

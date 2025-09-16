@@ -94,22 +94,19 @@ export default function Dashboard({ riskMatrixData, mitigasiMatrixData, filterOp
     const [unit, setUnit] = useState(filters?.unit || '');
     const [kategori, setKategori] = useState(filters?.kategori || '');
     const [tahun, setTahun] = useState(filters?.tahun || '');
-    const [popupData, setPopupData] = useState<
-        | {
-              x: number;
-              y: number;
-              value: number;
-              type: 'sebelum' | 'sesudah';
-              items: Array<
-                  RiskPoint & {
-                      kode_risiko?: string;
-                      nama_risiko?: string;
-                      unit_kerja?: string;
-                  }
-              >;
-          }
-        | null
-    >(null);
+    const [popupData, setPopupData] = useState<{
+        x: number;
+        y: number;
+        value: number;
+        type: 'sebelum' | 'sesudah';
+        items: Array<
+            RiskPoint & {
+                kode_risiko?: string;
+                nama_risiko?: string;
+                unit_kerja?: string;
+            }
+        >;
+    } | null>(null);
 
     // State for managing units fetched from API
     const [units, setUnits] = useState<Unit[]>([]);
@@ -117,13 +114,9 @@ export default function Dashboard({ riskMatrixData, mitigasiMatrixData, filterOp
     const [apiError, setApiError] = useState<string>('');
 
     // Only show validated risks (exclude pending/submitted)
-    const riskPointsSebelum = (riskMatrixData?.riskPointsSebelum || []).filter(
-        (p) => p.validation_status !== 'pending' && p.validation_status !== 'submitted',
-    );
+    const riskPointsSebelum = (riskMatrixData?.riskPointsSebelum || []).filter((p) => p.validation_status === 'approved');
 
-    const riskPointsSesudah = (riskMatrixData?.riskPointsSesudah || []).filter(
-        (p) => p.validation_status !== 'pending' && p.validation_status !== 'submitted',
-    );
+    const riskPointsSesudah = (riskMatrixData?.riskPointsSesudah || []).filter((p) => p.validation_status === 'approved');
 
     const tingkatRisiko = riskMatrixData?.tingkatRisiko || [
         { tingkat: 'Sangat Rendah', inheren: 0, residual: 2, color: 'bg-green-500' },
@@ -284,7 +277,10 @@ export default function Dashboard({ riskMatrixData, mitigasiMatrixData, filterOp
                                         ':hover': { borderColor: '#9ca3af' },
                                     }),
                                 }}
-                                options={(filterOptions?.kategoris?.length ? filterOptions.kategoris : ['Strategis', 'Operasional', 'Keuangan', 'Kepatuhan', 'Kecurangan']).map((k) => ({
+                                options={(filterOptions?.kategoris?.length
+                                    ? filterOptions.kategoris
+                                    : ['Strategis', 'Operasional', 'Keuangan', 'Kepatuhan', 'Kecurangan']
+                                ).map((k) => ({
                                     value: k,
                                     label: k,
                                 }))}
@@ -321,19 +317,13 @@ export default function Dashboard({ riskMatrixData, mitigasiMatrixData, filterOp
                             <h3 className="mb-2 text-center text-lg font-semibold">
                                 Peta Risiko <span className="font-normal">(Sebelum)</span>
                             </h3>
-                            <RiskMatrixTable
-                                riskPoints={riskPointsSebelum}
-                                onCellClick={(x, y, value) => openPopupForCell('sebelum', x, y, value)}
-                            />
+                            <RiskMatrixTable riskPoints={riskPointsSebelum} onCellClick={(x, y, value) => openPopupForCell('sebelum', x, y, value)} />
                         </div>
                         <div className="flex-1 rounded-xl border bg-white p-4">
                             <h3 className="mb-2 text-center text-lg font-semibold">
                                 Peta Risiko <span className="font-normal">(Sesudah)</span>
                             </h3>
-                            <RiskMatrixTable
-                                riskPoints={riskPointsSesudah}
-                                onCellClick={(x, y, value) => openPopupForCell('sesudah', x, y, value)}
-                            />
+                            <RiskMatrixTable riskPoints={riskPointsSesudah} onCellClick={(x, y, value) => openPopupForCell('sesudah', x, y, value)} />
                         </div>
                     </div>
 
@@ -366,21 +356,24 @@ export default function Dashboard({ riskMatrixData, mitigasiMatrixData, filterOp
                         </table>
                     </div>
 
-                    {mitigasiMatrixData && (
-                        <></>
-                    )}
+                    {mitigasiMatrixData && <></>}
 
                     {popupData && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                            <div className="w-full max-w-5xl max-h-[85vh] overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
-                                <h4 className="mb-4 text-xl font-semibold">{popupData.type === 'sebelum' ? 'Detail Risiko (Inheren)' : 'Detail Mitigasi (Residual)'} • Bobot {popupData.value}</h4>
+                            <div className="max-h-[85vh] w-full max-w-5xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+                                <h4 className="mb-4 text-xl font-semibold">
+                                    {popupData.type === 'sebelum' ? 'Detail Risiko (Inheren)' : 'Detail Mitigasi (Residual)'} • Bobot{' '}
+                                    {popupData.value}
+                                </h4>
                                 <table className="w-full border">
                                     <thead>
                                         <tr>
                                             <th className="border px-2 py-1">No</th>
                                             <th className="border px-2 py-1">Kode Risiko</th>
                                             <th className="border px-2 py-1">Unit Kerja</th>
-                                            <th className="border px-2 py-1">{popupData.type === 'sebelum' ? 'Deskripsi Risiko' : 'Judul Mitigasi'}</th>
+                                            <th className="border px-2 py-1">
+                                                {popupData.type === 'sebelum' ? 'Deskripsi Risiko' : 'Judul Mitigasi'}
+                                            </th>
                                             {popupData.type === 'sesudah' && <th className="border px-2 py-1">Strategi</th>}
                                             {popupData.type === 'sesudah' && <th className="border px-2 py-1">Status</th>}
                                             {popupData.type === 'sesudah' && <th className="border px-2 py-1">Progress</th>}
@@ -393,21 +386,35 @@ export default function Dashboard({ riskMatrixData, mitigasiMatrixData, filterOp
                                                     <td className="border px-2 py-1">{idx + 1}</td>
                                                     <td className="border px-2 py-1">{item.kode_risiko || item.label}</td>
                                                     <td className="border px-2 py-1">{item.unit_kerja || '-'}</td>
-                                                    <td className="border px-2 py-1">{popupData.type === 'sebelum' ? (item.nama_risiko || '-') : (item.judul_mitigasi || '-')}</td>
-                                                    {popupData.type === 'sesudah' && <td className="border px-2 py-1 capitalize">{item.strategi_mitigasi}</td>}
-                                                    {popupData.type === 'sesudah' && <td className="border px-2 py-1 capitalize">{item.status_mitigasi}</td>}
-                                                    {popupData.type === 'sesudah' && <td className="border px-2 py-1">{typeof item.progress_percentage === 'number' ? `${item.progress_percentage}%` : '-'}</td>}
+                                                    <td className="border px-2 py-1">
+                                                        {popupData.type === 'sebelum' ? item.nama_risiko || '-' : item.judul_mitigasi || '-'}
+                                                    </td>
+                                                    {popupData.type === 'sesudah' && (
+                                                        <td className="border px-2 py-1 capitalize">{item.strategi_mitigasi}</td>
+                                                    )}
+                                                    {popupData.type === 'sesudah' && (
+                                                        <td className="border px-2 py-1 capitalize">{item.status_mitigasi}</td>
+                                                    )}
+                                                    {popupData.type === 'sesudah' && (
+                                                        <td className="border px-2 py-1">
+                                                            {typeof item.progress_percentage === 'number' ? `${item.progress_percentage}%` : '-'}
+                                                        </td>
+                                                    )}
                                                 </tr>
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan={popupData.type === 'sebelum' ? 4 : 7} className="border px-2 py-4 text-center">Tidak ada data pada sel ini</td>
+                                                <td colSpan={popupData.type === 'sebelum' ? 4 : 7} className="border px-2 py-4 text-center">
+                                                    Tidak ada data pada sel ini
+                                                </td>
                                             </tr>
                                         )}
                                     </tbody>
                                 </table>
                                 <div className="mt-4 flex justify-end">
-                                    <button className="rounded bg-red-500 px-4 py-2 text-white" onClick={closePopup}>Tutup</button>
+                                    <button className="rounded bg-red-500 px-4 py-2 text-white" onClick={closePopup}>
+                                        Tutup
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -431,13 +438,7 @@ type RiskPoint = {
     nama_risiko?: string;
 };
 
-function RiskMatrixTable({
-    riskPoints,
-    onCellClick,
-}: {
-    riskPoints: RiskPoint[];
-    onCellClick: (x: number, y: number, value: number) => void;
-}) {
+function RiskMatrixTable({ riskPoints, onCellClick }: { riskPoints: RiskPoint[]; onCellClick: (x: number, y: number, value: number) => void }) {
     return (
         <div className="w-full overflow-x-hidden">
             <table className="w-full border border-black">
