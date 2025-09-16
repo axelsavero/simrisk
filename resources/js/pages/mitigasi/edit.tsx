@@ -383,7 +383,7 @@ export default function Edit() {
                                         min="0"
                                         max="100"
                                         value={data.progress_percentage}
-                                        onChange={(e) => setData('progress_percentage', parseInt(e.target.value) || 0)}
+                                        onChange={(e) => setData('progress_percentage', parseInt(e.target.value))}
                                         className={`w-full pl-10 pr-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
                                             errors.progress_percentage ? 'border-red-300' : 'border-gray-300'
                                         }`}

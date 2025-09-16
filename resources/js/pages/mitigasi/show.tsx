@@ -81,7 +81,7 @@ export default function Show() {
 
     const [showProgressModal, setShowProgressModal] = useState(false);
     const [progressData, setProgressData] = useState({
-        progress_percentage: mitigasi.progress_percentage || 0,
+        progress_percentage: mitigasi.progress_percentage,
         catatan_progress: mitigasi.catatan_progress || ''
     });
 
@@ -389,7 +389,7 @@ export default function Show() {
                                         <p className="mt-1 text-sm text-gray-900">{mitigasi.identify_risk.description}</p>
                                     </div>
 
-                                    <div className="flex items-center justify-between">
+                                    {/* <div className="flex items-center justify-between">
                                         <span className="text-sm text-gray-500">Lihat detail risiko</span>
                                         <Link
                                             href={`/identifyrisk/${mitigasi.identify_risk.id}`}
@@ -398,7 +398,7 @@ export default function Show() {
                                             <ExternalLink className="w-4 h-4 mr-1" />
                                             Buka Detail
                                         </Link>
-                                    </div>
+                                    </div> */}
                                 </div>
                             ) : (
                                 <p className="text-sm text-gray-500">Data risiko tidak tersedia.</p>
@@ -483,7 +483,7 @@ export default function Show() {
                         </div>
 
                         {/* Quick Actions */}
-                        <div className="bg-white shadow rounded-lg p-6">
+                        {/* <div className="bg-white shadow rounded-lg p-6">
                             <h2 className="text-lg font-medium text-gray-900 mb-4">Aksi Cepat</h2>
 
                             <div className="space-y-3">
@@ -503,7 +503,7 @@ export default function Show() {
                                     Lihat Detail Risiko
                                 </Link>
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
 
@@ -526,7 +526,7 @@ export default function Show() {
                                             value={progressData.progress_percentage}
                                             onChange={(e) => setProgressData(prev => ({
                                                 ...prev,
-                                                progress_percentage: parseInt(e.target.value) || 0
+                                                progress_percentage: parseInt(e.target.value)
                                             }))}
                                             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
                                         />

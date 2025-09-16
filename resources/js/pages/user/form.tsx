@@ -49,7 +49,7 @@ export default function Form({ allRoles, user = null }: FormProps) {
         name: user?.name || '',
         email: user?.email || '',
         password: '',
-        role: user?.roles?.[0]?.name || '',
+        role: 'admin',
     });
 
     // Fungsi utilitas untuk panggilan API
@@ -413,20 +413,13 @@ export default function Form({ allRoles, user = null }: FormProps) {
 
                     <div>
                         <label className="mb-1 block font-medium">Role</label>
-                        <select
+                        <input
+                            type='text'
                             value={data.role}
-                            onChange={(e) => setData('role', e.target.value)}
-                            className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            disabled={isThrottled}
-                        >
-                            <option value="">-- Pilih Role --</option>
-                            {allRoles.map((role, idx) => (
-                                <option key={idx} value={role}>
-                                    {role}
-                                </option>
-                            ))}
-                        </select>
-                        {errors.role && <div className="text-sm text-red-500">{errors.role}</div>}
+                            readOnly
+                            disabled
+                            className='w-full rounded-md border border-gray-300 p-2 bg-gray-100 cursor-not-allowed focus:outline-none' 
+                            />
                     </div>
 
                     <div className="mt-6 flex justify-between">
