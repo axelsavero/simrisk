@@ -10,7 +10,8 @@ import {
     DollarSign,
     User,
     FileText,
-    Target
+    Target,
+    AlertCircle
 } from 'lucide-react';
 import { useState } from 'react';
 import Swal from 'sweetalert2';
@@ -87,13 +88,13 @@ export default function Create() {
         progress_percentage: mitigasi?.progress_percentage || 0,
         catatan_progress: mitigasi?.catatan_progress || '',
         bukti_implementasi: [],
-        evaluasi_efektivitas: mitigasi?.evaluasi_efektivitas || '',
-        rekomendasi_lanjutan: mitigasi?.rekomendasi_lanjutan || ''
+        evaluasi_efektivitas: '',
+        rekomendasi_lanjutan: ''
     });
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
-        setSelectedFiles(prev => [...prev, ...files]);
+        setSelectedFiles((prev) => [...prev, ...files]);
         setData('bukti_implementasi', [...selectedFiles, ...files]);
     };
 
@@ -122,11 +123,10 @@ export default function Create() {
             onSuccess: () => {
                 Swal.fire({
                     title: 'Berhasil!',
-                    text: 'Mitigasi berhasil dibuat.',
+                    text: isEdit ? 'Mitigasi berhasil diperbarui.' : 'Mitigasi berhasil dibuat.',
                     icon: 'success',
-                    confirmButtonText: 'OK'
-                }).then(() => {
-                    router.visit('/mitigasi');
+                    timer: 1500, // Tampilkan notifikasi sebentar lalu biarkan redirect berjalan
+                    showConfirmButton: false,
                 });
             },
             onError: () => {
@@ -134,9 +134,9 @@ export default function Create() {
                     title: 'Error!',
                     text: 'Gagal membuat mitigasi. Periksa kembali data yang dimasukkan.',
                     icon: 'error',
-                    confirmButtonText: 'OK'
+                    confirmButtonText: 'OK',
                 });
-            }
+            },
         });
     };
 
@@ -154,17 +154,15 @@ export default function Create() {
     const currentBreadcrumbs = getBreadcrumbs(isEdit);
 
     return (
-        <AppLayout breadcrumbs={currentBreadcrumbs}>
-            <Head title={mitigasi ? 'Edit Mitigasi' : 'Tambah Mitigasi'} />
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title="Tambah Mitigasi" />
 
             <div className="w-full min-h-screen bg-gray-50 p-6">
                 {/* Header */}
                 <div className="mb-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">
-                                {mitigasi ? 'Edit Mitigasi' : 'Tambah Mitigasi Baru'}
-                            </h1>
+                            <h1 className="text-2xl font-bold text-gray-900">Tambah Mitigasi Baru</h1>
                             <p className="mt-1 text-sm text-gray-600">
                                 {mitigasi
                                     ? 'Ubah rencana mitigasi yang sudah ada'
@@ -173,16 +171,16 @@ export default function Create() {
                         </div>
                         <Link
                             href="/mitigasi"
-                            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
                         >
-                            <ArrowLeft className="w-4 h-4 mr-2" />
+                            <ArrowLeft className="mr-2 h-4 w-4" />
                             Kembali
                         </Link>
                     </div>
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="space-y-6 bg-white shadow rounded-lg p-6">
+                <form onSubmit={handleSubmit} className="space-y-6 rounded-lg bg-white p-6 shadow">
                     {/* Basic Information */}
                     <div>
                         <h2 className="text-lg font-medium text-gray-900 mb-4">Informasi Dasar</h2>
@@ -190,13 +188,13 @@ export default function Create() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
                             {/* Identify Risk */}
                             <div className="md:col-span-2 lg:col-span-3">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="mb-1 block text-sm font-medium text-gray-700">
                                     Risiko Terkait <span className="text-red-500">*</span>
                                 </label>
                                 <select
                                     value={data.identify_risk_id}
                                     onChange={(e) => setData('identify_risk_id', e.target.value)}
-                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
+                                    className={`w-full rounded-md border px-3 py-2 focus:border-blue-500 focus:ring-blue-500 ${
                                         errors.identify_risk_id ? 'border-red-300' : 'border-gray-300'
                                     }`}
                                     required
@@ -208,139 +206,123 @@ export default function Create() {
                                         </option>
                                     ))}
                                 </select>
-                                {errors.identify_risk_id && (
-                                    <p className="mt-1 text-sm text-red-600">{errors.identify_risk_id}</p>
-                                )}
+                                {errors.identify_risk_id && <p className="mt-1 text-sm text-red-600">{errors.identify_risk_id}</p>}
                             </div>
 
                             {/* Judul Mitigasi */}
                             <div className="md:col-span-2 lg:col-span-3">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="mb-1 block text-sm font-medium text-gray-700">
                                     Judul Mitigasi <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="text"
-                                    value={data.judul_mitigasi}
                                     onChange={(e) => setData('judul_mitigasi', e.target.value)}
-                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
+                                    className={`w-full rounded-md border px-3 py-2 focus:border-blue-500 focus:ring-blue-500 ${
                                         errors.judul_mitigasi ? 'border-red-300' : 'border-gray-300'
                                     }`}
                                     placeholder="Masukkan judul mitigasi"
                                     required
                                 />
-                                {errors.judul_mitigasi && (
-                                    <p className="mt-1 text-sm text-red-600">{errors.judul_mitigasi}</p>
-                                )}
+                                {errors.judul_mitigasi && <p className="mt-1 text-sm text-red-600">{errors.judul_mitigasi}</p>}
                             </div>
 
                             {/* Deskripsi Mitigasi */}
                             <div className="md:col-span-2 lg:col-span-3">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="mb-1 block text-sm font-medium text-gray-700">
                                     Deskripsi Mitigasi <span className="text-red-500">*</span>
                                 </label>
                                 <textarea
-                                    value={data.deskripsi_mitigasi}
                                     onChange={(e) => setData('deskripsi_mitigasi', e.target.value)}
                                     rows={4}
-                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
+                                    className={`w-full rounded-md border px-3 py-2 focus:border-blue-500 focus:ring-blue-500 ${
                                         errors.deskripsi_mitigasi ? 'border-red-300' : 'border-gray-300'
                                     }`}
-                                    placeholder="Jelaskan detail rencana mitigasi"
+                                    placeholder="Silakan isi deskripsi mitigasi untuk risiko ini"
                                     required
                                 />
-                                {errors.deskripsi_mitigasi && (
-                                    <p className="mt-1 text-sm text-red-600">{errors.deskripsi_mitigasi}</p>
-                                )}
+                                {errors.deskripsi_mitigasi && <p className="mt-1 text-sm text-red-600">{errors.deskripsi_mitigasi}</p>}
                             </div>
 
                             {/* Strategi Mitigasi */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="mb-1 block text-sm font-medium text-gray-700">
                                     Strategi Mitigasi <span className="text-red-500">*</span>
                                 </label>
                                 <select
                                     value={data.strategi_mitigasi}
                                     onChange={(e) => setData('strategi_mitigasi', e.target.value)}
-                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
+                                    className={`w-full rounded-md border px-3 py-2 focus:border-blue-500 focus:ring-blue-500 ${
                                         errors.strategi_mitigasi ? 'border-red-300' : 'border-gray-300'
                                     }`}
                                     required
                                 >
                                     <option value="">Pilih Strategi</option>
                                     {Object.entries(strategiOptions).map(([key, label]) => (
-                                        <option key={key} value={key}>{label}</option>
+                                        <option key={key} value={key}>
+                                            {label}
+                                        </option>
                                     ))}
                                 </select>
-                                {errors.strategi_mitigasi && (
-                                    <p className="mt-1 text-sm text-red-600">{errors.strategi_mitigasi}</p>
-                                )}
+                                {errors.strategi_mitigasi && <p className="mt-1 text-sm text-red-600">{errors.strategi_mitigasi}</p>}
                             </div>
 
                             {/* PIC Mitigasi */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="mb-1 block text-sm font-medium text-gray-700">
                                     PIC (Person In Charge) <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
-                                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                    <User className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
                                     <input
                                         type="text"
                                         value={data.pic_mitigasi}
                                         onChange={(e) => setData('pic_mitigasi', e.target.value)}
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                                        className={`w-full rounded-md border py-2 pr-3 pl-10 focus:border-blue-500 focus:ring-blue-500 ${
                                             errors.pic_mitigasi ? 'border-red-300' : 'border-gray-300'
                                         }`}
                                         placeholder="Nama penanggung jawab"
                                         required
                                     />
                                 </div>
-                                {errors.pic_mitigasi && (
-                                    <p className="mt-1 text-sm text-red-600">{errors.pic_mitigasi}</p>
-                                )}
+                                {errors.pic_mitigasi && <p className="mt-1 text-sm text-red-600">{errors.pic_mitigasi}</p>}
                             </div>
 
                             {/* Target Selesai */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="mb-1 block text-sm font-medium text-gray-700">
                                     Target Selesai <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
-                                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                    <Calendar className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
                                     <input
                                         type="date"
                                         value={data.target_selesai}
                                         onChange={(e) => setData('target_selesai', e.target.value)}
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                                        className={`w-full rounded-md border py-2 pr-3 pl-10 focus:border-blue-500 focus:ring-blue-500 ${
                                             errors.target_selesai ? 'border-red-300' : 'border-gray-300'
                                         }`}
                                         required
                                     />
                                 </div>
-                                {errors.target_selesai && (
-                                    <p className="mt-1 text-sm text-red-600">{errors.target_selesai}</p>
-                                )}
+                                {errors.target_selesai && <p className="mt-1 text-sm text-red-600">{errors.target_selesai}</p>}
                             </div>
 
                             {/* Biaya Mitigasi */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Biaya Mitigasi (Opsional)
-                                </label>
+                                <label className="mb-1 block text-sm font-medium text-gray-700">Biaya Mitigasi (Opsional)</label>
                                 <div className="relative">
-                                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                    <DollarSign className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
                                     <input
                                         type="text"
                                         value={data.biaya_mitigasi ? formatCurrency(data.biaya_mitigasi) : ''}
                                         onChange={handleCurrencyChange}
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                                        className={`w-full rounded-md border py-2 pr-3 pl-10 focus:border-blue-500 focus:ring-blue-500 ${
                                             errors.biaya_mitigasi ? 'border-red-300' : 'border-gray-300'
                                         }`}
                                         placeholder="0"
                                     />
                                 </div>
-                                {errors.biaya_mitigasi && (
-                                    <p className="mt-1 text-sm text-red-600">{errors.biaya_mitigasi}</p>
-                                )}
+                                {errors.biaya_mitigasi && <p className="mt-1 text-sm text-red-600">{errors.biaya_mitigasi}</p>}
                             </div>
                         </div>
                     </div>
@@ -352,66 +334,56 @@ export default function Create() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
                             {/* Status Mitigasi */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Status Mitigasi
-                                </label>
+                                <label className="mb-1 block text-sm font-medium text-gray-700">Status Mitigasi</label>
                                 <select
                                     value={data.status_mitigasi}
                                     onChange={(e) => setData('status_mitigasi', e.target.value)}
-                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
+                                    className={`w-full rounded-md border px-3 py-2 focus:border-blue-500 focus:ring-blue-500 ${
                                         errors.status_mitigasi ? 'border-red-300' : 'border-gray-300'
                                     }`}
                                 >
                                     {Object.entries(statusOptions).map(([key, label]) => (
-                                        <option key={key} value={key}>{label}</option>
+                                        <option key={key} value={key}>
+                                            {label}
+                                        </option>
                                     ))}
                                 </select>
-                                {errors.status_mitigasi && (
-                                    <p className="mt-1 text-sm text-red-600">{errors.status_mitigasi}</p>
-                                )}
+                                {errors.status_mitigasi && <p className="mt-1 text-sm text-red-600">{errors.status_mitigasi}</p>}
                             </div>
 
                             {/* Progress Percentage */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Progress (%)
-                                </label>
+                                <label className="mb-1 block text-sm font-medium text-gray-700">Progress (%)</label>
                                 <div className="relative">
-                                    <Target className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                    <Target className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
                                     <input
                                         type="number"
                                         min="0"
                                         max="100"
                                         value={data.progress_percentage}
-                                        onChange={(e) => setData('progress_percentage', parseInt(e.target.value) || 0)}
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                                        onChange={(e) => setData('progress_percentage', parseInt(e.target.value))}
+                                        className={`w-full rounded-md border py-2 pr-3 pl-10 focus:border-blue-500 focus:ring-blue-500 ${
                                             errors.progress_percentage ? 'border-red-300' : 'border-gray-300'
                                         }`}
                                         placeholder="0"
                                     />
                                 </div>
-                                {errors.progress_percentage && (
-                                    <p className="mt-1 text-sm text-red-600">{errors.progress_percentage}</p>
-                                )}
+                                {errors.progress_percentage && <p className="mt-1 text-sm text-red-600">{errors.progress_percentage}</p>}
                             </div>
 
                             {/* Catatan Progress */}
                             <div className="md:col-span-2 lg:col-span-3">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Catatan Progress
-                                </label>
+                                <label className="mb-1 block text-sm font-medium text-gray-700">Catatan Progress</label>
                                 <textarea
                                     value={data.catatan_progress}
                                     onChange={(e) => setData('catatan_progress', e.target.value)}
                                     rows={3}
-                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
+                                    className={`w-full rounded-md border px-3 py-2 focus:border-blue-500 focus:ring-blue-500 ${
                                         errors.catatan_progress ? 'border-red-300' : 'border-gray-300'
                                     }`}
                                     placeholder="Catatan mengenai progress implementasi mitigasi"
                                 />
-                                {errors.catatan_progress && (
-                                    <p className="mt-1 text-sm text-red-600">{errors.catatan_progress}</p>
-                                )}
+                                {errors.catatan_progress && <p className="mt-1 text-sm text-red-600">{errors.catatan_progress}</p>}
                             </div>
                         </div>
                     </div>
@@ -423,14 +395,12 @@ export default function Create() {
                         <div className="space-y-6 w-full">
                             {/* Bukti Implementasi */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Bukti Implementasi
-                                </label>
-                                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md w-full">
-                                    <div className="space-y-1 text-center w-full">
+                                <label className="mb-1 block text-sm font-medium text-gray-700">Bukti Implementasi</label>
+                                <div className="mt-1 flex w-full justify-center rounded-md border-2 border-dashed border-gray-300 px-6 pt-5 pb-6">
+                                    <div className="w-full space-y-1 text-center">
                                         <Upload className="mx-auto h-12 w-12 text-gray-400" />
                                         <div className="flex text-sm text-gray-600">
-                                            <label className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                            <label className="relative cursor-pointer rounded-md bg-white font-medium text-blue-600 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 focus-within:outline-none hover:text-blue-500">
                                                 <span>Upload files</span>
                                                 <input
                                                     type="file"
@@ -442,23 +412,21 @@ export default function Create() {
                                             </label>
                                             <p className="pl-1">atau drag and drop</p>
                                         </div>
-                                        <p className="text-xs text-gray-500">
-                                            PDF, DOC, DOCX, JPG, PNG up to 10MB
-                                        </p>
+                                        <p className="text-xs text-gray-500">PDF, DOC, DOCX, JPG, PNG up to 10MB</p>
                                     </div>
                                 </div>
 
                                 {/* Selected Files */}
                                 {selectedFiles.length > 0 && (
                                     <div className="mt-4">
-                                        <h4 className="text-sm font-medium text-gray-700 mb-2">File yang dipilih:</h4>
+                                        <h4 className="mb-2 text-sm font-medium text-gray-700">File yang dipilih:</h4>
                                         <div className="space-y-2">
                                             {selectedFiles.map((file, index) => (
-                                                <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded w-full">
+                                                <div key={index} className="flex w-full items-center justify-between rounded bg-gray-50 p-2">
                                                     <div className="flex items-center">
-                                                        <FileText className="w-4 h-4 text-gray-400 mr-2" />
+                                                        <FileText className="mr-2 h-4 w-4 text-gray-400" />
                                                         <span className="text-sm text-gray-700">{file.name}</span>
-                                                        <span className="text-xs text-gray-500 ml-2">
+                                                        <span className="ml-2 text-xs text-gray-500">
                                                             ({(file.size / 1024 / 1024).toFixed(2)} MB)
                                                         </span>
                                                     </div>
@@ -467,7 +435,7 @@ export default function Create() {
                                                         onClick={() => removeFile(index)}
                                                         className="text-red-500 hover:text-red-700"
                                                     >
-                                                        <X className="w-4 h-4" />
+                                                        <X className="h-4 w-4" />
                                                     </button>
                                                 </div>
                                             ))}
@@ -482,40 +450,32 @@ export default function Create() {
 
                             {/* Evaluasi Efektivitas */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Evaluasi Efektivitas
-                                </label>
+                                <label className="mb-1 block text-sm font-medium text-gray-700">Evaluasi Efektivitas</label>
                                 <textarea
                                     value={data.evaluasi_efektivitas}
                                     onChange={(e) => setData('evaluasi_efektivitas', e.target.value)}
                                     rows={3}
-                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
+                                    className={`w-full rounded-md border px-3 py-2 focus:border-blue-500 focus:ring-blue-500 ${
                                         errors.evaluasi_efektivitas ? 'border-red-300' : 'border-gray-300'
                                     }`}
                                     placeholder="Evaluasi efektivitas mitigasi yang telah diimplementasikan"
                                 />
-                                {errors.evaluasi_efektivitas && (
-                                    <p className="mt-1 text-sm text-red-600">{errors.evaluasi_efektivitas}</p>
-                                )}
+                                {errors.evaluasi_efektivitas && <p className="mt-1 text-sm text-red-600">{errors.evaluasi_efektivitas}</p>}
                             </div>
 
                             {/* Rekomendasi Lanjutan */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Rekomendasi Lanjutan
-                                </label>
+                                <label className="mb-1 block text-sm font-medium text-gray-700">Rekomendasi Lanjutan</label>
                                 <textarea
                                     value={data.rekomendasi_lanjutan}
                                     onChange={(e) => setData('rekomendasi_lanjutan', e.target.value)}
                                     rows={3}
-                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
+                                    className={`w-full rounded-md border px-3 py-2 focus:border-blue-500 focus:ring-blue-500 ${
                                         errors.rekomendasi_lanjutan ? 'border-red-300' : 'border-gray-300'
                                     }`}
                                     placeholder="Rekomendasi untuk tindak lanjut atau perbaikan mitigasi"
                                 />
-                                {errors.rekomendasi_lanjutan && (
-                                    <p className="mt-1 text-sm text-red-600">{errors.rekomendasi_lanjutan}</p>
-                                )}
+                                {errors.rekomendasi_lanjutan && <p className="mt-1 text-sm text-red-600">{errors.rekomendasi_lanjutan}</p>}
                             </div>
                         </div>
                     </div>
@@ -524,23 +484,23 @@ export default function Create() {
                     <div className="flex items-center justify-end space-x-4">
                         <Link
                             href="/mitigasi"
-                            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
                         >
                             Batal
                         </Link>
                         <button
                             type="submit"
                             disabled={processing}
-                            className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-50"
+                            className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-xs font-semibold tracking-widest text-white uppercase transition duration-150 ease-in-out hover:bg-blue-700 focus:bg-blue-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none active:bg-blue-900 disabled:opacity-50"
                         >
                             {processing ? (
                                 <>
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
                                     Menyimpan...
                                 </>
                             ) : (
                                 <>
-                                    <Save className="w-4 h-4 mr-2" />
+                                    <Save className="mr-2 h-4 w-4" />
                                     Simpan Mitigasi
                                 </>
                             )}

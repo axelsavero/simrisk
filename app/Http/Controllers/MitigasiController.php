@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\MitigationSubmitted;
@@ -300,7 +301,7 @@ class MitigasiController extends Controller
         }
 
         return redirect()->route('mitigasi.show', $mitigasi)
-                        ->with('success', $message);
+                        ->with('success', 'Mitigasi berhasil dibuat.');
     }
 
     /**

@@ -173,7 +173,7 @@ export default function Show() {
                                 </button>
                                 <Link
                                     href={route('identify-risk.index')}
-                                    className="inline-flex items-center gap-2 rounded-md border border-red-300 px-4 py-2 text-red-700 transition-colors hover:bg-red-50"
+                                    className="inline-flex text-white items-center gap-2 rounded-md border border-red-300 px-4 py-2 bg-red-700 transition-colors hover:bg-red-800"
                                 >
                                     Tolak di daftar
                                 </Link>
