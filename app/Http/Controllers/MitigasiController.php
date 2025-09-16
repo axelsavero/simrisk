@@ -12,17 +12,87 @@ use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\MitigationSubmitted; // Asumsi kita buat ini nanti
+use App\Mail\MitigationSubmitted;
 use Illuminate\Support\Facades\Log;
+use App\Models\User;
 
 class MitigasiController extends Controller
 {
+    private const VALIDATION_STATUS_DRAFT = 'draft';
+    private const VALIDATION_STATUS_PENDING = 'pending';
+    private const VALIDATION_STATUS_SUBMITTED = 'submitted';
+    private const VALIDATION_STATUS_APPROVED = 'approved';
+    private const VALIDATION_STATUS_REJECTED = 'rejected';
+
+    /**
+     * Check if user has specific role
+     */
+    protected function hasRole($user, $role): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        // Ensure roles are loaded
+        if (!$user->relationLoaded('roles')) {
+            $user->load('roles');
+        }
+
+        if (!$user->roles) {
+            return false;
+        }
+
+        // If roles is a Collection, convert it to array
+        $roles = $user->roles instanceof \Illuminate\Support\Collection
+            ? $user->roles->pluck('name')->toArray()
+            : (is_array($user->roles) ? $user->roles : []);
+
+        return in_array($role, $roles);
+    }
+
+    /**
+     * Check if user is admin
+     */
+    protected function isAdmin($user): bool
+    {
+        return $this->hasRole($user, 'admin');
+    }
+
+    /**
+     * Check if user is super admin
+     */
+    protected function isSuperAdmin($user): bool
+    {
+        return $this->hasRole($user, 'super-admin');
+    }
+
+    /**
+     * Check if user is owner risk
+     */
+    protected function isOwnerRisk($user): bool
+    {
+        return $this->hasRole($user, 'owner-risk');
+    }
+
+    /**
+     * Check if user is pimpinan
+     */
+    protected function isPimpinan($user): bool
+    {
+        return $this->hasRole($user, 'pimpinan');
+    }
+
     /**
      * Display a listing of mitigasi.
      */
     public function index(Request $request): Response
     {
+        // Ensure user and roles are loaded
         $user = Auth::user();
+        if ($user && !$user->relationLoaded('roles')) {
+            $user->load('roles');
+        }
+
         $query = Mitigasi::with(['identifyRisk', 'identifyRisk.user', 'validationProcessor']);
 
         // Terapkan aturan akses generik
@@ -84,7 +154,6 @@ class MitigasiController extends Controller
             return $mitigasi;
         });
 
-        // Log::debug('Showing ' . $mitigasis->count() . ' mitigations for user ' . $user->id . ' with role ' . $user->getRoleNames()->first());
         // Get filter options
         $statusOptions = [
             'belum_dimulai' => 'Belum Dimulai',
@@ -134,6 +203,10 @@ class MitigasiController extends Controller
     public function create(Request $request): Response
     {
         $user = Auth::user();
+        if ($user && !$user->relationLoaded('roles')) {
+            $user->load('roles');
+        }
+
         $riskId = $request->get('risk_id');
         $identifyRisk = null;
 
@@ -145,10 +218,10 @@ class MitigasiController extends Controller
                                          ->where('validation_status', 'approved');
 
         // Filter berdasarkan role
-        if ($user->hasRole('owner-risk')) {
+        if ($this->isOwnerRisk($user)) {
             // Owner risk hanya bisa membuat mitigasi dari risiko yang mereka buat dan sudah approved
             $identifyRisksQuery->where('user_id', $user->id);
-        } elseif ($user->hasRole('pimpinan')) {
+        } elseif ($this->isPimpinan($user)) {
             // Pimpinan bisa membuat mitigasi dari risiko di unit kerja mereka yang sudah approved
             $identifyRisksQuery->where('unit_kerja', $user->unit_kerja);
         }
@@ -171,61 +244,95 @@ class MitigasiController extends Controller
     {
         $validated = $request->validate(Mitigasi::getValidationRules());
 
-        // Handle file uploads
-        $buktiFiles = [];
-        if ($request->hasFile('bukti_files')) {
-            foreach ($request->file('bukti_files') as $file) {
-                $fileName = time() . '_' . $file->getClientOriginalName();
-                $filePath = $file->storeAs('mitigasi-bukti', $fileName, 'public');
+        if ($request->filled('id')) {
+            // Update existing mitigasi
+            $mitigasi = Mitigasi::findOrFail($request->id);
 
-                $buktiFiles[] = [
-                    'original_name' => $file->getClientOriginalName(),
-                    'file_name' => $fileName,
-                    'file_path' => $filePath,
-                    'file_size' => $file->getSize(),
-                    'file_extension' => strtolower($file->getClientOriginalExtension()),
-                    'uploaded_at' => now()->toISOString(),
-                ];
+            // Handle file uploads - keep existing files
+            $buktiFiles = $mitigasi->bukti_implementasi ?? [];
+            if ($request->hasFile('bukti_files')) {
+                foreach ($request->file('bukti_files') as $file) {
+                    $fileName = time() . '_' . $file->getClientOriginalName();
+                    $filePath = $file->storeAs('mitigasi-bukti', $fileName, 'public');
+
+                    $buktiFiles[] = [
+                        'original_name' => $file->getClientOriginalName(),
+                        'file_name' => $fileName,
+                        'file_path' => $filePath,
+                        'file_size' => $file->getSize(),
+                        'file_extension' => strtolower($file->getClientOriginalExtension()),
+                        'uploaded_at' => now()->toISOString(),
+                    ];
+                }
             }
+
+            $validated['bukti_implementasi'] = $buktiFiles;
+            $validated['updated_by'] = Auth::id();
+
+            $mitigasi->update($validated);
+            $message = 'Mitigasi berhasil diperbarui.';
+        } else {
+            // Create new mitigasi
+            $buktiFiles = [];
+            if ($request->hasFile('bukti_files')) {
+                foreach ($request->file('bukti_files') as $file) {
+                    $fileName = time() . '_' . $file->getClientOriginalName();
+                    $filePath = $file->storeAs('mitigasi-bukti', $fileName, 'public');
+
+                    $buktiFiles[] = [
+                        'original_name' => $file->getClientOriginalName(),
+                        'file_name' => $fileName,
+                        'file_path' => $filePath,
+                        'file_size' => $file->getSize(),
+                        'file_extension' => strtolower($file->getClientOriginalExtension()),
+                        'uploaded_at' => now()->toISOString(),
+                    ];
+                }
+            }
+
+            $validated['bukti_implementasi'] = $buktiFiles;
+            $validated['created_by'] = Auth::id();
+            $validated['updated_by'] = Auth::id();
+            $validated['validation_status'] = Mitigasi::VALIDATION_STATUS_DRAFT;
+
+            $mitigasi = Mitigasi::create($validated);
+            $message = 'Mitigasi berhasil dibuat.';
         }
 
-        $validated['bukti_implementasi'] = $buktiFiles;
-        $validated['created_by'] = Auth::id();
-        $validated['updated_by'] = Auth::id();
-        $validated['validation_status'] = Mitigasi::VALIDATION_STATUS_DRAFT;
-
-        $mitigasi = Mitigasi::create($validated);
-
         return redirect()->route('mitigasi.show', $mitigasi)
-                        ->with('success', 'Mitigasi berhasil dibuat.');
+                        ->with('success', $message);
     }
 
     /**
      * Display the specified mitigasi.
      */
-public function show(Mitigasi $mitigasi): Response
-{
-    $user = Auth::user();
-    if ($user->hasRole('super-admin') || $user->hasRole('pimpinan')) {
-        // Full access
-    } elseif ($this->isOwnerRisk($user)) {
-        if ($mitigasi->identifyRisk->user_id !== $user->id) {
+    public function show(Mitigasi $mitigasi): Response
+    {
+        $user = Auth::user();
+        if ($user && !$user->relationLoaded('roles')) {
+            $user->load('roles');
+        }
+
+        if ($this->isSuperAdmin($user) || $this->isPimpinan($user)) {
+            // Full access
+        } elseif ($this->isOwnerRisk($user)) {
+            if ($mitigasi->identifyRisk->user_id !== $user->id) {
+                abort(403, 'Unauthorized');
+            }
+        } elseif ($this->isAdmin($user)) {
+            if ($mitigasi->identifyRisk->unit_kerja !== $user->unit_kerja) {
+                abort(403, 'Unauthorized');
+            }
+        } else {
             abort(403, 'Unauthorized');
         }
-    } elseif ($this->isAdmin($user)) {
-        if ($mitigasi->identifyRisk->unit_kerja !== $user->unit_kerja) {
-            abort(403, 'Unauthorized');
-        }
-    } else {
-        abort(403, 'Unauthorized');
+
+        $mitigasi->load(['identifyRisk', 'creator', 'updater']);
+
+        return Inertia::render('mitigasi/show', [
+            'mitigasi' => $mitigasi,
+        ]);
     }
-
-    $mitigasi->load(['identifyRisk', 'creator', 'updater']);
-
-    return Inertia::render('mitigasi/show', [
-        'mitigasi' => $mitigasi,
-    ]);
-}
 
     /**
      * Show the form for editing the specified mitigasi.
@@ -291,24 +398,46 @@ public function show(Mitigasi $mitigasi): Response
      */
     public function destroy(Mitigasi $mitigasi): RedirectResponse
     {
-        if (!$mitigasi->canBeDeleted()) {
-            return redirect()->back()
-                           ->with('error', 'Mitigasi tidak dapat dihapus karena sudah dalam proses atau selesai.');
-        }
+        try {
+            $user = Auth::user();
+            if ($user && !$user->relationLoaded('roles')) {
+                $user->load('roles');
+            }
 
-        // Delete associated files
-        if ($mitigasi->bukti_implementasi) {
-            foreach ($mitigasi->bukti_implementasi as $file) {
-                if (Storage::disk('public')->exists($file['file_path'])) {
-                    Storage::disk('public')->delete($file['file_path']);
+            // Check if user has permission to delete
+            if (!$this->canDelete($mitigasi, $user)) {
+                return redirect()->back()
+                    ->with('error', 'Anda tidak memiliki izin untuk menghapus mitigasi ini.');
+            }
+
+            // Check if mitigasi can be deleted based on its status
+            if ($mitigasi->validation_status !== self::VALIDATION_STATUS_DRAFT) {
+                return redirect()->back()
+                    ->with('error', 'Mitigasi tidak dapat dihapus karena sudah dalam proses validasi atau telah disetujui.');
+            }
+
+            // Delete associated files
+            if ($mitigasi->bukti_implementasi) {
+                foreach ($mitigasi->bukti_implementasi as $file) {
+                    if (isset($file['file_path']) && Storage::disk('public')->exists($file['file_path'])) {
+                        Storage::disk('public')->delete($file['file_path']);
+                    }
                 }
             }
+
+            // Delete the mitigasi
+            $mitigasi->delete();
+
+            return redirect()->route('mitigasi.index')
+                ->with('success', 'Mitigasi berhasil dihapus.');
+
+        } catch (\Exception $e) {
+            // Log the error
+            Log::error('Error deleting mitigasi: ' . $e->getMessage());
+
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan saat menghapus mitigasi. Silakan coba lagi.');
         }
-
-        $mitigasi->delete();
-
-        return redirect()->route('mitigasi.index')
-                        ->with('success', 'Mitigasi berhasil dihapus.');
     }
 
     /**
@@ -317,7 +446,12 @@ public function show(Mitigasi $mitigasi): Response
     public function submit(Mitigasi $mitigasi): RedirectResponse
     {
         // Check permission
-        if (!Auth::user()->hasRole('owner-risk') && !Auth::user()->hasRole('super-admin')) {
+        $user = Auth::user();
+        if ($user && !$user->relationLoaded('roles')) {
+            $user->load('roles');
+        }
+
+        if (!$this->isOwnerRisk($user) && !$this->isSuperAdmin($user)) {
             abort(403, 'Anda tidak memiliki izin untuk mengirim mitigasi.');
         }
 
@@ -327,9 +461,10 @@ public function show(Mitigasi $mitigasi): Response
                            ->with('error', 'Mitigasi ini tidak dapat dikirim karena sudah dalam proses validasi.');
         }
 
-        // Update status to pending
+        // Update status to pending and clear rejection reason if exists
         $mitigasi->update([
             'validation_status' => Mitigasi::VALIDATION_STATUS_PENDING,
+            'rejection_reason' => null
         ]);
 
         // Kirim notifikasi ke SuperAdmins
@@ -348,7 +483,12 @@ public function show(Mitigasi $mitigasi): Response
     public function approve(Request $request, Mitigasi $mitigasi): RedirectResponse
     {
         // Check permission - only super-admin can approve
-        if (!Auth::user()->hasRole('super-admin')) {
+        $user = Auth::user();
+        if ($user && !$user->relationLoaded('roles')) {
+            $user->load('roles');
+        }
+
+        if (!$this->isSuperAdmin($user)) {
             abort(403, 'Hanya Super Admin yang dapat menyetujui mitigasi.');
         }
 
@@ -376,7 +516,12 @@ public function show(Mitigasi $mitigasi): Response
     public function reject(Request $request, Mitigasi $mitigasi): RedirectResponse
     {
         // Check permission - only super-admin can reject
-        if (!Auth::user()->hasRole('super-admin')) {
+        $user = Auth::user();
+        if ($user && !$user->relationLoaded('roles')) {
+            $user->load('roles');
+        }
+
+        if (!$this->isSuperAdmin($user)) {
             abort(403, 'Hanya Super Admin yang dapat menolak mitigasi.');
         }
 
@@ -528,6 +673,11 @@ public function show(Mitigasi $mitigasi): Response
      */
     private function canEdit(Mitigasi $mitigasi, $user): bool
     {
+        // Safety check - ensure user exists and has roles loaded
+        if (!$user || !$user->relationLoaded('roles')) {
+            return false;
+        }
+
         if ($user->hasRole('super-admin')) {
             return true;
         }
@@ -545,6 +695,11 @@ public function show(Mitigasi $mitigasi): Response
      */
     private function canDelete(Mitigasi $mitigasi, $user): bool
     {
+        // Safety check - ensure user exists and has roles loaded
+        if (!$user || !$user->relationLoaded('roles')) {
+            return false;
+        }
+
         if ($user->hasRole('super-admin')) {
             return true;
         }
@@ -562,6 +717,11 @@ public function show(Mitigasi $mitigasi): Response
      */
     private function canSubmit(Mitigasi $mitigasi, $user): bool
     {
+        // Safety check - ensure user exists and has roles loaded
+        if (!$user || !$user->relationLoaded('roles')) {
+            return false;
+        }
+
         if ($user->hasRole('owner-risk')) {
             return $mitigasi->identifyRisk->user_id === $user->id &&
                    in_array($mitigasi->validation_status, [Mitigasi::VALIDATION_STATUS_DRAFT, Mitigasi::VALIDATION_STATUS_REJECTED]);
@@ -575,6 +735,11 @@ public function show(Mitigasi $mitigasi): Response
      */
     private function canApprove(Mitigasi $mitigasi, $user): bool
     {
+        // Safety check - ensure user exists and has roles loaded
+        if (!$user || !$user->relationLoaded('roles')) {
+            return false;
+        }
+
         return $user->hasRole('super-admin') &&
                in_array($mitigasi->validation_status, [Mitigasi::VALIDATION_STATUS_SUBMITTED, Mitigasi::VALIDATION_STATUS_PENDING]);
     }
@@ -584,6 +749,11 @@ public function show(Mitigasi $mitigasi): Response
      */
     private function canReject(Mitigasi $mitigasi, $user): bool
     {
+        // Safety check - ensure user exists and has roles loaded
+        if (!$user || !$user->relationLoaded('roles')) {
+            return false;
+        }
+
         return $user->hasRole('super-admin') &&
                in_array($mitigasi->validation_status, [Mitigasi::VALIDATION_STATUS_SUBMITTED, Mitigasi::VALIDATION_STATUS_PENDING]);
     }

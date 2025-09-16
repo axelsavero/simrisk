@@ -1,17 +1,16 @@
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, IdentifyRisk } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { 
-    ArrowLeft, 
-    Save, 
-    Upload, 
-    X, 
-    Calendar, 
-    DollarSign, 
-    User, 
+import {
+    ArrowLeft,
+    Save,
+    Upload,
+    X,
+    Calendar,
+    DollarSign,
+    User,
     FileText,
-    Target,
-    AlertCircle
+    Target
 } from 'lucide-react';
 import { useState } from 'react';
 import Swal from 'sweetalert2';
@@ -21,9 +20,33 @@ interface PageProps {
     selectedRiskId?: string;
     statusOptions: Record<string, string>;
     strategiOptions: Record<string, string>;
+    mitigasi?: {
+        id: number;
+        identify_risk_id: string;
+        judul_mitigasi: string;
+        deskripsi_mitigasi: string;
+        strategi_mitigasi: string;
+        pic_mitigasi: string;
+        target_selesai: string;
+        biaya_mitigasi: string;
+        status_mitigasi: string;
+        progress_percentage: number;
+        catatan_progress: string;
+        bukti_implementasi: Array<{
+            original_name: string;
+            file_name: string;
+            file_path: string;
+            file_size: number;
+            file_extension: string;
+            uploaded_at: string;
+        }>;
+        evaluasi_efektivitas: string;
+        rekomendasi_lanjutan: string;
+    };
 }
 
-interface FormData {
+interface MitigasiFormData {
+    id?: number;
     identify_risk_id: string;
     judul_mitigasi: string;
     deskripsi_mitigasi: string;
@@ -39,30 +62,33 @@ interface FormData {
     rekomendasi_lanjutan: string;
 }
 
-const breadcrumbs: BreadcrumbItem[] = [
+const getBreadcrumbs = (isEdit: boolean): BreadcrumbItem[] => [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Manajemen Mitigasi', href: '/mitigasi' },
-    { title: 'Tambah Mitigasi', href: '/mitigasi/create' },
+    { title: isEdit ? 'Edit Mitigasi' : 'Tambah Mitigasi', href: isEdit ? '#' : '/mitigasi/create' },
 ];
 
 export default function Create() {
     const { identifyRisks, selectedRiskId, statusOptions, strategiOptions } = usePage<PageProps>().props;
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-    
-    const { data, setData, post, processing, errors, reset } = useForm<FormData>({
-        identify_risk_id: selectedRiskId || '',
-        judul_mitigasi: '',
-        deskripsi_mitigasi: '',
-        strategi_mitigasi: '',
-        pic_mitigasi: '',
-        target_selesai: '',
-        biaya_mitigasi: '',
-        status_mitigasi: 'belum_dimulai',
-        progress_percentage: 0,
-        catatan_progress: '',
+
+    const { mitigasi } = usePage<PageProps>().props;
+
+    const { data, setData, processing, errors } = useForm<MitigasiFormData>({
+        id: mitigasi?.id,
+        identify_risk_id: mitigasi?.identify_risk_id || selectedRiskId || '',
+        judul_mitigasi: mitigasi?.judul_mitigasi || '',
+        deskripsi_mitigasi: mitigasi?.deskripsi_mitigasi || '',
+        strategi_mitigasi: mitigasi?.strategi_mitigasi || '',
+        pic_mitigasi: mitigasi?.pic_mitigasi || '',
+        target_selesai: mitigasi?.target_selesai || '',
+        biaya_mitigasi: mitigasi?.biaya_mitigasi || '',
+        status_mitigasi: mitigasi?.status_mitigasi || 'belum_dimulai',
+        progress_percentage: mitigasi?.progress_percentage || 0,
+        catatan_progress: mitigasi?.catatan_progress || '',
         bukti_implementasi: [],
-        evaluasi_efektivitas: '',
-        rekomendasi_lanjutan: ''
+        evaluasi_efektivitas: mitigasi?.evaluasi_efektivitas || '',
+        rekomendasi_lanjutan: mitigasi?.rekomendasi_lanjutan || ''
     });
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,9 +105,9 @@ export default function Create() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         const formData = new FormData();
-        
+
         Object.entries(data).forEach(([key, value]) => {
             if (key === 'bukti_implementasi') {
                 selectedFiles.forEach((file, index) => {
@@ -124,18 +150,25 @@ export default function Create() {
         setData('biaya_mitigasi', value);
     };
 
+    const isEdit = Boolean(mitigasi);
+    const currentBreadcrumbs = getBreadcrumbs(isEdit);
+
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Tambah Mitigasi" />
-            
+        <AppLayout breadcrumbs={currentBreadcrumbs}>
+            <Head title={mitigasi ? 'Edit Mitigasi' : 'Tambah Mitigasi'} />
+
             <div className="w-full min-h-screen bg-gray-50 p-6">
                 {/* Header */}
                 <div className="mb-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Tambah Mitigasi Baru</h1>
+                            <h1 className="text-2xl font-bold text-gray-900">
+                                {mitigasi ? 'Edit Mitigasi' : 'Tambah Mitigasi Baru'}
+                            </h1>
                             <p className="mt-1 text-sm text-gray-600">
-                                Buat rencana mitigasi untuk mengelola risiko yang telah diidentifikasi
+                                {mitigasi
+                                    ? 'Ubah rencana mitigasi yang sudah ada'
+                                    : 'Buat rencana mitigasi untuk mengelola risiko yang telah diidentifikasi'}
                             </p>
                         </div>
                         <Link
@@ -153,7 +186,7 @@ export default function Create() {
                     {/* Basic Information */}
                     <div>
                         <h2 className="text-lg font-medium text-gray-900 mb-4">Informasi Dasar</h2>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
                             {/* Identify Risk */}
                             <div className="md:col-span-2 lg:col-span-3">
@@ -315,7 +348,7 @@ export default function Create() {
                     {/* Status and Progress */}
                     <div>
                         <h2 className="text-lg font-medium text-gray-900 mb-4">Status dan Progress</h2>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
                             {/* Status Mitigasi */}
                             <div>
@@ -386,7 +419,7 @@ export default function Create() {
                     {/* Files and Documentation */}
                     <div>
                         <h2 className="text-lg font-medium text-gray-900 mb-4">Dokumentasi</h2>
-                        
+
                         <div className="space-y-6 w-full">
                             {/* Bukti Implementasi */}
                             <div>
@@ -414,7 +447,7 @@ export default function Create() {
                                         </p>
                                     </div>
                                 </div>
-                                
+
                                 {/* Selected Files */}
                                 {selectedFiles.length > 0 && (
                                     <div className="mt-4">
@@ -441,7 +474,7 @@ export default function Create() {
                                         </div>
                                     </div>
                                 )}
-                                
+
                                 {errors.bukti_implementasi && (
                                     <p className="mt-1 text-sm text-red-600">{errors.bukti_implementasi}</p>
                                 )}
