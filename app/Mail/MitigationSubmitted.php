@@ -7,6 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Mitigasi;
+use Inertia\Ssr\Gateway;
 
 class MitigationSubmitted extends Mailable
 {
@@ -22,9 +23,9 @@ class MitigationSubmitted extends Mailable
     public function build()
     {
         return $this->subject('Mitigasi Baru Menunggu Persetujuan')
-                    ->view('emails.mitigation_submitted')
+                    ->view('emails.mitigation-submitted')
                     ->with([
-                        'mitigasi' => $this->mitigasi,
+                        'mitigasi' => $this->mitigasi
                     ]);
     }
 }

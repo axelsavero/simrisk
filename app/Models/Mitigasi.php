@@ -171,13 +171,13 @@ class Mitigasi extends Model
 
     public function getIsOverdueAttribute(): bool
     {
-        return $this->target_selesai < now() && 
+        return $this->target_selesai < now() &&
                !in_array($this->status_mitigasi, [self::STATUS_SELESAI, self::STATUS_DIBATALKAN]);
     }
 
     public function getIsUpcomingAttribute(): bool
     {
-        return $this->target_selesai >= now() && 
+        return $this->target_selesai >= now() &&
                $this->target_selesai <= now()->addDays(7) &&
                !in_array($this->status_mitigasi, [self::STATUS_SELESAI, self::STATUS_DIBATALKAN]);
     }
@@ -187,7 +187,7 @@ class Mitigasi extends Model
         if ($this->status_mitigasi === self::STATUS_SELESAI) {
             return 0;
         }
-        
+
         return max(0, now()->diffInDays($this->target_selesai, false));
     }
 
@@ -206,7 +206,10 @@ class Mitigasi extends Model
 
     public function canBeSubmitted(): bool
     {
-        return $this->validation_status === self::VALIDATION_STATUS_DRAFT;
+        return in_array($this->validation_status, [
+            self::VALIDATION_STATUS_DRAFT,
+            self::VALIDATION_STATUS_REJECTED
+        ]);
     }
 
     public function isDraft(): bool
@@ -232,7 +235,7 @@ class Mitigasi extends Model
     public function updateProgress(int $percentage, string $catatan = null): bool
     {
         $this->progress_percentage = min(100, max(0, $percentage));
-        
+
         if ($catatan) {
             $this->catatan_progress = $catatan;
         }
@@ -298,7 +301,7 @@ class Mitigasi extends Model
             if (!$model->status_mitigasi) {
                 $model->status_mitigasi = self::STATUS_BELUM_DIMULAI;
             }
-            
+
             if (!$model->progress_percentage) {
                 $model->progress_percentage = 0;
             }
