@@ -5,90 +5,160 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-select';
 
-export default function OperatorForm({ user = null }: { user?: any }) {
-    const auth = (usePage().props as any)?.auth;
-    const currentUser = auth?.user || {};
-    const adminUnitName = currentUser?.unit || '';
+interface Unit {
+    id: number;
+    name: string;
+}
 
-    // ambil role dari user yg login (bisa array objek atau string)
+interface Pegawai {
+    id: number;
+    nama: string;
+    email: string;
+    unit: string;
+    homebase: string;
+    unit_id?: number;
+}
+
+export default function OperatorForm({ user = null }: { user?: any }) {
+    const { props } = usePage();
+    const auth = props.auth || {};
+    const currentUser = auth.user || {};
     const roles = currentUser?.roles || currentUser?.role;
     const isAdmin = Array.isArray(roles)
         ? roles.some((r: any) => (r?.name ? r.name === 'admin' : r === 'admin'))
         : roles === 'admin';
 
-    const [pegawaiUnit, setPegawaiUnit] = useState<any[]>([]);
-    const [loading, setLoading] = useState(false);
+    // Inisialisasi units dari currentUser.unit
+    const [units, setUnits] = useState<Unit[]>(currentUser?.unit_id && currentUser?.unit ? [{ id: currentUser.unit_id, name: currentUser.unit }] : []);
+    const [pegawaiUnit, setPegawaiUnit] = useState<Pegawai[]>([]);
+    const [loading, setLoading] = useState({ units: false, pegawai: false });
     const [apiError, setApiError] = useState<string>('');
 
     const { data, setData, post, put, processing, errors } = useForm({
+        unit_id: user?.unit_id?.toString() || (currentUser?.unit_id?.toString() || ''),
+        unit: user?.unit || currentUser?.unit || '', // Menggunakan unit dari nama_unit
         name: user?.name || '',
         email: user?.email || '',
         password: '',
+        role: 'owner-risk',
     });
 
-    const processApiData = (d: any): any[] => {
-        if (!d) return [];
-        if (Array.isArray(d)) return d;
-        if (d?.data && Array.isArray(d.data)) return d.data;
-        if (d?.result && Array.isArray(d.result)) return d.result;
-        if (d?.units && Array.isArray(d.units)) return d.units;
-        const arr = Object.values(d).find((v) => Array.isArray(v));
-        return arr || [];
+    const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+        const defaultOptions: RequestInit = {
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            },
+            ...options,
+        };
+
+        const url = `/api/sipegproxy${endpoint}`;
+
+        try {
+            const response = await fetch(url, defaultOptions);
+
+            if (!response.ok) {
+                if (response.status === 429) {
+                    throw new Error(`HTTP 429: Terlalu banyak permintaan.`);
+                }
+                if (response.status === 404) {
+                    throw new Error(`HTTP 404: Endpoint ${endpoint} tidak ditemukan. Silakan hubungi admin API SIPEG.`);
+                }
+                throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+            }
+
+            return { success: true, data: await response.json(), url };
+        } catch (error) {
+            console.error(`Gagal memanggil ${url}:`, error);
+            throw error;
+        }
     };
 
-    // hanya lakukan fetch jika user adalah admin
-    useEffect(() => {
-        if (!isAdmin) return;
-        if (!adminUnitName) {
-            setApiError('Unit tidak ditemukan pada profil Anda. Hubungi administrator.');
-            setPegawaiUnit([]);
-            return;
-        }
-
-        setLoading(true);
+    const fetchPegawaiByUnit = async (unitName: string) => {
+        setLoading((prev) => ({ ...prev, pegawai: true }));
         setApiError('');
 
-        const url = `/api/sipegproxy/pegawai?unit_kerja=${encodeURIComponent(adminUnitName)}`;
-        console.debug('Memanggil SIPEG proxy:', url);
+        try {
+            const encodedUnitName = encodeURIComponent(unitName);
+            const result = await apiCall(`/pegawai?unit_kerja=${encodedUnitName}`); // Menggunakan unit_kerja sesuai ekspektasi API
 
-        fetch(url)
-            .then(async (res) => {
-                if (!res.ok) {
-                    const text = await res.text().catch(() => '');
-                    throw new Error(`HTTP ${res.status}: ${text}`);
-                }
-                const json = await res.json();
-                console.debug('Respons SIPEG mentah:', json);
+            const pegawaiData = result.data?.data || result.data || [];
+            console.debug(`Pegawai by unit (${unitName}) response:`, result.data);
 
-                const arr = processApiData(json);
-                console.debug('Array hasil normalisasi SIPEG:', arr);
-
-                const filtered = (arr || []).filter((p: any) => {
-                    const unitKerja = (p.unit_kerja || p.unit || p.nama_unit || p.ur_unit || '').toString();
-                    return unitKerja.trim() && unitKerja.trim() === adminUnitName.trim();
+            const filtered = pegawaiData
+                .filter((p: any) => {
+                    const unitField = (p.unit || p.homebase || '').toString().trim().toLowerCase();
+                    return unitField && unitField === unitName.trim().toLowerCase();
+                })
+                .map((p: any) => {
+                    const unitId = units.find((u) => u.name.toLowerCase() === unitName.toLowerCase())?.id;
+                    return {
+                        id: p.id,
+                        nama: p.nama || p.name || `Pegawai ${p.id}`,
+                        email: p.email || '',
+                        unit: p.unit || p.homebase || '',
+                        homebase: p.homebase || p.unit || '',
+                        unit_id: unitId || null,
+                    };
                 });
 
-                console.debug(`Ditemukan ${filtered.length} pegawai untuk unit "${adminUnitName}"`, filtered);
+            console.debug(`Ditemukan ${filtered.length} pegawai untuk unit "${unitName}"`, filtered);
+            setPegawaiUnit(filtered);
 
-                setPegawaiUnit(filtered);
-
-                if (!filtered.length) {
-                    setApiError(`Tidak ada pegawai ditemukan untuk unit "${adminUnitName}".`);
-                }
-            })
-            .catch((err: any) => {
-                console.error('Fetch pegawai unit admin gagal:', err);
-                setApiError(`Gagal memuat pegawai untuk unit "${adminUnitName}".`);
+            if (!filtered.length) {
+                setApiError(`Tidak ada pegawai ditemukan untuk unit "${unitName}".`);
+            } else {
+                setApiError(`✅ ${filtered.length} pegawai ditemukan untuk unit "${unitName}".`);
+                setTimeout(() => setApiError(''), 5000);
+            }
+        } catch (error: any) {
+            const errorMessage = error.message.includes('429')
+                ? `❌ Terlalu banyak permintaan (HTTP 429).`
+                : error.message.includes('404')
+                ? `❌ Endpoint /pegawai?unit_kerja=${unitName} tidak ditemukan. Silakan hubungi admin API SIPEG.`
+                : `❌ Gagal memuat pegawai: ${error.message}`;
+            setApiError(errorMessage);
+            if (process.env.NODE_ENV === 'development') {
+                const dummyPegawai = [
+                    { id: 1, nama: 'John Doe', email: 'john@example.com', unit: unitName, homebase: unitName, unit_id: 1 },
+                    { id: 2, nama: 'Jane Smith', email: 'jane@example.com', unit: unitName, homebase: unitName, unit_id: 1 },
+                ];
+                setPegawaiUnit(dummyPegawai);
+                setApiError(`${errorMessage} (Menggunakan data dummy untuk pengembangan)`);
+            } else {
                 setPegawaiUnit([]);
-            })
-            .finally(() => setLoading(false));
-    }, [isAdmin, adminUnitName]);
+            }
+        } finally {
+            setLoading((prev) => ({ ...prev, pegawai: false }));
+        }
+    };
 
-    function handleSubmit(e: React.FormEvent) {
+    useEffect(() => {
+        if (!isAdmin) return;
+        if (!currentUser?.unit_id || !currentUser?.unit) {
+            setApiError('Unit dari akun admin tidak ditemukan. Silakan hubungi administrator.');
+        }
+    }, [isAdmin]);
+
+    useEffect(() => {
+        if (!data.unit) {
+            setPegawaiUnit([]);
+            setData('name', '');
+            setData('email', '');
+            return;
+        }
+        fetchPegawaiByUnit(data.unit); // Menggunakan data.unit untuk unit_kerja
+    }, [data.unit]);
+
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!isAdmin) {
-            // safety: jangan submit bila bukan admin
             setApiError('Akses ditolak: hanya admin yang dapat menambahkan operator.');
+            return;
+        }
+        if (!data.unit_id || !data.unit || !data.name || !data.email) {
+            setApiError('Unit, nama unit, nama, dan email harus diisi.');
             return;
         }
         if (user) {
@@ -96,15 +166,14 @@ export default function OperatorForm({ user = null }: { user?: any }) {
         } else {
             post('/user/operator');
         }
-    }
+    };
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
         { title: 'Manajemen Operator', href: '/user/operator' },
-        { title: user ? 'Edit User' : 'Tambah User', href: '#' },
+        { title: user ? 'Edit Operator' : 'Tambah Operator', href: '#' },
     ];
 
-    // jika bukan admin tampilkan pesan akses ditolak
     if (!isAdmin) {
         return (
             <AppLayout breadcrumbs={breadcrumbs}>
@@ -113,7 +182,7 @@ export default function OperatorForm({ user = null }: { user?: any }) {
                     <h2 className="mb-6 text-2xl font-semibold">Akses Ditolak</h2>
                     <div className="rounded-md border p-6 bg-white shadow">
                         <p className="mb-4">Halaman ini hanya dapat diakses oleh pengguna dengan peran <strong>admin</strong>.</p>
-                        <p className="mb-4">Anda login sebagai: {currentUser?.name || '–'} ({Array.isArray(roles) ? roles.map((r:any)=> r?.name || r).join(', ') : roles})</p>
+                        <p className="mb-4">Anda login sebagai: {currentUser?.name || '–'} ({Array.isArray(roles) ? roles.map((r: any) => r?.name || r).join(', ') : roles})</p>
                         <Button asChild variant="outline">
                             <Link href="/dashboard">Kembali ke Dashboard</Link>
                         </Button>
@@ -128,23 +197,81 @@ export default function OperatorForm({ user = null }: { user?: any }) {
             <Head title={user ? 'Edit Operator' : 'Tambah Operator'} />
             <div className="w-full px-6 py-8">
                 <h2 className="mb-6 text-2xl font-semibold">{user ? 'Edit Operator' : 'Tambah Operator'}</h2>
+
+                {apiError && (
+                    <div
+                        className={`mb-4 flex items-center justify-between rounded-md border p-4 ${
+                            apiError.startsWith('✅') ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'
+                        }`}
+                    >
+                        <span className={apiError.startsWith('✅') ? 'text-green-700' : 'text-red-700'}>{apiError}</span>
+                        {!apiError.startsWith('✅') && (
+                            <div className="flex gap-2">
+                                <Button
+                                    type="button"
+                                    variant="link"
+                                    className="h-auto p-0 text-sm text-red-600 underline hover:text-red-800 disabled:cursor-not-allowed disabled:text-gray-400"
+                                    onClick={() => {
+                                        if (data.unit) fetchPegawaiByUnit(data.unit);
+                                    }}
+                                    disabled={loading.pegawai}
+                                >
+                                    {loading.pegawai ? 'Memuat...' : 'Coba Lagi'}
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 <form onSubmit={handleSubmit} className="w-full space-y-6 rounded-xl border-2 border-gray-300 bg-white p-6 shadow-md">
-                    {/* Hanya field Nama, Email, Password — unit diambil dari user yang login */}
+                    <div>
+                        <label className="mb-1 block font-medium">Unit</label>
+                        <Select
+                            options={units.map((unit) => ({ value: unit.id.toString(), label: unit.name }))}
+                            value={
+                                data.unit_id
+                                    ? { value: data.unit_id, label: units.find((unit) => unit.id.toString() === data.unit_id)?.name || '' }
+                                    : null
+                            }
+                            onChange={(selected) => {
+                                if (selected) {
+                                    setData('unit_id', selected.value);
+                                    setData('unit', selected.label);
+                                } else {
+                                    setData('unit_id', '');
+                                    setData('unit', '');
+                                }
+                            }}
+                            isDisabled={true}
+                            placeholder={units.length > 0 ? units[0].name : '-- Unit Tidak Tersedia --'}
+                            classNamePrefix="react-select"
+                        />
+                        {errors.unit_id && <div className="text-sm text-red-500">{errors.unit_id}</div>}
+                    </div>
+
                     <div>
                         <label className="mb-1 block font-medium">Nama Operator</label>
                         <Select
-                            options={pegawaiUnit.map((p: any) => ({
-                                value: (p.nama || p.name || '').toString(),
-                                label: p.nama || p.name || '(tanpa nama)',
+                            options={pegawaiUnit.map((p) => ({
+                                value: p.nama,
+                                label: p.nama,
                                 email: p.email,
+                                unit_id: p.unit_id,
                             }))}
-                            value={data.name ? { value: data.name, label: data.name } : null}
-                            onChange={(selected: any) => {
-                                setData('name', selected?.value || '');
-                                if (selected?.email) setData('email', selected.email);
+                            value={data.name ? { value: data.name, label: data.name, email: data.email, unit_id: data.unit_id } : null}
+                            onChange={(selected) => {
+                                if (selected) {
+                                    setData('name', selected.value || '');
+                                    setData('email', selected.email || '');
+                                    setData('unit_id', selected.unit_id?.toString() || data.unit_id);
+                                } else {
+                                    setData('name', '');
+                                    setData('email', '');
+                                }
                             }}
-                            placeholder={loading ? 'Memuat daftar pegawai...' : apiError ? apiError : '-- Pilih Operator --'}
-                            isDisabled={loading || !adminUnitName}
+                            isLoading={!data.unit || loading.pegawai}
+                            isDisabled={!data.unit || loading.pegawai}
+                            placeholder={loading.pegawai ? 'Memuat daftar pegawai...' : !data.unit ? 'Pilih unit terlebih dahulu' : '-- Pilih Operator --'}
                             classNamePrefix="react-select"
                         />
                         {errors.name && <div className="text-sm text-red-500">{errors.name}</div>}
@@ -172,6 +299,17 @@ export default function OperatorForm({ user = null }: { user?: any }) {
                             placeholder={user ? 'Kosongkan jika tidak ingin mengubah' : ''}
                         />
                         {errors.password && <div className="text-sm text-red-500">{errors.password}</div>}
+                    </div>
+
+                    <div>
+                        <label className="mb-1 block font-medium">Role</label>
+                        <input
+                            type="text"
+                            value={data.role}
+                            readOnly
+                            disabled
+                            className="w-full rounded-md border border-gray-300 p-2 bg-gray-100 cursor-not-allowed focus:outline-none"
+                        />
                     </div>
 
                     <div className="mt-6 flex justify-between">

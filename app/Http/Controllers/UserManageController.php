@@ -3,46 +3,35 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth; // <-- mengecek user yang login
-use App\Models\User; // <-- Import model User untuk mengambil data
-use Illuminate\Support\Facades\Hash; // <-- Import Hash
-use Illuminate\Support\Facades\Redirect; // <-- Import Redirect
-use Inertia\Inertia; // <-- Import Inertia
-use App\Models\Role; // <-- Import Role
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Redirect;
+use Inertia\Inertia;
+use App\Models\Role;
 use App\Models\Unit;
 use Illuminate\Validation\Rule;
 
 class UserManageController extends Controller
 {
-    /**
-     * Menampilkan halaman manajemen user.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index()
     {
-        if (!Auth::user()->hasRole('super-admin')) { // Cek apakah user yang login memiliki role 'super-admin'
-            // Jika tidak, tampilkan pesan error 403 Forbidden
+        if (!Auth::user()->hasRole('super-admin')) {
             abort(403, 'ANDA TIDAK MEMILIKI HAK AKSES UNTUK MELIHAT HALAMAN INI.');
         }
 
-        // Ambil data user beserta relasi rolenya
         $users = User::with('roles')->get()->map(function ($user) {
-            // return sebuah array 
-            // Ambil ID, nama, email, unit, kode_unit dan roles dari user
-
             return [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
                 'unit_id' => $user->unit_id,
-                'unit' => $user->unit,
+                'unit' => $user->unit, // Tetap gunakan 'unit' jika ada di model
                 'kode_unit' => $user->kode_unit,
-                'roles' => $user->roles->pluck('name')->toArray(), // <-- Ambil nama role sebagai array
+                'roles' => $user->roles->pluck('name')->toArray(),
             ];
         });
 
-        // Kirim data yang sudah di-transformasi ke komponen Inertia
         return Inertia::render('user/manage', [
             'users' => $users,
         ]);
@@ -55,9 +44,9 @@ class UserManageController extends Controller
             abort(403);
         }
 
-        // Kirim hanya role operator untuk pilihan
         return Inertia::render('user/operator-form', [
-            'allRoles' => ['operator'],
+            'auth' => ['user' => $authUser], // Pastikan auth dikirim
+            'allRoles' => ['owner-risk'],
             'user' => null,
         ]);
     }
@@ -69,7 +58,7 @@ class UserManageController extends Controller
         }
 
         return Inertia::render('user/form', [
-            'allRoles' => Role::all()->pluck('name'), // Kirim semua role yang ada
+            'allRoles' => Role::all()->pluck('name'),
         ]);
     }
 
@@ -79,8 +68,7 @@ class UserManageController extends Controller
         if (!$authUser || !$authUser->hasRole('admin')) {
             abort(403);
         }
-        // Pastikan hanya bisa edit operator di unit yang sama
-        if ($user->unit_id !== $authUser->unit_id || !$user->hasRole('operator')) {
+        if ($user->unit_id !== $authUser->unit_id || !$user->hasRole('owner-risk')) {
             abort(403);
         }
 
@@ -90,14 +78,15 @@ class UserManageController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'unit_id' => $user->unit_id,
-            'unit' => $user->unit,
+            'unit' => $user->unit, // Ganti unit_kerja dengan unit jika ada
             'kode_unit' => $user->kode_unit,
             'roles' => $user->roles->pluck('name')->toArray(),
         ];
 
         return Inertia::render('user/operator-form', [
+            'auth' => ['user' => $authUser], // Pastikan auth dikirim
             'user' => $userData,
-            'allRoles' => ['operator'], // Hanya role operator
+            'allRoles' => ['owner-risk'],
         ]);
     }
 
@@ -107,27 +96,39 @@ class UserManageController extends Controller
         if (!$authUser || !$authUser->hasRole('admin')) {
             abort(403);
         }
-        if ($user->unit_id !== $authUser->unit_id || !$user->hasRole('operator')) {
+        if ($user->unit_id !== $authUser->unit_id || !$user->hasRole('owner-risk')) {
             abort(403);
         }
 
+        \Log::info('Update operator request: ', $request->all());
+
         $validated = $request->validate([
+            'unit_id' => 'required|integer|exists:unit,id_unit',
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8',
+            'role' => 'required|string|in:owner-risk',
         ]);
 
         $user->name = $validated['name'];
         $user->email = $validated['email'];
+        $user->unit_id = $validated['unit_id'];
+        // Hapus unit_kerja, gunakan unit jika ada, atau abaikan jika tidak relevan
+        if (isset($user->unit)) {
+            $user->unit = Unit::find($validated['unit_id'])->nama_unit ?? $user->unit;
+        }
         if ($validated['password']) {
             $user->password = Hash::make($validated['password']);
         }
         $user->save();
 
-        // Pastikan role tetap operator
-        $roleId = \App\Models\Role::where('name', 'operator')->first()?->id;
+        \Log::info('Updated user unit_id: ' . $user->unit_id);
+
+        $roleId = Role::where('name', 'owner-risk')->first()?->id;
         if ($roleId) {
             $user->roles()->sync([$roleId]);
+        } else {
+            throw new \Exception('Role "owner-risk" tidak ditemukan.');
         }
 
         return redirect()->route('user.operator.index')->with('success', 'User operator berhasil diperbarui.');
@@ -135,22 +136,39 @@ class UserManageController extends Controller
 
     public function storeOperator(Request $request)
     {
-        $user = Auth::user();
-        if (!$user || !$user->hasRole('admin')) {
+        $authUser = Auth::user();
+        if (!$authUser || !$authUser->hasRole('admin')) {
             abort(403);
         }
 
+        \Log::info('Store operator request: ', $request->all());
+
         $validated = $request->validate([
+            'unit_id' => 'required|integer|exists:unit,id_unit',
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
+            'role' => 'required|string|in:owner-risk',
         ]);
 
-        // Set unit dan role operator
-        $validated['unit_id'] = $user->unit_id;
-        $validated['roles'] = json_encode(['operator']);
+        $unitName = Unit::find($validated['unit_id'])->nama_unit ?? 'Unit Tidak Diketahui'; // Ambil nama_unit dari unit_id
 
-        User::create($validated);
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'unit_id' => $validated['unit_id'],
+            'unit' => $unitName, // Ganti unit_kerja dengan nama_unit dari tabel unit
+        ]);
+
+        \Log::info('Created user with unit_id: ' . $user->unit_id);
+
+        $roleId = Role::where('name', 'owner-risk')->first()?->id;
+        if ($roleId) {
+            $user->roles()->sync([$roleId]);
+        } else {
+            throw new \Exception('Role "owner-risk" tidak ditemukan.');
+        }
 
         return redirect()->route('user.operator.index')->with('success', 'User operator berhasil ditambahkan.');
     }
@@ -161,7 +179,7 @@ class UserManageController extends Controller
         if (!$authUser || !$authUser->hasRole('admin')) {
             abort(403);
         }
-        if ($user->unit_id !== $authUser->unit_id || !$user->hasRole('operator')) {
+        if ($user->unit_id !== $authUser->unit_id || !$user->hasRole('owner-risk')) {
             abort(403);
         }
         if ($authUser->id === $user->id) {
@@ -173,41 +191,36 @@ class UserManageController extends Controller
         return redirect()->route('user.operator.index')->with('success', 'User operator berhasil dihapus.');
     }
 
-    // Method untuk menyimpan data
-
     public function store(Request $request)
     {
         if (!Auth::user()->hasRole('super-admin')) {
             abort(403);
         }
 
-        // Validasi data
+        \Log::info('Store request data: ', $request->all());
+
         $validated = $request->validate([
-            'unit_id' => 'required|string',
-            'unit' => 'required|string',
-            'kode_unit' => 'nullable|string',
+            'unit_id' => 'required|integer|exists:unit,id_unit',
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'role' => 'required|string',
+            'role' => 'required|string|in:admin,super-admin',
+        ], [
+            'unit_id.exists' => 'Unit ID yang dipilih tidak valid. Pastikan unit ada di database. Unit ID diterima: :input',
         ]);
 
-        // Simpan unit ke tabel unit jika belum ada
-        Unit::firstOrCreate(
-            ['id_unit' => $validated['unit_id']],
-            ['nama_unit' => $validated['unit'], 'kode_unit' => '']
-        );
+        $unitName = Unit::find($validated['unit_id'])->nama_unit ?? 'Unit Tidak Diketahui'; // Ambil nama_unit
 
-        // Buat user baru
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'unit_id' => $validated['unit_id'],
-            'unit' => $validated['unit'],
+            'unit' => $unitName, // Ganti unit_kerja dengan nama_unit
         ]);
 
-        // Role
+        \Log::info('Created user with unit_id: ' . $user->unit_id);
+
         $roleId = Role::where('name', $validated['role'])->first()?->id;
         if ($roleId) {
             $user->roles()->sync([$roleId]);
@@ -222,57 +235,53 @@ class UserManageController extends Controller
             abort(403);
         }
 
-        // Muat role yang dimiliki user ini
         $user->load('roles');
-
-        // Format data user untuk frontend
         $userData = [
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
             'unit_id' => $user->unit_id,
-            'unit' => $user->unit,
+            'unit' => $user->unit, // Ganti unit_kerja dengan unit jika ada
             'kode_unit' => $user->kode_unit,
             'roles' => $user->roles->pluck('name')->toArray(),
         ];
 
         return Inertia::render('user/form', [
-            'user' => $userData, // Kirim data user yang akan diedit
+            'user' => $userData,
             'allRoles' => Role::all()->pluck('name'),
         ]);
     }
 
-    // Method untuk menyimpan perubahan
     public function update(Request $request, User $user)
     {
         if (!Auth::user()->hasRole('super-admin')) {
             abort(403);
         }
 
-        // Validasi, email harus unik kecuali untuk user ini sendiri
+        \Log::info('Update request data: ', $request->all());
+
         $validated = $request->validate([
-            'unit_id' => 'required|string',
+            'unit_id' => 'required|integer|exists:unit,id_unit',
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'password' => 'nullable|string|min:8', // Password boleh kosong
+            'password' => 'nullable|string|min:8',
             'role' => 'required|string',
         ]);
 
-        // Update data user
+        $unitName = Unit::find($validated['unit_id'])->nama_unit ?? $user->unit; // Ambil nama_unit
+
         $user->name = $validated['name'];
         $user->email = $validated['email'];
         $user->unit_id = $validated['unit_id'];
-        $user->unit = $request->input('unit');
-        $user->kode_unit = $request->input('kode_unit');
-
+        $user->unit = $unitName; // Ganti unit_kerja dengan nama_unit
         if ($validated['password']) {
             $user->password = Hash::make($validated['password']);
         }
         $user->save();
 
-        // Update role (single role)
-        $roleId = Role::where('name', $validated['role'])->first()?->id;
+        \Log::info('Updated user with unit_id: ' . $user->unit_id);
 
+        $roleId = Role::where('name', $validated['role'])->first()?->id;
         if ($roleId) {
             $user->roles()->sync([$roleId]);
         }
@@ -286,7 +295,6 @@ class UserManageController extends Controller
             abort(403);
         }
 
-        // Jangan biarkan user menghapus dirinya sendiri
         if (Auth::id() === $user->id) {
             return Redirect::route('user.manage.index')->with('error', 'Anda tidak bisa menghapus diri sendiri.');
         }
@@ -300,14 +308,12 @@ class UserManageController extends Controller
     {
         $user = Auth::user();
 
-        // Hanya admin yang bisa akses
         if (!$user || !$user->hasRole('admin')) {
             abort(403);
         }
 
-        // Ambil user operator di unit yang sama menggunakan relasi roles
         $users = User::whereHas('roles', function ($q) {
-            $q->where('name', 'operator');
+            $q->where('name', 'owner-risk');
         })
             ->where('unit_id', $user->unit_id)
             ->get()
@@ -317,7 +323,7 @@ class UserManageController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                     'unit_id' => $user->unit_id,
-                    'unit' => $user->unit,
+                    'unit' => $user->unit, // Ganti unit_kerja dengan unit
                     'kode_unit' => $user->kode_unit,
                     'roles' => $user->roles->pluck('name')->toArray(),
                 ];
