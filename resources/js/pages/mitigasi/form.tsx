@@ -153,7 +153,7 @@ export default function Create() {
     const currentBreadcrumbs = getBreadcrumbs(isEdit);
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout breadcrumbs={currentBreadcrumbs}>
             <Head title="Tambah Mitigasi" />
 
             <div className="w-full min-h-screen bg-gray-50 p-6">
