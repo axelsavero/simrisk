@@ -136,6 +136,7 @@ export interface IdentifyRisk {
     id: number;
     id_identify: string;
     is_active: boolean;
+    kategori_risiko?: string;
     risk_category: string;
     identification_date_start: string;
     identification_date_end: string;

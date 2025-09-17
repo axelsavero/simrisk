@@ -128,7 +128,7 @@ export default function Show() {
                     <div className="mb-4 flex items-start justify-between">
                         <div>
                             <h1 className="mb-2 text-3xl font-bold text-gray-900">{identifyRisk.id_identify}</h1>
-                            <p className="text-lg text-gray-600">{identifyRisk.risk_category}</p>
+                            <p className="text-lg text-gray-600">{identifyRisk.kategori_risiko || identifyRisk.risk_category}</p>
                         </div>
                         <div className="flex gap-3">
                             <span className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium ${validationInfo.color}`}>
@@ -162,7 +162,7 @@ export default function Show() {
                             </>
                         )}
                         {/* Super Admin: hanya setuju/tolak di show page jika status submitted/pending (opsional jika ada endpoint) */}
-                        {isSuperAdmin && ['submitted','pending'].includes(identifyRisk.validation_status) && (
+                        {isSuperAdmin && ['submitted', 'pending'].includes(identifyRisk.validation_status) && (
                             <>
                                 <button
                                     onClick={() => router.post(route('identify-risk.approve', identifyRisk.id))}
@@ -173,7 +173,7 @@ export default function Show() {
                                 </button>
                                 <Link
                                     href={route('identify-risk.index')}
-                                    className="inline-flex text-white items-center gap-2 rounded-md border border-red-300 px-4 py-2 bg-red-700 transition-colors hover:bg-red-800"
+                                    className="inline-flex items-center gap-2 rounded-md border border-red-300 bg-red-700 px-4 py-2 text-white transition-colors hover:bg-red-800"
                                 >
                                     Tolak di daftar
                                 </Link>
@@ -352,7 +352,9 @@ export default function Show() {
                 {identifyRisk.bukti_files && identifyRisk.bukti_files.length > 0 && (
                     <div className="mb-6 rounded-lg bg-white p-6 shadow-md">
                         <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
-                            <span><FileText/></span>
+                            <span>
+                                <FileText />
+                            </span>
                             Bukti Risiko ({identifyRisk.bukti_files.length})
                         </h2>
 

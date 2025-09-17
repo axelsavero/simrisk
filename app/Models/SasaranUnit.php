@@ -27,6 +27,11 @@ class SasaranUnit extends Model
         'pic_unit',
         'keterangan',
         'metadata',
+        'kategori',
+        'nama_dokumen',
+        'nomor_dokumen',
+        'tanggal_dokumen',
+        'file_path',
     ];
 
     protected $casts = [

@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('unit', function (Blueprint $table) {
             $table->id('id_unit');
-            $table->string('kode_unit', 20)->unique();
+            $table->string('kode_unit', 20)->nullable();
             $table->string('nama_unit');
             $table->enum('jenis_unit', [
                 'fakultas', 'prodi', 'lembaga', 'biro', 
