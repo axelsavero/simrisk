@@ -166,16 +166,14 @@ export default function AdminForm({ allRoles, user = null }: FormProps) {
 
         setLoading((prev) => ({ ...prev, pegawai: true }));
         setApiError('');
-
+        
+        const encodedUnitName = encodeURIComponent(unitName);
         try {
-            const encodedUnitName = encodeURIComponent(unitName);
             const result = await apiCall(`/pegawai?unit_kerja=${encodedUnitName}`);
 
             const pegawaiData = processApiData(result.data);
             console.log(`Pegawai by unit (${unitName}) response:`, result.data); // Log untuk debugging
-            const pegawaiNames = pegawaiData.map((pegawai: any) => pegawai.nama || pegawai.name || `Pegawai ${pegawai.id}`);
-            setAvailableNames(pegawaiNames);
-            setUnits((prevUnits) => prevUnits.map((unit) => (unit.name === unitName ? { ...unit, members: pegawaiNames } : unit)));
+
             console.debug(`Pegawai by unit (${unitName}) response:`, result.data);
 
             const filtered = pegawaiData
@@ -206,19 +204,14 @@ export default function AdminForm({ allRoles, user = null }: FormProps) {
             }
         } catch (error: any) {
             const errorMessage = error.message.includes('429')
-                ? `❌ Terlalu banyak permintaan (HTTP 429). Tunggu beberapa saat.`
-                : error.message.includes('400')
-                ? `❌ ${error.message}`
-                : error.message.includes('404')
-                  ? `❌ Endpoint /unit/${unitName} tidak ditemukan. Silakan hubungi admin API SIPEG.`
-                  : `❌ Gagal memuat pegawai: ${error.message}`;
-                ? `❌ Endpoint /pegawai?unit_kerja=${unitName} tidak ditemukan. Silakan hubungi admin API SIPEG.`
+            ? `❌ Terlalu banyak permintaan (HTTP 429). Tunggu beberapa saat.`
+            : error.message.includes('400')
+            ? `❌ ${error.message}`
+            : error.message.includes('404')
+                ? `❌ Endpoint /pegawai?unit_kerja=${encodedUnitName} tidak ditemukan. Silakan hubungi admin API SIPEG.`
                 : `❌ Gagal memuat pegawai: ${error.message}`;
             setApiError(errorMessage);
             if (process.env.NODE_ENV === 'development') {
-                const dummyNames = ['John Doe', 'Jane Smith'];
-                setAvailableNames(dummyNames);
-                setUnits((prevUnits) => prevUnits.map((unit) => (unit.name === unitName ? { ...unit, members: dummyNames } : unit)));
                 const dummyPegawai = [
                     { id: 1, nama: 'John Doe', email: 'john@example.com', unit_kerja: unitName, homebase: unitName, unit_id: 1 },
                     { id: 2, nama: 'Jane Smith', email: 'jane@example.com', unit_kerja: unitName, homebase: unitName, unit_id: 1 },
@@ -389,7 +382,7 @@ export default function AdminForm({ allRoles, user = null }: FormProps) {
                         {errors.password && <div className="text-sm text-red-500">{errors.password}</div>}
                     </div>
 
-                    {/* <div>
+                    <div>
                         <label className="mb-1 block font-medium">Role</label>
                         <Select
                             options={allRoles.map((role) => ({ value: role, label: role }))}
@@ -401,7 +394,7 @@ export default function AdminForm({ allRoles, user = null }: FormProps) {
                         />
                         {errors.role && <div className="text-sm text-red-500">{errors.role}</div>}
                     </div>
-
+                    
                     <div className="mt-6 flex justify-between">
                         <Button
                             type="submit"

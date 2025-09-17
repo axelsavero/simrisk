@@ -245,7 +245,7 @@ export default function Dashboard({ riskMatrixData, mitigasiMatrixData, filterOp
                                     }
                                 }}
                             >
-                                Sycn
+                                Sync
                             </button>
                             {apiError && <p className="self-center text-sm text-red-500">{apiError}</p>}
                             <ReactSelect
