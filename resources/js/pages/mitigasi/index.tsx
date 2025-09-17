@@ -14,6 +14,7 @@ import {
     Plus,
     Search,
     Send,
+    Trash2,
     TrendingUp,
     User,
     XCircle,
@@ -504,7 +505,7 @@ export default function Index() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 bg-white">
-                                    {mitigasis.data.map((mitigasi) => (
+                                    {mitigasis.data.map((mitigasi: Mitigasi) => (
                                         <tr key={mitigasi.id} className="border border-black hover:bg-gray-50">
                                             <td className="border border-black px-3 py-4 align-top">
                                                 <div>
@@ -623,7 +624,7 @@ export default function Index() {
                                                                 >
                                                                     <Trash2 className="h-4 w-4" />
                                                                 </button>
-                                                            )} */}
+                                                            )}
                                                             {isSuperAdmin &&
                                                                 mitigasi.validation_status &&
                                                                 ['submitted', 'pending'].includes(mitigasi.validation_status) && (
