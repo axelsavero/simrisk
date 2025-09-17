@@ -567,7 +567,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                     </div>
 
                     {/* Status */}
-                    <div>
+                    {/* <div>
                         <label className="flex items-center gap-2">
                             <input
                                 type="checkbox"
@@ -578,7 +578,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                             <span className="font-medium">Status Aktif</span>
                         </label>
                         <small className="text-gray-500">Centang jika risiko ini masih aktif dipantau</small>
-                    </div>
+                    </div> */}
 
                     {/* Submit Buttons */}
                     <div className="mt-8 flex justify-between border-t pt-4">

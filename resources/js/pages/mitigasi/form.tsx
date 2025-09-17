@@ -10,8 +10,7 @@ import {
     DollarSign,
     User,
     FileText,
-    Target,
-    AlertCircle
+    Target
 } from 'lucide-react';
 import { useState } from 'react';
 import Swal from 'sweetalert2';
@@ -83,7 +82,7 @@ export default function Create() {
         strategi_mitigasi: mitigasi?.strategi_mitigasi || '',
         pic_mitigasi: mitigasi?.pic_mitigasi || '',
         target_selesai: mitigasi?.target_selesai || '',
-        biaya_mitigasi: mitigasi?.biaya_mitigasi || '',
+        biaya_mitigasi: (mitigasi?.biaya_mitigasi || '').split('.')[0],
         status_mitigasi: mitigasi?.status_mitigasi || 'belum_dimulai',
         progress_percentage: mitigasi?.progress_percentage || 0,
         catatan_progress: mitigasi?.catatan_progress || '',
@@ -140,10 +139,10 @@ export default function Create() {
         });
     };
 
-    const formatCurrency = (value: string) => {
-        const number = value.replace(/[^\d]/g, '');
-        return new Intl.NumberFormat('id-ID').format(parseInt(number) || 0);
-    };
+    // const formatCurrency = (value: string) => {
+    //     const number = value.replace(/[^\d]/g, '');
+    //     return new Intl.NumberFormat('id-ID').format(parseInt(number) || 0);
+    // };
 
     const handleCurrencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value.replace(/[^\d]/g, '');
@@ -311,10 +310,10 @@ export default function Create() {
                             <div>
                                 <label className="mb-1 block text-sm font-medium text-gray-700">Biaya Mitigasi (Opsional)</label>
                                 <div className="relative">
-                                    <DollarSign className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+                                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                                     <input
                                         type="text"
-                                        value={data.biaya_mitigasi ? formatCurrency(data.biaya_mitigasi) : ''}
+                                        value={data.biaya_mitigasi}
                                         onChange={handleCurrencyChange}
                                         className={`w-full rounded-md border py-2 pr-3 pl-10 focus:border-blue-500 focus:ring-blue-500 ${
                                             errors.biaya_mitigasi ? 'border-red-300' : 'border-gray-300'

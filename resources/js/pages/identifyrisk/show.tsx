@@ -8,6 +8,7 @@ import {
     ChartColumn,
     CheckCircle2,
     CircleHelp,
+    Cog,
     CornerDownLeft,
     FileText,
     Hourglass,
@@ -72,7 +73,7 @@ export default function Show() {
             case 'approved':
                 return { label: 'Disetujui', color: 'bg-green-100 text-green-800', icon: <CheckCircle2 /> };
             case 'rejected':
-                return { label: 'Ditolak', color: 'bg-red-100 text-red-800', icon: <X /> };
+                return { label: 'Butuh Perbaikan', color: 'bg-red-100 text-red-800', icon: <Cog /> };
             default:
                 return { label: 'Unknown', color: 'bg-gray-100 text-gray-800', icon: <CircleHelp /> };
         }
@@ -175,7 +176,7 @@ export default function Show() {
                                     href={route('identify-risk.index')}
                                     className="inline-flex items-center gap-2 rounded-md border border-red-300 bg-red-700 px-4 py-2 text-white transition-colors hover:bg-red-800"
                                 >
-                                    Tolak di daftar
+                                    Revisi
                                 </Link>
                             </>
                         )}
@@ -442,7 +443,7 @@ export default function Show() {
 
                             {identifyRisk.rejection_reason && (
                                 <div>
-                                    <label className="mb-1 block text-sm font-medium text-gray-700">Alasan Penolakan</label>
+                                    <label className="mb-1 block text-sm font-medium text-gray-700">Alasan Revisi</label>
                                     <div className="rounded-lg border border-red-200 bg-red-50 p-4">
                                         <p className="text-red-800">{identifyRisk.rejection_reason}</p>
                                     </div>

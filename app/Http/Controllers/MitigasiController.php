@@ -96,16 +96,35 @@ class MitigasiController extends Controller
 
         $query = Mitigasi::with(['identifyRisk', 'identifyRisk.user', 'validationProcessor']);
 
+        $query->where(function ($q) use ($user) {
+            $q->where('validation_status', '!=', Mitigasi::VALIDATION_STATUS_DRAFT);
+            
+            if ($this->isOwnerRisk($user)) {
+                $q->orWhere(function ($subQ) use ($user) {
+                    $subQ->where('validation_status', Mitigasi::VALIDATION_STATUS_DRAFT)
+                         ->whereHas('identifyRisk', function ($riskQ) use ($user) {
+                             $riskQ->where('user_id', $user->id);
+                         });
+                });
+            }
+        });
+
         // Terapkan aturan akses generik
-        if ($this->isAdmin($user)) {
+        if ($this->isSuperAdmin($user)) {
+            // Super Admin melihat semua hasil dari aturan visibilitas di atas.
+            // Tidak perlu scope tambahan.
+        } elseif ($this->isAdmin($user)) {
+            // Admin melihat hasil di atas, TAPI dibatasi HANYA untuk unit kerjanya.
             $query->whereHas('identifyRisk', function ($q) use ($user) {
                 $q->where('unit_kerja', $user->unit_kerja);
             });
         } elseif ($this->isOwnerRisk($user)) {
+            // Owner Risk (yang bukan admin/super-admin) HANYA melihat miliknya sendiri.
             $query->whereHas('identifyRisk', function ($q) use ($user) {
                 $q->where('user_id', $user->id);
             });
         }
+
         // Super admin bisa melihat semua mitigasi
 
         // Filter berdasarkan status

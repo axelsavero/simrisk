@@ -18,7 +18,8 @@ import {
     XCircle,
     Pause,
     ExternalLink,
-    Plus
+    Plus,
+    Wallet
 } from 'lucide-react';
 import { useState } from 'react';
 import Swal from 'sweetalert2';
@@ -303,7 +304,7 @@ export default function Show() {
 
                     <div className="bg-white p-6 rounded-lg shadow">
                         <div className="flex items-center">
-                            <DollarSign className="w-5 h-5 text-green-500" />
+                            <Wallet className="w-5 h-5 text-green-500" />
                             <div className="ml-3">
                                 <p className="text-sm font-medium text-gray-500">Biaya</p>
                                 <p className="text-sm font-medium text-gray-900">

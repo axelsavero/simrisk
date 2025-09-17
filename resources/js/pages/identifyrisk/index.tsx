@@ -129,7 +129,7 @@ export default function Index() {
 
     const rejectItem = (item: IdentifyRisk) =>
         Swal.fire({
-            title: 'Tolak Risiko',
+            title: 'Revisi Risiko',
             html: `
                 <div class="text-left max-w-xs">
                     <div class="mb-2"><strong>Kode Risiko</strong>: ${item.id_identify}</div>
@@ -138,18 +138,18 @@ export default function Index() {
                         item.penyebab && Array.isArray(item.penyebab) ? item.penyebab.map((p: any) => p.description).join(', ') : ''
                     }</div>
                     <div class="mb-2"><strong>Alasan</strong>:</div>
-                    <textarea id="swal-reject-reason" class="swal2-textarea w-full min-w-0 max-w-[95%] min-h-[100px] resize-y" placeholder="Tuliskan alasan penolakan..."></textarea>
+                    <textarea id="swal-reject-reason" class="swal2-textarea w-full min-w-0 max-w-[95%] min-h-[100px] resize-y" placeholder="Tuliskan alasan revisi..."></textarea>
                 </div>
             `,
             focusConfirm: false,
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#aaa',
-            confirmButtonText: 'Tolak',
+            confirmButtonText: 'Revisi',
             cancelButtonText: 'Batal',
             preConfirm: () => {
                 const reason = (document.getElementById('swal-reject-reason') as HTMLTextAreaElement)?.value;
-                if (!reason?.trim()) Swal.showValidationMessage('Alasan penolakan harus diisi');
+                if (!reason?.trim()) Swal.showValidationMessage('Alasan revisi harus diisi');
                 return reason;
             },
         }).then(
@@ -437,7 +437,7 @@ export default function Index() {
                                                                                 onClick={() => rejectItem(item)}
                                                                                 className="action-btn rounded bg-red-500 px-2 py-1 text-white hover:bg-red-600"
                                                                             >
-                                                                                <X className="inline" /> Tolak
+                                                                                <X className="inline" /> Revisi
                                                                             </button>
                                                                         )}
                                                                     </>
