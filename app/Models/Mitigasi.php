@@ -44,6 +44,8 @@ class Mitigasi extends Model
         'deleted_at' => 'datetime',
     ];
 
+     protected $appends = ['status_label', 'strategi_label'];
+
     // Status constants
     const STATUS_BELUM_DIMULAI = 'belum_dimulai';
     const STATUS_SEDANG_BERJALAN = 'sedang_berjalan';
@@ -136,19 +138,19 @@ class Mitigasi extends Model
     public function scopeOverdue($query)
     {
         return $query->where('target_selesai', '<', now())
-                    ->whereNotIn('status_mitigasi', [self::STATUS_SELESAI, self::STATUS_DIBATALKAN]);
+            ->whereNotIn('status_mitigasi', [self::STATUS_SELESAI, self::STATUS_DIBATALKAN]);
     }
 
     public function scopeUpcoming($query, $days = 7)
     {
         return $query->whereBetween('target_selesai', [now(), now()->addDays($days)])
-                    ->whereNotIn('status_mitigasi', [self::STATUS_SELESAI, self::STATUS_DIBATALKAN]);
+            ->whereNotIn('status_mitigasi', [self::STATUS_SELESAI, self::STATUS_DIBATALKAN]);
     }
 
     // Accessors
     public function getStatusLabelAttribute(): string
     {
-        return match($this->status_mitigasi) {
+        return match ($this->status_mitigasi) {
             self::STATUS_BELUM_DIMULAI => 'Belum Dimulai',
             self::STATUS_SEDANG_BERJALAN => 'Sedang Berjalan',
             self::STATUS_SELESAI => 'Selesai',
@@ -160,7 +162,7 @@ class Mitigasi extends Model
 
     public function getStrategiLabelAttribute(): string
     {
-        return match($this->strategi_mitigasi) {
+        return match ($this->strategi_mitigasi) {
             self::STRATEGI_AVOID => 'Menghindari (Avoid)',
             self::STRATEGI_REDUCE => 'Mengurangi (Reduce)',
             self::STRATEGI_TRANSFER => 'Mentransfer (Transfer)',
@@ -172,14 +174,14 @@ class Mitigasi extends Model
     public function getIsOverdueAttribute(): bool
     {
         return $this->target_selesai < now() &&
-               !in_array($this->status_mitigasi, [self::STATUS_SELESAI, self::STATUS_DIBATALKAN]);
+            !in_array($this->status_mitigasi, [self::STATUS_SELESAI, self::STATUS_DIBATALKAN]);
     }
 
     public function getIsUpcomingAttribute(): bool
     {
         return $this->target_selesai >= now() &&
-               $this->target_selesai <= now()->addDays(7) &&
-               !in_array($this->status_mitigasi, [self::STATUS_SELESAI, self::STATUS_DIBATALKAN]);
+            $this->target_selesai <= now()->addDays(7) &&
+            !in_array($this->status_mitigasi, [self::STATUS_SELESAI, self::STATUS_DIBATALKAN]);
     }
 
     public function getDaysRemainingAttribute(): int
@@ -195,13 +197,13 @@ class Mitigasi extends Model
     public function canBeEdited(): bool
     {
         return !in_array($this->status_mitigasi, [self::STATUS_SELESAI, self::STATUS_DIBATALKAN]) &&
-               in_array($this->validation_status, [self::VALIDATION_STATUS_DRAFT, self::VALIDATION_STATUS_REJECTED]);
+            in_array($this->validation_status, [self::VALIDATION_STATUS_DRAFT, self::VALIDATION_STATUS_REJECTED]);
     }
 
     public function canBeDeleted(): bool
     {
         return $this->status_mitigasi === self::STATUS_BELUM_DIMULAI &&
-               $this->validation_status === self::VALIDATION_STATUS_DRAFT;
+            $this->validation_status === self::VALIDATION_STATUS_DRAFT;
     }
 
     public function canBeSubmitted(): bool
@@ -256,11 +258,11 @@ class Mitigasi extends Model
     public static function getStatusOptions(): array
     {
         return [
-            self::STATUS_BELUM_DIMULAI => 'Belum Dimulai',
-            self::STATUS_SEDANG_BERJALAN => 'Sedang Berjalan',
-            self::STATUS_SELESAI => 'Selesai',
-            self::STATUS_TERTUNDA => 'Tertunda',
-            self::STATUS_DIBATALKAN => 'Dibatalkan',
+            'belum_dimulai' => 'Belum Dimulai',
+            'sedang_berjalan' => 'Sedang Berjalan',
+            'selesai' => 'Selesai',
+            'tertunda' => 'Tertunda',
+            'dibatalkan' => 'Dibatalkan',
         ];
     }
 
@@ -289,6 +291,16 @@ class Mitigasi extends Model
             'catatan_progress' => 'nullable|string',
             'evaluasi_efektivitas' => 'nullable|string',
             'rekomendasi_lanjutan' => 'nullable|string',
+        ];
+    }
+
+    public static function getValidationStatusOptions(): array
+    {
+        return [
+            self::VALIDATION_STATUS_DRAFT => 'Draft',
+            self::VALIDATION_STATUS_PENDING => 'Menunggu Persetujuan',
+            self::VALIDATION_STATUS_APPROVED => 'Disetujui',
+            self::VALIDATION_STATUS_REJECTED => 'Ditolak',
         ];
     }
 
