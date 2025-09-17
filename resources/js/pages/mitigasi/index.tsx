@@ -11,10 +11,8 @@ import {
     Eye,
     Filter,
     Pause,
-    Plus,
     Search,
     Send,
-    Trash2,
     TrendingUp,
     User,
     XCircle,
@@ -25,7 +23,7 @@ import Swal from 'sweetalert2';
 interface PageProps {
     mitigasis: PaginatedData<Mitigasi>;
     filters: {
-        status?: string;
+        status_mitigasi?: string;
         validation_status?: string;
         strategi_mitigasi?: string;
         identify_risk_id?: string;
@@ -163,13 +161,20 @@ const getValidationStatusLabel = (status: string) => {
 };
 
 export default function Index() {
-    const { mitigasis, filters, statusOptions, strategiOptions, auth }: any = usePage<any>().props;
+    const { mitigasis, filters, statusOptions, strategiOptions, validationStatusOptions, auth }: PageProps = usePage<PageProps>().props;
     const roles: string[] = auth?.user?.roles || [];
     const isSuperAdmin = roles.includes('super-admin');
     const isAdmin = roles.includes('admin');
     const isOwnerRisk = roles.includes('owner-risk');
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const [showFilters, setShowFilters] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Debug statusOptions
+    useEffect(() => {
+        console.log('statusOptions:', statusOptions);
+        console.log('filters:', filters);
+    }, [statusOptions, filters]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -191,6 +196,7 @@ export default function Index() {
     };
 
     const handleFilter = (key: string, value: string) => {
+        setIsLoading(true);
         const newFilters = { ...filters, [key]: value };
         if (!value) {
             delete newFilters[key];
@@ -383,10 +389,11 @@ export default function Index() {
                                 <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
                                 <input
                                     type="text"
-                                    placeholder="Cari mitigasi..."
+                                    placeholder="Cari judul atau deskripsi mitigasi..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="w-full rounded-md border border-gray-300 py-2 pr-4 pl-10 focus:border-[#12745a] focus:ring-[#12745a]"
+                                    disabled={isLoading}
                                 />
                             </div>
                         </form>
@@ -396,9 +403,10 @@ export default function Index() {
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
                                 className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                disabled={isLoading}
                             >
                                 <Filter className="mr-2 h-4 w-4" />
-                                Filter
+                                {isLoading ? 'Memuat...' : 'Filter'}
                             </button>
                             {(filters.status_mitigasi || filters.strategi_mitigasi || filters.validation_status || filters.search) && (
                                 <button onClick={clearFilters} className="text-sm text-[#12745a] hover:text-[#0c4435]" disabled={isLoading}>
@@ -415,9 +423,10 @@ export default function Index() {
                                 <div>
                                     <label className="mb-1 block text-sm font-medium text-gray-700">Status</label>
                                     <select
-                                        value={filters.status || ''}
-                                        onChange={(e) => handleFilter('status', e.target.value)}
+                                        value={filters.status_mitigasi || ''}
+                                        onChange={(e) => handleFilter('status_mitigasi', e.target.value)}
                                         className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#12745a] focus:ring-[#12745a]"
+                                        disabled={isLoading}
                                     >
                                         <option value="">Semua Status</option>
                                         {Object.entries(statusOptions).map(([key, label]) => (
@@ -430,9 +439,10 @@ export default function Index() {
                                 <div>
                                     <label className="mb-1 block text-sm font-medium text-gray-700">Strategi</label>
                                     <select
-                                        value={filters.strategi || ''}
-                                        onChange={(e) => handleFilter('strategi', e.target.value)}
+                                        value={filters.strategi_mitigasi || ''}
+                                        onChange={(e) => handleFilter('strategi_mitigasi', e.target.value)}
                                         className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#12745a] focus:ring-[#12745a]"
+                                        disabled={isLoading}
                                     >
                                         <option value="">Semua Strategi</option>
                                         {Object.entries(strategiOptions).map(([key, label]) => (
@@ -448,13 +458,14 @@ export default function Index() {
                                         value={filters.validation_status || ''}
                                         onChange={(e) => handleFilter('validation_status', e.target.value)}
                                         className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#12745a] focus:ring-[#12745a]"
+                                        disabled={isLoading}
                                     >
                                         <option value="">Semua Status Validasi</option>
-                                        <option value="draft">Draft</option>
-                                        <option value="submitted">Menunggu Persetujuan</option>
-                                        <option value="pending">Menunggu Persetujuan</option>
-                                        <option value="approved">Disetujui</option>
-                                        <option value="rejected">Ditolak</option>
+                                        {Object.entries(validationStatusOptions).map(([key, label]) => (
+                                            <option key={key} value={key}>
+                                                {label}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>
@@ -468,7 +479,11 @@ export default function Index() {
                         <div className="py-12 text-center">
                             <AlertTriangle className="mx-auto h-12 w-12 text-gray-400" />
                             <h3 className="mt-2 text-sm font-medium text-gray-900">Tidak ada mitigasi</h3>
-                            <p className="mt-1 text-sm text-gray-500">Belum ada risiko yang disetujui / dikirim.</p>
+                            <p className="mt-1 text-sm text-gray-500">
+                                {searchTerm || filters.status_mitigasi || filters.strategi_mitigasi || filters.validation_status
+                                    ? `Tidak ada mitigasi yang cocok dengan filter${filters.status_mitigasi ? ` status "${statusOptions[filters.status_mitigasi]}"` : ''}${filters.strategi_mitigasi ? ` strategi "${strategiOptions[filters.strategi_mitigasi]}"` : ''}${filters.validation_status ? ` validasi "${getValidationStatusLabel(filters.validation_status)}"` : ''}${searchTerm ? ` atau pencarian "${searchTerm}"` : ''}.`
+                                    : 'Belum ada mitigasi yang dibuat.'}
+                            </p>
                         </div>
                     ) : (
                         <div className="w-full overflow-x-auto">
@@ -505,13 +520,12 @@ export default function Index() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 bg-white">
-                                    {mitigasis.data.map((mitigasi: Mitigasi) => (
+                                    {mitigasis.data.map((mitigasi) => (
                                         <tr key={mitigasi.id} className="border border-black hover:bg-gray-50">
                                             <td className="border border-black px-3 py-4 align-top">
                                                 <div>
                                                     <div className="text-sm font-medium break-words text-gray-900">{mitigasi.judul_mitigasi}</div>
-                                                    <div className="text-sm break-words text-gray-500">{mitigasi.deskripsi_mitigasi}</div>{' '}
-                                                    {/* CHANGE: Changed truncate to break-words */}
+                                                    <div className="text-sm break-words text-gray-500">{mitigasi.deskripsi_mitigasi}</div>
                                                     {mitigasi.biaya_mitigasi && (
                                                         <div className="mt-1 text-xs font-medium text-green-600">
                                                             {formatCurrency(mitigasi.biaya_mitigasi)}
@@ -521,12 +535,11 @@ export default function Index() {
                                             </td>
                                             <td className="border border-black px-3 py-4 align-top">
                                                 <div className="text-sm break-words text-gray-900">{mitigasi.identify_risk?.id_identify}</div>
-                                                <div className="text-sm break-words text-gray-500">{mitigasi.identify_risk?.description}</div>{' '}
-                                                {/* CHANGE: Changed truncate to break-words */}
+                                                <div className="text-sm break-words text-gray-500">{mitigasi.identify_risk?.description}</div>
                                             </td>
                                             <td className="border border-black px-3 py-4 align-top">
                                                 <span className={getStrategiBadge(mitigasi.strategi_mitigasi)}>
-                                                    {mitigasi.strategi_label || strategiOptions?.[mitigasi.strategi_mitigasi]}
+                                                    {mitigasi.strategi_label || strategiOptions?.[mitigasi.strategi_mitigasi] || 'Tidak Diketahui'}
                                                 </span>
                                             </td>
                                             <td className="border border-black px-3 py-4 align-top">
@@ -565,9 +578,9 @@ export default function Index() {
                                                 <div className="flex items-center">
                                                     {getStatusIcon(mitigasi.status_mitigasi)}
                                                     <span
-                                                        className={`ml-2 ${getStatusBadge(mitigasi.status_mitigasi, mitigasi.status_label || statusOptions?.[mitigasi.status_mitigasi])}`}
+                                                        className={`ml-2 ${getStatusBadge(mitigasi.status_mitigasi, mitigasi.status_label || statusOptions?.[mitigasi.status_mitigasi] || 'Tidak Diketahui')}`}
                                                     >
-                                                        {mitigasi.status_label || statusOptions?.[mitigasi.status_mitigasi]}
+                                                        {mitigasi.status_label || statusOptions?.[mitigasi.status_mitigasi] || 'Tidak Diketahui'}
                                                     </span>
                                                 </div>
                                             </td>
@@ -576,13 +589,6 @@ export default function Index() {
                                                     <span className={getValidationStatusBadge(mitigasi.validation_status || 'draft')}>
                                                         {getValidationStatusLabel(mitigasi.validation_status || 'draft')}
                                                     </span>
-                                                    {mitigasi.validation_status === 'rejected' && mitigasi.rejection_reason && (
-                                                        <div className="text-xs break-words text-red-600" title={mitigasi.rejection_reason}>
-                                                            {' '}
-                                                            {/* CHANGE: Changed truncate to break-words */}
-                                                            {mitigasi.rejection_reason}
-                                                        </div>
-                                                    )}
                                                 </div>
                                             </td>
                                             <td className="border border-black px-3 py-4 align-top">
@@ -591,13 +597,11 @@ export default function Index() {
                                                         href={`/mitigasi/${mitigasi.id}`}
                                                         className="text-[#12745a] hover:text-[#0c4435]"
                                                         title="Lihat Detail"
-                                                        >
+                                                    >
                                                         <Eye className="h-4 w-4" />
                                                     </Link>
-                                                    {/* Admin: read-only */}
                                                     {!isAdmin && (
                                                         <>
-                                                            {/* Owner Risk full actions */}
                                                             {isOwnerRisk && mitigasi.permissions?.canEdit && (
                                                                 <Link
                                                                     href={`/mitigasi/${mitigasi.id}/edit`}
@@ -616,7 +620,7 @@ export default function Index() {
                                                                     <Send className="h-4 w-4" />
                                                                 </button>
                                                             )}
-                                                            {isOwnerRisk && mitigasi.permissions?.canDelete && (
+                                                            {/* {isOwnerRisk && mitigasi.permissions?.canDelete && (
                                                                 <button
                                                                     onClick={() => handleDelete(mitigasi)}
                                                                     className="text-red-600 hover:text-red-900"
@@ -624,7 +628,7 @@ export default function Index() {
                                                                 >
                                                                     <Trash2 className="h-4 w-4" />
                                                                 </button>
-                                                            )}
+                                                            )} */}
                                                             {isSuperAdmin &&
                                                                 mitigasi.validation_status &&
                                                                 ['submitted', 'pending'].includes(mitigasi.validation_status) && (

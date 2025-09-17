@@ -26,8 +26,8 @@ import Swal from 'sweetalert2';
 
 interface PageProps {
     mitigasi: Mitigasi | null;
-    statusOptions?: Record<string, string>; // Make optional with fallback
-    strategiOptions?: Record<string, string>; // Make optional with fallback
+    statusOptions?: Record<string, string>;
+    strategiOptions?: Record<string, string>;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -67,6 +67,29 @@ const getStrategiBadge = (strategi: string, label: string) => {
         case 'transfer': return `${baseClasses} bg-blue-100 text-blue-800`;
         case 'accept': return `${baseClasses} bg-green-100 text-green-800`;
         default: return `${baseClasses} bg-gray-100 text-gray-800`;
+    }
+};
+
+const getValidationStatusBadge = (status: string) => {
+    const baseClasses = "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium";
+    switch (status) {
+        case 'draft': return `${baseClasses} bg-gray-100 text-gray-800`;
+        case 'submitted':
+        case 'pending': return `${baseClasses} bg-yellow-100 text-yellow-800`;
+        case 'approved': return `${baseClasses} bg-green-100 text-green-800`;
+        case 'rejected': return `${baseClasses} bg-red-100 text-red-800`;
+        default: return `${baseClasses} bg-gray-100 text-gray-800`;
+    }
+};
+
+const getValidationStatusLabel = (status: string) => {
+    switch (status) {
+        case 'draft': return 'Draft';
+        case 'submitted':
+        case 'pending': return 'Menunggu Persetujuan';
+        case 'approved': return 'Disetujui';
+        case 'rejected': return 'Ditolak';
+        default: return 'Tidak Diketahui';
     }
 };
 
@@ -119,7 +142,8 @@ export default function Show() {
             },
             onError: () => {
                 Swal.fire('Error!', 'Gagal memperbarui progress.', 'error');
-            }
+            },
+            preserveScroll: true // <-- Tambahkan ini
         });
     };
 
@@ -214,7 +238,6 @@ export default function Show() {
                         </div>
                     </div>
                     <div className="mt-4 sm:mt-0 flex items-center space-x-3">
-                        {/* Owner Risk can update progress, edit, delete */}
                         {isOwnerRisk && (
                             <>
                                 <button
@@ -224,24 +247,15 @@ export default function Show() {
                                     <Target className="w-4 h-4 mr-2" />
                                     Update Progress
                                 </button>
-                                <Link
-                                    href={`/mitigasi/${mitigasi.id}/edit`}
-                                    className="inline-flex items-center px-3 py-2 border border-yellow-300 rounded-md shadow-sm text-sm font-medium text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
-                                >
-                                    <Edit className="w-4 h-4 mr-2" />
-                                    Edit
-                                </Link>
-                                <button
+                                {/* <button
                                     onClick={handleDelete}
                                     className="inline-flex items-center px-3 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100"
                                 >
                                     <Trash2 className="w-4 h-4 mr-2" />
                                     Hapus
-                                </button>
+                                </button> */}
                             </>
                         )}
-                        {/* Super Admin: no edit/delete here; approvals happen in list */}
-                        {/* Admin: no action buttons */}
                     </div>
                 </div>
 
@@ -252,8 +266,8 @@ export default function Show() {
                             {getStatusIcon(mitigasi.status_mitigasi || 'belum_dimulai')}
                             <div className="ml-3">
                                 <p className="text-sm font-medium text-gray-500">Status</p>
-                                <span className={getStatusBadge(mitigasi.status_mitigasi || 'belum_dimulai', mitigasi.status_label || statusOptions[mitigasi.status_mitigasi] || 'Unknown')}>
-                                    {mitigasi.status_label || statusOptions[mitigasi.status_mitigasi] || 'Unknown'}
+                                <span className={getStatusBadge(mitigasi.status_mitigasi || 'belum_dimulai', mitigasi.status_label || statusOptions[mitigasi.status_mitigasi])}>
+                                    {mitigasi.status_label || statusOptions[mitigasi.status_mitigasi]}
                                 </span>
                             </div>
                         </div>
@@ -345,6 +359,20 @@ export default function Show() {
                                     </div>
                                 </div>
 
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-500">Status Validasi</label>
+                                    <span className={`mt-1 ${getValidationStatusBadge(mitigasi.validation_status || 'draft')}`}>
+                                        {getValidationStatusLabel(mitigasi.validation_status || 'draft')}
+                                    </span>
+                                </div>
+
+                                {mitigasi.validation_status === 'rejected' && mitigasi.rejection_reason && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-500">Alasan Penolakan</label>
+                                        <p className="mt-1 text-sm text-red-600">{mitigasi.rejection_reason}</p>
+                                    </div>
+                                )}
+
                                 {mitigasi.catatan_progress && (
                                     <div>
                                         <label className="block text-sm font-medium text-gray-500">Catatan Progress</label>
@@ -389,17 +417,6 @@ export default function Show() {
                                         <label className="block text-sm font-medium text-gray-500">Deskripsi Risiko</label>
                                         <p className="mt-1 text-sm text-gray-900">{mitigasi.identify_risk.description}</p>
                                     </div>
-
-                                    {/* <div className="flex items-center justify-between">
-                                        <span className="text-sm text-gray-500">Lihat detail risiko</span>
-                                        <Link
-                                            href={`/identifyrisk/${mitigasi.identify_risk.id}`}
-                                            className="inline-flex items-center text-blue-600 hover:text-blue-800"
-                                        >
-                                            <ExternalLink className="w-4 h-4 mr-1" />
-                                            Buka Detail
-                                        </Link>
-                                    </div> */}
                                 </div>
                             ) : (
                                 <p className="text-sm text-gray-500">Data risiko tidak tersedia.</p>
@@ -453,19 +470,6 @@ export default function Show() {
                             <h2 className="text-lg font-medium text-gray-900 mb-4">Audit Trail</h2>
 
                             <div className="space-y-4">
-                                {/* <div>
-                                    <label className="block text-sm font-medium text-gray-500">Dibuat oleh</label>
-                                    <div className="mt-1 flex items-center">
-                                        <User className="w-4 h-4 text-gray-400 mr-2" />
-                                        <span className="text-sm text-gray-900">
-                                            {mitigasi.creator?.name || 'Unknown'}
-                                        </span>
-                                    </div>
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        {mitigasi.created_at ? formatDateTime(mitigasi.created_at) : 'N/A'}
-                                    </p>
-                                </div> */}
-
                                 {mitigasi.updated_at && mitigasi.updated_at !== mitigasi.created_at && (
                                     <div>
                                         <label className="block text-sm font-medium text-gray-500">Terakhir diperbarui</label>
@@ -482,29 +486,6 @@ export default function Show() {
                                 )}
                             </div>
                         </div>
-
-                        {/* Quick Actions */}
-                        {/* <div className="bg-white shadow rounded-lg p-6">
-                            <h2 className="text-lg font-medium text-gray-900 mb-4">Aksi Cepat</h2>
-
-                            <div className="space-y-3">
-                                <Link
-                                    href={`/mitigasi/create?risk_id=${mitigasi.identify_risk_id || ''}`}
-                                    className="w-full inline-flex items-center justify-center px-3 py-2 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100"
-                                >
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    Tambah Mitigasi Lain
-                                </Link>
-
-                                <Link
-                                    href={`/identifyrisk/${mitigasi.identify_risk_id || ''}`}
-                                    className="w-full inline-flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                                >
-                                    <ExternalLink className="w-4 h-4 mr-2" />
-                                    Lihat Detail Risiko
-                                </Link>
-                            </div>
-                        </div> */}
                     </div>
                 </div>
 
