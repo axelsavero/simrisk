@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
-
+import { PageProps as InertiaPageProps } from '@inertiajs/core';
 interface PageProps {
     mitigasis: PaginatedData<Mitigasi>;
     filters: {
@@ -31,7 +31,8 @@ interface PageProps {
     };
     statusOptions: Record<string, string>;
     validationStatusOptions: Record<string, string>;
-    strategiOptions: Record<string, string>;
+    strategiOptions: Record<string, string>; // Ensure this is always present
+    auth: any; // Add auth property
     identifyRisks: Array<{ id: number; id_identify: string; description: string }>;
 }
 
@@ -161,7 +162,7 @@ const getValidationStatusLabel = (status: string) => {
 };
 
 export default function Index() {
-    const { mitigasis, filters, statusOptions, strategiOptions, validationStatusOptions, auth }: PageProps = usePage<PageProps>().props;
+    const { mitigasis, filters, statusOptions, strategiOptions, validationStatusOptions, auth }: PageProps = usePage<InertiaPageProps & PageProps>().props;
     const roles: string[] = auth?.user?.roles || [];
     const isSuperAdmin = roles.includes('super-admin');
     const isAdmin = roles.includes('admin');
@@ -478,7 +479,7 @@ export default function Index() {
                     {mitigasis.data.length === 0 ? (
                         <div className="py-12 text-center">
                             <AlertTriangle className="mx-auto h-12 w-12 text-gray-400" />
-                            <h3 className="mt-2 text-sm font-medium text-gray-900">Tidak ada mitigasi</h3>
+                            <h3 className="mt-2 text-sm font-medium text-gray-900">Tidak ada mitigasi ditemukan</h3>
                             <p className="mt-1 text-sm text-gray-500">
                                 {searchTerm || filters.status_mitigasi || filters.strategi_mitigasi || filters.validation_status
                                     ? `Tidak ada mitigasi yang cocok dengan filter${filters.status_mitigasi ? ` status "${statusOptions[filters.status_mitigasi]}"` : ''}${filters.strategi_mitigasi ? ` strategi "${strategiOptions[filters.strategi_mitigasi]}"` : ''}${filters.validation_status ? ` validasi "${getValidationStatusLabel(filters.validation_status)}"` : ''}${searchTerm ? ` atau pencarian "${searchTerm}"` : ''}.`
