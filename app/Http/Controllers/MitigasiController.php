@@ -519,7 +519,7 @@ class MitigasiController extends Controller
         // Check current status
         if ($mitigasi->validation_status === Mitigasi::VALIDATION_STATUS_REJECTED) {
             return redirect()->back()
-                ->with('error', 'Mitigasi ini sudah ditolak sebelumnya.');
+                ->with('error', 'Mitigasi ini sudah direvisi sebelumnya.');
         }
 
         // Update status to rejected
@@ -531,7 +531,7 @@ class MitigasiController extends Controller
         ]);
 
         return redirect()->route('mitigasi.index')
-            ->with('success', "Mitigasi '{$mitigasi->judul_mitigasi}' berhasil ditolak.");
+            ->with('success', "Mitigasi '{$mitigasi->judul_mitigasi}' berhasil direvisi.");
     }
 
     /**

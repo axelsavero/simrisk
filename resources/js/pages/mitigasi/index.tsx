@@ -155,7 +155,7 @@ const getValidationStatusLabel = (status: string) => {
         case 'approved':
             return 'Disetujui';
         case 'rejected':
-            return 'Ditolak';
+            return 'Butuh Revisi';
         default:
             return 'Tidak Diketahui';
     }
@@ -317,10 +317,10 @@ export default function Index() {
 
     const handleReject = (mitigasi: Mitigasi) => {
         Swal.fire({
-            title: 'Tolak Mitigasi?',
+            title: 'Revisi Mitigasi?',
             input: 'textarea',
-            inputLabel: 'Alasan Penolakan',
-            inputPlaceholder: 'Masukkan alasan penolakan...',
+            inputLabel: 'Alasan Perbaikkan',
+            inputPlaceholder: 'Masukkan alasan perbaikkan...',
             inputValidator: (value) => {
                 if (!value) {
                     return 'Alasan penolakan harus diisi!';
@@ -329,7 +329,7 @@ export default function Index() {
             showCancelButton: true,
             confirmButtonColor: '#ef4444',
             cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Ya, Tolak!',
+            confirmButtonText: 'Ya, Revisi!',
             cancelButtonText: 'Batal',
         }).then((result) => {
             if (result.isConfirmed) {
@@ -340,7 +340,7 @@ export default function Index() {
                     },
                     {
                         onSuccess: () => {
-                            Swal.fire('Berhasil!', 'Mitigasi berhasil ditolak.', 'success');
+                            Swal.fire('Berhasil!', 'Mitigasi berhasil direvisi.', 'success');
                         },
                         onError: () => {
                             Swal.fire('Error!', 'Gagal menolak mitigasi.', 'error');
@@ -651,7 +651,7 @@ export default function Index() {
                                                                             <button
                                                                                 onClick={() => handleReject(mitigasi)}
                                                                                 className="text-red-600 hover:text-red-900"
-                                                                                title="Tolak"
+                                                                                title="Revisi"
                                                                             >
                                                                                 <XCircle className="h-4 w-4" />
                                                                             </button>

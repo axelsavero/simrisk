@@ -300,7 +300,7 @@ class Mitigasi extends Model
             self::VALIDATION_STATUS_DRAFT => 'Draft',
             self::VALIDATION_STATUS_PENDING => 'Menunggu Persetujuan',
             self::VALIDATION_STATUS_APPROVED => 'Disetujui',
-            self::VALIDATION_STATUS_REJECTED => 'Ditolak',
+            self::VALIDATION_STATUS_REJECTED => 'Butuh Revisi',
         ];
     }
 

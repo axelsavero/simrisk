@@ -88,7 +88,7 @@ const getValidationStatusLabel = (status: string) => {
         case 'submitted':
         case 'pending': return 'Menunggu Persetujuan';
         case 'approved': return 'Disetujui';
-        case 'rejected': return 'Ditolak';
+        case 'rejected': return 'Butuh Revisi';
         default: return 'Tidak Diketahui';
     }
 };
@@ -368,7 +368,7 @@ export default function Show() {
 
                                 {mitigasi.validation_status === 'rejected' && mitigasi.rejection_reason && (
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-500">Alasan Penolakan</label>
+                                        <label className="block text-sm font-medium text-gray-500">Alasan Revisi</label>
                                         <p className="mt-1 text-sm text-red-600">{mitigasi.rejection_reason}</p>
                                     </div>
                                 )}
