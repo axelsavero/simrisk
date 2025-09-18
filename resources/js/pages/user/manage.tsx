@@ -34,6 +34,8 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
         });
     }
 
+    const adminUsers = users.filter((user: { roles: string | string[]; }) => user.roles?.includes('admin'));
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="User Management" />
@@ -66,8 +68,8 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {users && users.length > 0 ? (
-                                    users.map((user: User, idx: number) => (
+                                {adminUsers && adminUsers.length > 0 ? (
+                                    adminUsers.map((user: User, idx: number) => (
                                         <tr key={user.id} className="hover:bg-gray-50">
                                             <td className="border px-2 py-2 text-center">{idx + 1}</td>
                                             <td className="border px-4 py-2">{user.unit}</td>
