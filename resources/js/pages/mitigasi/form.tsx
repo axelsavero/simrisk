@@ -228,7 +228,7 @@ export default function Create() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
                             {/* Identify Risk */}
-                            <div className="md:col-span-2 lg:col-span-3">
+                            {/* <div className="md:col-span-2 lg:col-span-3">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Risiko Terkait <span className="text-red-500">*</span>
                                 </label>
@@ -249,7 +249,7 @@ export default function Create() {
                                 {errors.identify_risk_id && (
                                     <p className="mt-1 text-sm text-red-600">{errors.identify_risk_id}</p>
                                 )}
-                            </div>
+                            </div> */}
 
                             {/* Judul Mitigasi */}
                             <div className="md:col-span-2 lg:col-span-3">
