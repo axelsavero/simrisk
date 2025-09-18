@@ -50,7 +50,7 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
                         <Button asChild className="rounded-lg border bg-[#12745A] px-4 py-2 font-medium text-white">
                             <Link href="/user/manage/create">
                                 <UserRoundPlus />
-                                Tambah User
+                                Tambah Admin
                             </Link>
                         </Button>
                     )}
