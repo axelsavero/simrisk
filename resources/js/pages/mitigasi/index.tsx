@@ -530,7 +530,7 @@ export default function Index() {
                                             <td className="border border-black px-3 py-4 align-top">
                                                 <div>
                                                     <div className="text-sm font-medium break-words text-gray-900">{mitigasi.judul_mitigasi}</div>
-                                                    <div className="text-sm break-words text-gray-500">{mitigasi.deskripsi_mitigasi}</div>
+                                                    {/* <div className="text-sm break-words text-gray-500">{mitigasi.deskripsi_mitigasi}</div> */}
                                                     {mitigasi.biaya_mitigasi && (
                                                         <div className="mt-1 text-xs font-medium text-green-600">
                                                             {formatCurrency(mitigasi.biaya_mitigasi)}
@@ -540,7 +540,7 @@ export default function Index() {
                                             </td>
                                             <td className="border border-black px-3 py-4 align-top">
                                                 <div className="text-sm break-words text-gray-900">{mitigasi.identify_risk?.id_identify}</div>
-                                                <div className="text-sm break-words text-gray-500">{mitigasi.identify_risk?.description}</div>
+                                                {/* <div className="text-sm break-words text-gray-500">{mitigasi.identify_risk?.description}</div> */}
                                             </td>
                                             <td className="border border-black px-3 py-4 align-top">
                                                 <span className={getStrategiBadge(mitigasi.strategi_mitigasi)}>
