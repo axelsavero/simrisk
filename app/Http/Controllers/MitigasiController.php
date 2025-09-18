@@ -177,6 +177,94 @@ class MitigasiController extends Controller
             'strategiOptions' => $strategiOptions,
         ]);
     }
+    
+    /**
+     * Display dashboard with risk matrix and mitigation data.
+     */
+    public function dashboard(Request $request): Response
+    {
+        $user = Auth::user();
+
+        // --- MITIGASI DATA FOR MATRIX ---
+        $mitigasiQuery = Mitigasi::query()->with('identifyRisk')
+            ->where('validation_status', self::VALIDATION_STATUS_APPROVED);
+
+        // Apply role-based filtering
+        if ($this->isOwnerRisk($user)) {
+            $mitigasiQuery->whereHas('identifyRisk', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            });
+        } elseif ($this->isAdmin($user) || $this->isPimpinan($user)) {
+            $mitigasiQuery->whereHas('identifyRisk', function ($q) use ($user) {
+                $q->where('unit_kerja', $user->unit_kerja);
+            });
+        }
+        
+        // Apply dashboard filters
+        if ($request->filled('unit')) {
+             $mitigasiQuery->whereHas('identifyRisk', function ($q) use ($request) {
+                $q->where('unit_kerja', $request->unit);
+            });
+        }
+        if ($request->filled('kategori')) {
+            $mitigasiQuery->whereHas('identifyRisk', function ($q) use ($request) {
+                $q->where('risk_category', $request->kategori);
+            });
+        }
+        if ($request->filled('tahun')) {
+            $mitigasiQuery->whereYear('created_at', $request->tahun);
+        }
+        
+        $mitigasis = $mitigasiQuery->get();
+
+        $mitigasiPoints = $mitigasis->map(function ($mitigasi) {
+            $level = ($mitigasi->probability ?: 1) * ($mitigasi->impact ?: 1);
+            $levelText = 'Sangat Rendah';
+            if ($level >= 20) $levelText = 'Tinggi';
+            elseif ($level >= 9) $levelText = 'Sedang';
+            elseif ($level >= 3) $levelText = 'Rendah';
+
+            return [
+                'id' => $mitigasi->id,
+                'x' => $mitigasi->probability,
+                'y' => $mitigasi->impact,
+                'label' => $mitigasi->identifyRisk->id_identify ?? 'N/A',
+                'judul_mitigasi' => $mitigasi->judul_mitigasi,
+                'kode_risiko' => $mitigasi->identifyRisk->id_identify ?? 'N/A',
+                'nama_risiko' => $mitigasi->identifyRisk->description ?? 'N/A',
+                'strategi_mitigasi' => $mitigasi->strategi_mitigasi,
+                'status_mitigasi' => $mitigasi->status_mitigasi,
+                'progress_percentage' => $mitigasi->progress_percentage,
+                'pic_mitigasi' => $mitigasi->pic_mitigasi,
+                'target_selesai' => $mitigasi->target_selesai ? $mitigasi->target_selesai->toDateString() : null,
+                'unit_kerja' => $mitigasi->identifyRisk->unit_kerja ?? 'N/A',
+                'level' => $level,
+                'level_text' => $levelText,
+            ];
+        });
+
+        $statusStats = $mitigasis->countBy('status_mitigasi');
+        $strategiStats = $mitigasis->countBy('strategi_mitigasi');
+        $totalMitigasi = $mitigasis->count();
+        $completedCount = $statusStats->get(Mitigasi::STATUS_SELESAI, 0);
+
+        $mitigasiMatrixData = [
+            'mitigasiPoints' => $mitigasiPoints,
+            'totalMitigasi' => $totalMitigasi,
+            'statusStats' => $statusStats,
+            'strategiStats' => $strategiStats,
+            'completionRate' => $totalMitigasi > 0 ? round(($completedCount / $totalMitigasi) * 100) : 0,
+            'averageProgress' => round($mitigasis->avg('progress_percentage') ?? 0),
+        ];
+
+        return Inertia::render('dashboard/index', [
+            'mitigasiMatrixData' => $mitigasiMatrixData,
+            // You may need to add riskMatrixData and filterOptions here as well
+            // 'riskMatrixData' => ... ,
+            // 'filterOptions' => ... ,
+            'filters' => $request->only(['unit', 'kategori', 'tahun']),
+        ]);
+    }
 
     /**
      * Show the form for creating a new mitigasi.
@@ -194,8 +282,9 @@ class MitigasiController extends Controller
         if ($riskId) {
             $identifyRisk = IdentifyRisk::findOrFail($riskId);
         }
-
-        $identifyRisksQuery = IdentifyRisk::select('id', 'id_identify', 'description')
+        
+        // 🔥 PERUBAHAN: Sekarang mengambil semua field yang dibutuhkan
+        $identifyRisksQuery = IdentifyRisk::select('id', 'id_identify', 'description', 'probability', 'impact')
             ->where('validation_status', 'approved');
 
         // Filter berdasarkan role
@@ -218,6 +307,7 @@ class MitigasiController extends Controller
         ]);
     }
 
+
     /**
      * Store a newly created mitigasi in storage.
      */
@@ -225,65 +315,35 @@ class MitigasiController extends Controller
     {
         $validated = $request->validate(Mitigasi::getValidationRules());
 
-        if ($request->filled('id')) {
-            // Update existing mitigasi
-            $mitigasi = Mitigasi::findOrFail($request->id);
+        // Handle file uploads
+        $buktiFiles = [];
+        if ($request->hasFile('bukti_implementasi')) {
+            foreach ($request->file('bukti_implementasi') as $file) {
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $filePath = $file->storeAs('mitigasi-bukti', $fileName, 'public');
 
-            // Handle file uploads - keep existing files
-            $buktiFiles = $mitigasi->bukti_implementasi ?? [];
-            if ($request->hasFile('bukti_files')) {
-                foreach ($request->file('bukti_files') as $file) {
-                    $fileName = time() . '_' . $file->getClientOriginalName();
-                    $filePath = $file->storeAs('mitigasi-bukti', $fileName, 'public');
-
-                    $buktiFiles[] = [
-                        'original_name' => $file->getClientOriginalName(),
-                        'file_name' => $fileName,
-                        'file_path' => $filePath,
-                        'file_size' => $file->getSize(),
-                        'file_extension' => strtolower($file->getClientOriginalExtension()),
-                        'uploaded_at' => now()->toISOString(),
-                    ];
-                }
+                $buktiFiles[] = [
+                    'original_name' => $file->getClientOriginalName(),
+                    'file_name' => $fileName,
+                    'file_path' => $filePath,
+                    'file_size' => $file->getSize(),
+                    'file_extension' => strtolower($file->getClientOriginalExtension()),
+                    'uploaded_at' => now()->toISOString(),
+                ];
             }
-
-            $validated['bukti_implementasi'] = $buktiFiles;
-            $validated['updated_by'] = Auth::id();
-
-            $mitigasi->update($validated);
-            $message = 'Mitigasi berhasil diperbarui.';
-        } else {
-            // Create new mitigasi
-            $buktiFiles = [];
-            if ($request->hasFile('bukti_files')) {
-                foreach ($request->file('bukti_files') as $file) {
-                    $fileName = time() . '_' . $file->getClientOriginalName();
-                    $filePath = $file->storeAs('mitigasi-bukti', $fileName, 'public');
-
-                    $buktiFiles[] = [
-                        'original_name' => $file->getClientOriginalName(),
-                        'file_name' => $fileName,
-                        'file_path' => $filePath,
-                        'file_size' => $file->getSize(),
-                        'file_extension' => strtolower($file->getClientOriginalExtension()),
-                        'uploaded_at' => now()->toISOString(),
-                    ];
-                }
-            }
-
-            $validated['bukti_implementasi'] = $buktiFiles;
-            $validated['created_by'] = Auth::id();
-            $validated['updated_by'] = Auth::id();
-            $validated['validation_status'] = Mitigasi::VALIDATION_STATUS_DRAFT;
-
-            $mitigasi = Mitigasi::create($validated);
-            $message = 'Mitigasi berhasil dibuat.';
         }
 
-        // FIX: Single consistent success message (removed duplicate)
+        $validated['bukti_implementasi'] = $buktiFiles;
+        $validated['created_by'] = Auth::id();
+        $validated['updated_by'] = Auth::id();
+        $validated['validation_status'] = Mitigasi::VALIDATION_STATUS_DRAFT;
+
+        $mitigasi = Mitigasi::create($validated);
+
         return redirect()->route('mitigasi.show', $mitigasi)
-            ->with('success', $message);
+            ->with('success', 'Mitigasi berhasil dibuat sebagai draft.');
     }
+
 
     /**
      * Display the specified mitigasi.
@@ -295,6 +355,7 @@ class MitigasiController extends Controller
             $user->load('roles');
         }
 
+        // Authorization logic remains the same
         if ($this->isSuperAdmin($user) || $this->isPimpinan($user)) {
             // Full access
         } elseif ($this->isOwnerRisk($user)) {
@@ -311,12 +372,17 @@ class MitigasiController extends Controller
 
         $mitigasi->load(['identifyRisk', 'creator', 'updater']);
 
+        // The 'probability' and 'impact' fields are already part of the $mitigasi model object
+        // because we added them to the database and the $fillable array.
+        // No extra action is needed here to pass them to the view.
+
         return Inertia::render('mitigasi/show', [
             'mitigasi' => $mitigasi,
             'statusOptions' => Mitigasi::getStatusOptions(),
             'strategiOptions' => Mitigasi::getStrategiOptions(),
         ]);
     }
+
 
     /**
      * Show the form for editing the specified mitigasi.
@@ -325,7 +391,8 @@ class MitigasiController extends Controller
     {
         $mitigasi->load('identifyRisk');
 
-        $identifyRisks = IdentifyRisk::select('id', 'id_identify', 'description')
+        // 🔥 PERUBAHAN: Juga mengambil probability dan impact untuk auto-fill jika risiko diubah
+        $identifyRisks = IdentifyRisk::select('id', 'id_identify', 'description', 'probability', 'impact')
             ->where('validation_status', 'approved')
             ->orderBy('id_identify')
             ->get();
@@ -344,16 +411,14 @@ class MitigasiController extends Controller
     public function update(Request $request, Mitigasi $mitigasi): RedirectResponse
     {
         $rules = Mitigasi::getValidationRules();
-        // Make identify_risk_id not required for update
-        $rules['identify_risk_id'] = 'sometimes|exists:identify_risks,id';
-
+        
         $validated = $request->validate($rules);
 
         // Handle file uploads
         $existingFiles = $mitigasi->bukti_implementasi ?? [];
 
-        if ($request->hasFile('bukti_files')) {
-            foreach ($request->file('bukti_files') as $file) {
+        if ($request->hasFile('bukti_implementasi')) {
+            foreach ($request->file('bukti_implementasi') as $file) {
                 $fileName = time() . '_' . $file->getClientOriginalName();
                 $filePath = $file->storeAs('mitigasi-bukti', $fileName, 'public');
 
@@ -376,6 +441,8 @@ class MitigasiController extends Controller
         return redirect()->route('mitigasi.show', $mitigasi)
             ->with('success', 'Mitigasi berhasil diperbarui.');
     }
+
+    // ... (sisa controller tidak berubah)
 
     /**
      * Remove the specified mitigasi from storage.
@@ -449,15 +516,6 @@ class MitigasiController extends Controller
             'validation_status' => Mitigasi::VALIDATION_STATUS_PENDING,
             'rejection_reason' => null
         ]);
-
-        // FIX: Replace User::role('super-admin') with whereHas to avoid undefined method error
-        // $superAdmins = User::whereHas('roles', function ($query) {
-        //     $query->where('name', 'super-admin');
-        // })->get();
-
-        // foreach ($superAdmins as $admin) {
-        //     Mail::to($admin->email)->send(new MitigationSubmitted($mitigasi));
-        // }
 
         return redirect()->route('mitigasi.index')
             ->with('success', "Mitigasi '{$mitigasi->judul_mitigasi}' berhasil dikirim untuk validasi.");
@@ -549,50 +607,46 @@ class MitigasiController extends Controller
             $validated['catatan_progress'] ?? null
         );
 
-        // return response()->json([
-        //     'success' => true,
-        //     'message' => 'Progress berhasil diperbarui.',
-        //     'data' => [
-        //         'progress_percentage' => $mitigasi->progress_percentage,
-        //         'status_mitigasi' => $mitigasi->status_mitigasi,
-        //         'status_label' => $mitigasi->status_label,
-        //     ]
-        // ]);
         return redirect()->back();
     }
 
     /**
      * Download bukti file.
      */
-    public function downloadBukti(Mitigasi $mitigasi, Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse|RedirectResponse
+    public function downloadBukti(Mitigasi $mitigasi, $filename): \Symfony\Component\HttpFoundation\BinaryFileResponse|RedirectResponse
     {
-        $fileIndex = $request->get('file_index', 0);
         $buktiFiles = $mitigasi->bukti_implementasi ?? [];
 
-        if (!isset($buktiFiles[$fileIndex])) {
+        $fileData = collect($buktiFiles)->first(function ($file) use ($filename) {
+            return $file['file_name'] === $filename || $file['original_name'] === $filename;
+        });
+
+        if (!$fileData) {
             return redirect()->back()->with('error', 'File tidak ditemukan.');
         }
 
-        $file = $buktiFiles[$fileIndex];
-        $filePath = storage_path('app/public/' . $file['file_path']);
+        $filePath = storage_path('app/public/' . $fileData['file_path']);
 
         if (!file_exists($filePath)) {
             return redirect()->back()->with('error', 'File tidak ditemukan di server.');
         }
 
-        return response()->download($filePath, $file['original_name']);
+        return response()->download($filePath, $fileData['original_name']);
     }
 
     /**
      * Remove bukti file.
      */
-    public function removeBukti(Mitigasi $mitigasi, Request $request): JsonResponse
+    public function removeBukti(Mitigasi $mitigasi, $filename): RedirectResponse
     {
-        $fileIndex = $request->get('file_index');
         $buktiFiles = $mitigasi->bukti_implementasi ?? [];
 
-        if (!isset($buktiFiles[$fileIndex])) {
-            return response()->json(['success' => false, 'message' => 'File tidak ditemukan.'], 404);
+        $fileIndex = collect($buktiFiles)->search(function ($file) use ($filename) {
+            return $file['file_name'] === $filename || $file['original_name'] === $filename;
+        });
+
+        if ($fileIndex === false) {
+            return redirect()->back()->with('error', 'File tidak ditemukan.');
         }
 
         $file = $buktiFiles[$fileIndex];
@@ -603,20 +657,16 @@ class MitigasiController extends Controller
         }
 
         // Remove from array
-        unset($buktiFiles[$fileIndex]);
-        $buktiFiles = array_values($buktiFiles); // Re-index array
+        array_splice($buktiFiles, $fileIndex, 1);
 
         $mitigasi->update([
             'bukti_implementasi' => $buktiFiles,
             'updated_by' => Auth::id(),
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'File berhasil dihapus.',
-            'data' => $buktiFiles
-        ]);
+        return redirect()->back()->with('success', 'File berhasil dihapus.');
     }
+
 
     /**
      * Get mitigasi statistics for dashboard.

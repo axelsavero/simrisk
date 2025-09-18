@@ -3,29 +3,24 @@ import { BreadcrumbItem, Mitigasi } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     ArrowLeft,
-    Edit,
-    Trash2,
     Download,
     Calendar,
-    DollarSign,
     User,
     FileText,
     Target,
-    AlertCircle,
     CheckCircle2,
     Clock,
     TrendingUp,
     XCircle,
     Pause,
-    ExternalLink,
-    Plus,
-    Wallet
+    Wallet,
+    Trash2
 } from 'lucide-react';
 import { useState } from 'react';
 import Swal from 'sweetalert2';
 
 interface PageProps {
-    mitigasi: Mitigasi | null;
+    mitigasi: (Mitigasi & { probability?: number; impact?: number }) | null;
     statusOptions?: Record<string, string>;
     strategiOptions?: Record<string, string>;
 }
@@ -93,14 +88,31 @@ const getValidationStatusLabel = (status: string) => {
     }
 };
 
+const getRiskLevelText = (level: number) => {
+    if (level >= 20) return 'Tinggi';
+    if (level >= 9) return 'Sedang';
+    if (level >= 3) return 'Rendah';
+    return 'Sangat Rendah';
+};
+
+const getRiskLevelColor = (level: number) => {
+    if (level >= 20) return 'text-red-600 bg-red-100';
+    if (level >= 9) return 'text-orange-600 bg-orange-100';
+    if (level >= 3) return 'text-yellow-600 bg-yellow-100';
+    return 'text-green-600 bg-green-100';
+};
+
 export default function Show() {
     const { mitigasi, statusOptions = {}, strategiOptions = {}, auth }: any = usePage<any>().props;
     const roles: string[] = auth?.user?.roles || [];
-    const isSuperAdmin = roles.includes('super-admin');
-    const isAdmin = roles.includes('admin');
     const isOwnerRisk = roles.includes('owner-risk');
+    
     if (!mitigasi) {
-        return <div className="text-center p-4 text-red-500">Data mitigasi tidak ditemukan.</div>;
+        return (
+            <AppLayout breadcrumbs={breadcrumbs}>
+                <div className="text-center p-4 text-red-500">Data mitigasi tidak ditemukan.</div>
+            </AppLayout>
+        );
     }
 
     const [showProgressModal, setShowProgressModal] = useState(false);
@@ -108,6 +120,8 @@ export default function Show() {
         progress_percentage: mitigasi.progress_percentage,
         catatan_progress: mitigasi.catatan_progress || ''
     });
+
+    const riskLevel = (mitigasi.probability || 1) * (mitigasi.impact || 1);
 
     const handleDelete = () => {
         Swal.fire({
@@ -143,7 +157,7 @@ export default function Show() {
             onError: () => {
                 Swal.fire('Error!', 'Gagal memperbarui progress.', 'error');
             },
-            preserveScroll: true // <-- Tambahkan ini
+            preserveScroll: true
         });
     };
 
@@ -239,22 +253,13 @@ export default function Show() {
                     </div>
                     <div className="mt-4 sm:mt-0 flex items-center space-x-3">
                         {isOwnerRisk && (
-                            <>
-                                <button
-                                    onClick={() => setShowProgressModal(true)}
-                                    className="inline-flex items-center px-3 py-2 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100"
-                                >
-                                    <Target className="w-4 h-4 mr-2" />
-                                    Update Progress
-                                </button>
-                                {/* <button
-                                    onClick={handleDelete}
-                                    className="inline-flex items-center px-3 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100"
-                                >
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Hapus
-                                </button> */}
-                            </>
+                            <button
+                                onClick={() => setShowProgressModal(true)}
+                                className="inline-flex items-center px-3 py-2 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100"
+                            >
+                                <Target className="w-4 h-4 mr-2" />
+                                Update Progress
+                            </button>
                         )}
                     </div>
                 </div>
@@ -272,7 +277,6 @@ export default function Show() {
                             </div>
                         </div>
                     </div>
-
                     <div className="bg-white p-6 rounded-lg shadow">
                         <div className="flex items-center">
                             <Target className="w-5 h-5 text-blue-500" />
@@ -292,19 +296,17 @@ export default function Show() {
                             </div>
                         </div>
                     </div>
-
                     <div className="bg-white p-6 rounded-lg shadow">
                         <div className="flex items-center">
                             <Calendar className="w-5 h-5 text-gray-500" />
                             <div className="ml-3">
                                 <p className="text-sm font-medium text-gray-500">Target Selesai</p>
-                                <p className={`text-sm font-medium ${
-                                    mitigasi.target_selesai && isOverdue(mitigasi.target_selesai, mitigasi.status_mitigasi || 'belum_dimulai')
-                                        ? 'text-red-600'
-                                        : (mitigasi.target_selesai && daysUntilTarget <= 7 && daysUntilTarget > 0)
+                                <p className={`text-sm font-medium ${mitigasi.target_selesai && isOverdue(mitigasi.target_selesai, mitigasi.status_mitigasi || 'belum_dimulai')
+                                    ? 'text-red-600'
+                                    : (mitigasi.target_selesai && daysUntilTarget <= 7 && daysUntilTarget > 0)
                                         ? 'text-yellow-600'
                                         : 'text-gray-900'
-                                }`}>
+                                    }`}>
                                     {mitigasi.target_selesai ? formatDate(mitigasi.target_selesai) : 'N/A'}
                                 </p>
                                 {mitigasi.target_selesai && isOverdue(mitigasi.target_selesai, mitigasi.status_mitigasi || 'belum_dimulai') ? (
@@ -315,7 +317,6 @@ export default function Show() {
                             </div>
                         </div>
                     </div>
-
                     <div className="bg-white p-6 rounded-lg shadow">
                         <div className="flex items-center">
                             <Wallet className="w-5 h-5 text-green-500" />
@@ -332,16 +333,13 @@ export default function Show() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Main Content */}
                     <div className="lg:col-span-2 space-y-6">
-                        {/* Basic Information */}
                         <div className="bg-white shadow rounded-lg p-6">
                             <h2 className="text-lg font-medium text-gray-900 mb-4">Informasi Mitigasi</h2>
-
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-500">Deskripsi Mitigasi</label>
                                     <p className="mt-1 text-sm text-gray-900">{mitigasi.deskripsi_mitigasi || 'N/A'}</p>
                                 </div>
-
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-500">Strategi Mitigasi</label>
@@ -349,7 +347,6 @@ export default function Show() {
                                             {mitigasi.strategi_label || strategiOptions[mitigasi.strategi_mitigasi] || 'Menerima'}
                                         </span>
                                     </div>
-
                                     <div>
                                         <label className="block text-sm font-medium text-gray-500">PIC (Person In Charge)</label>
                                         <div className="mt-1 flex items-center">
@@ -358,35 +355,30 @@ export default function Show() {
                                         </div>
                                     </div>
                                 </div>
-
                                 <div>
                                     <label className="block text-sm font-medium text-gray-500">Status Validasi</label>
                                     <span className={`mt-1 ${getValidationStatusBadge(mitigasi.validation_status || 'draft')}`}>
                                         {getValidationStatusLabel(mitigasi.validation_status || 'draft')}
                                     </span>
                                 </div>
-
                                 {mitigasi.validation_status === 'rejected' && mitigasi.rejection_reason && (
                                     <div>
                                         <label className="block text-sm font-medium text-gray-500">Alasan Revisi</label>
                                         <p className="mt-1 text-sm text-red-600">{mitigasi.rejection_reason}</p>
                                     </div>
                                 )}
-
                                 {mitigasi.catatan_progress && (
                                     <div>
                                         <label className="block text-sm font-medium text-gray-500">Catatan Progress</label>
                                         <p className="mt-1 text-sm text-gray-900">{mitigasi.catatan_progress}</p>
                                     </div>
                                 )}
-
                                 {mitigasi.evaluasi_efektivitas && (
                                     <div>
                                         <label className="block text-sm font-medium text-gray-500">Evaluasi Efektivitas</label>
                                         <p className="mt-1 text-sm text-gray-900">{mitigasi.evaluasi_efektivitas}</p>
                                     </div>
                                 )}
-
                                 {mitigasi.rekomendasi_lanjutan && (
                                     <div>
                                         <label className="block text-sm font-medium text-gray-500">Rekomendasi Lanjutan</label>
@@ -396,10 +388,28 @@ export default function Show() {
                             </div>
                         </div>
 
-                        {/* Risk Information */}
+                        <div className="bg-white shadow rounded-lg p-6">
+                            <h2 className="text-lg font-medium text-gray-900 mb-4">Analisis Risiko</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className='p-4 border rounded-lg'>
+                                    <label className="block text-sm font-medium text-gray-500">Probabilitas</label>
+                                    <p className="mt-1 text-2xl font-semibold text-gray-900">{mitigasi.probability || 'N/A'}</p>
+                                </div>
+                                <div className='p-4 border rounded-lg'>
+                                    <label className="block text-sm font-medium text-gray-500">Dampak</label>
+                                    <p className="mt-1 text-2xl font-semibold text-gray-900">{mitigasi.impact || 'N/A'}</p>
+                                </div>
+                                <div className='p-4 border rounded-lg'>
+                                    <label className="block text-sm font-medium text-gray-500">Level Risiko</label>
+                                    <div className={`mt-1 inline-block rounded-lg px-3 py-1 text-sm font-semibold ${getRiskLevelColor(riskLevel)}`}>
+                                        {getRiskLevelText(riskLevel)} ({riskLevel}/25)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="bg-white shadow rounded-lg p-6">
                             <h2 className="text-lg font-medium text-gray-900 mb-4">Informasi Risiko Terkait</h2>
-
                             {mitigasi.identify_risk ? (
                                 <div className="space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -409,10 +419,9 @@ export default function Show() {
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-500">Unit Kerja</label>
-                                            <p className="mt-1 text-sm text-gray-900">{mitigasi.identify_risk.unit_kerja}</p>
+                                            <p className="mt-1 text-sm text-gray-900">{mitigasi.identify_risk.unit}</p>
                                         </div>
                                     </div>
-
                                     <div>
                                         <label className="block text-sm font-medium text-gray-500">Deskripsi Risiko</label>
                                         <p className="mt-1 text-sm text-gray-900">{mitigasi.identify_risk.description}</p>
@@ -423,13 +432,11 @@ export default function Show() {
                             )}
                         </div>
 
-                        {/* Files */}
                         {mitigasi.bukti_implementasi && mitigasi.bukti_implementasi.length > 0 ? (
                             <div className="bg-white shadow rounded-lg p-6">
                                 <h2 className="text-lg font-medium text-gray-900 mb-4">Bukti Implementasi</h2>
-
                                 <div className="space-y-3">
-                                    {mitigasi.bukti_implementasi.map((file, index) => (
+                                    {mitigasi.bukti_implementasi.map((file: any, index: number) => (
                                         <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                             <div className="flex items-center">
                                                 <FileText className="w-5 h-5 text-gray-400 mr-3" />
@@ -442,14 +449,14 @@ export default function Show() {
                                             </div>
                                             <div className="flex items-center space-x-2">
                                                 <button
-                                                    onClick={() => handleDownloadBukti(file.filename || file.original_name)}
+                                                    onClick={() => handleDownloadBukti(file.file_name || file.original_name)}
                                                     className="text-blue-600 hover:text-blue-800"
                                                     title="Download"
                                                 >
                                                     <Download className="w-4 h-4" />
                                                 </button>
                                                 <button
-                                                    onClick={() => handleRemoveBukti(file.filename || file.original_name)}
+                                                    onClick={() => handleRemoveBukti(file.file_name || file.original_name)}
                                                     className="text-red-600 hover:text-red-800"
                                                     title="Hapus"
                                                 >
@@ -465,10 +472,8 @@ export default function Show() {
 
                     {/* Sidebar */}
                     <div className="space-y-6">
-                        {/* Audit Trail */}
                         <div className="bg-white shadow rounded-lg p-6">
                             <h2 className="text-lg font-medium text-gray-900 mb-4">Audit Trail</h2>
-
                             <div className="space-y-4">
                                 {mitigasi.updated_at && mitigasi.updated_at !== mitigasi.created_at && (
                                     <div>
@@ -495,7 +500,6 @@ export default function Show() {
                         <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
                             <div className="mt-3">
                                 <h3 className="text-lg font-medium text-gray-900 mb-4">Update Progress</h3>
-
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -513,7 +517,6 @@ export default function Show() {
                                             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
                                         />
                                     </div>
-
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
                                             Catatan Progress
@@ -530,7 +533,6 @@ export default function Show() {
                                         />
                                     </div>
                                 </div>
-
                                 <div className="flex items-center justify-end space-x-3 mt-6">
                                     <button
                                         onClick={() => setShowProgressModal(false)}
@@ -553,3 +555,4 @@ export default function Show() {
         </AppLayout>
     );
 }
+

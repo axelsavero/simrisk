@@ -11,9 +11,9 @@ import {
     User,
     FileText,
     Target,
-    Wallet
+    Wallet,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 
 interface PageProps {
@@ -33,6 +33,8 @@ interface PageProps {
         status_mitigasi: string;
         progress_percentage: number;
         catatan_progress: string;
+        probability: number;
+        impact: number;
         bukti_implementasi: Array<{
             original_name: string;
             file_name: string;
@@ -57,6 +59,8 @@ interface MitigasiFormData {
     biaya_mitigasi: string;
     status_mitigasi: string;
     progress_percentage: number;
+    probability: number;
+    impact: number;
     catatan_progress: string;
     bukti_implementasi: File[];
     evaluasi_efektivitas: string;
@@ -69,11 +73,24 @@ const getBreadcrumbs = (isEdit: boolean): BreadcrumbItem[] => [
     { title: isEdit ? 'Edit Mitigasi' : 'Tambah Mitigasi', href: isEdit ? '#' : '/mitigasi/create' },
 ];
 
-export default function Create() {
-    const { identifyRisks, selectedRiskId, statusOptions, strategiOptions } = usePage<PageProps>().props;
-    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+const getRiskLevelText = (level: number) => {
+    if (level >= 20) return 'Tinggi';
+    if (level >= 9) return 'Sedang';
+    if (level >= 3) return 'Rendah';
+    return 'Sangat Rendah';
+};
 
-    const { mitigasi } = usePage<PageProps>().props;
+const getRiskLevelColor = (level: number) => {
+    if (level >= 20) return 'text-red-600 bg-red-100';
+    if (level >= 9) return 'text-orange-600 bg-orange-100';
+    if (level >= 3) return 'text-yellow-600 bg-yellow-100';
+    return 'text-green-600 bg-green-100';
+};
+
+
+export default function Create() {
+    const { identifyRisks, selectedRiskId, statusOptions, strategiOptions, mitigasi } = usePage<PageProps>().props;
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
     const { data, setData, processing, errors } = useForm<MitigasiFormData>({
         id: mitigasi?.id,
@@ -83,14 +100,31 @@ export default function Create() {
         strategi_mitigasi: mitigasi?.strategi_mitigasi || '',
         pic_mitigasi: mitigasi?.pic_mitigasi || '',
         target_selesai: mitigasi?.target_selesai || '',
-        biaya_mitigasi: (mitigasi?.biaya_mitigasi || '').split('.')[0],
+        biaya_mitigasi: (mitigasi?.biaya_mitigasi || '0').split('.')[0],
         status_mitigasi: mitigasi?.status_mitigasi || 'belum_dimulai',
         progress_percentage: mitigasi?.progress_percentage || 0,
+        probability: mitigasi?.probability || 1,
+        impact: mitigasi?.impact || 1,
         catatan_progress: mitigasi?.catatan_progress || '',
         bukti_implementasi: [],
         evaluasi_efektivitas: mitigasi?.evaluasi_efektivitas || '',
         rekomendasi_lanjutan: mitigasi?.rekomendasi_lanjutan || ''
     });
+
+    // 🔥 FIX: Auto-populate probability and impact when risk is selected
+    useEffect(() => {
+        if (data.identify_risk_id) {
+            const selectedRisk = identifyRisks.find(risk => risk.id.toString() === data.identify_risk_id);
+            if (selectedRisk) {
+                setData(currentData => ({
+                    ...currentData,
+                    probability: selectedRisk.probability || 1,
+                    impact: selectedRisk.impact || 1,
+                }));
+            }
+        }
+    }, [data.identify_risk_id, identifyRisks]);
+
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
@@ -119,37 +153,41 @@ export default function Create() {
             }
         });
 
-        router.post('/mitigasi', formData, {
-            onSuccess: () => {
-                Swal.fire({
-                    title: 'Berhasil!',
-                    text: 'Mitigasi berhasil dibuat.',
-                    icon: 'success',
-                    confirmButtonText: 'OK'
-                }).then(() => {
-                    router.visit('/mitigasi');
-                });
-            },
-            onError: () => {
-                Swal.fire({
-                    title: 'Error!',
-                    text: 'Gagal membuat mitigasi. Periksa kembali data yang dimasukkan.',
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                });
-            }
-        });
+        if (isEdit) {
+            // Inertia doesn't handle FormData with PUT/PATCH well, so we use a POST request with a method spoofing.
+            formData.append('_method', 'PUT');
+            router.post(`/mitigasi/${mitigasi?.id}`, formData, {
+                onSuccess: () => {
+                    Swal.fire('Berhasil!', 'Mitigasi berhasil diperbarui.', 'success').then(() => {
+                        router.visit('/mitigasi');
+                    });
+                },
+                onError: (errs) => {
+                    console.error(errs);
+                    Swal.fire('Error!', 'Gagal memperbarui mitigasi. Periksa kembali data yang dimasukkan.', 'error');
+                }
+            });
+        } else {
+            router.post('/mitigasi', formData, {
+                onSuccess: () => {
+                    Swal.fire('Berhasil!', 'Mitigasi berhasil dibuat.', 'success').then(() => {
+                        router.visit('/mitigasi');
+                    });
+                },
+                onError: (errs) => {
+                    console.error(errs);
+                    Swal.fire('Error!', 'Gagal membuat mitigasi. Periksa kembali data yang dimasukkan.', 'error');
+                }
+            });
+        }
     };
-
-    // const formatCurrency = (value: string) => {
-    //     const number = value.replace(/[^\d]/g, '');
-    //     return new Intl.NumberFormat('id-ID').format(parseInt(number) || 0);
-    // };
 
     const handleCurrencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value.replace(/[^\d]/g, '');
         setData('biaya_mitigasi', value);
     };
+
+    const riskLevel = data.probability * data.impact;
 
     const isEdit = Boolean(mitigasi);
     const currentBreadcrumbs = getBreadcrumbs(isEdit);
@@ -197,9 +235,8 @@ export default function Create() {
                                 <select
                                     value={data.identify_risk_id}
                                     onChange={(e) => setData('identify_risk_id', e.target.value)}
-                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                        errors.identify_risk_id ? 'border-red-300' : 'border-gray-300'
-                                    }`}
+                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${errors.identify_risk_id ? 'border-red-300' : 'border-gray-300'
+                                        }`}
                                     required
                                 >
                                     <option value="">Pilih Risiko</option>
@@ -223,9 +260,8 @@ export default function Create() {
                                     type="text"
                                     value={data.judul_mitigasi}
                                     onChange={(e) => setData('judul_mitigasi', e.target.value)}
-                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                        errors.judul_mitigasi ? 'border-red-300' : 'border-gray-300'
-                                    }`}
+                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${errors.judul_mitigasi ? 'border-red-300' : 'border-gray-300'
+                                        }`}
                                     placeholder="Masukkan judul mitigasi"
                                     required
                                 />
@@ -243,9 +279,8 @@ export default function Create() {
                                     value={data.deskripsi_mitigasi}
                                     onChange={(e) => setData('deskripsi_mitigasi', e.target.value)}
                                     rows={4}
-                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                        errors.deskripsi_mitigasi ? 'border-red-300' : 'border-gray-300'
-                                    }`}
+                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${errors.deskripsi_mitigasi ? 'border-red-300' : 'border-gray-300'
+                                        }`}
                                     placeholder="Jelaskan detail rencana mitigasi"
                                     required
                                 />
@@ -262,9 +297,8 @@ export default function Create() {
                                 <select
                                     value={data.strategi_mitigasi}
                                     onChange={(e) => setData('strategi_mitigasi', e.target.value)}
-                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                        errors.strategi_mitigasi ? 'border-red-300' : 'border-gray-300'
-                                    }`}
+                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${errors.strategi_mitigasi ? 'border-red-300' : 'border-gray-300'
+                                        }`}
                                     required
                                 >
                                     <option value="">Pilih Strategi</option>
@@ -288,9 +322,8 @@ export default function Create() {
                                         type="text"
                                         value={data.pic_mitigasi}
                                         onChange={(e) => setData('pic_mitigasi', e.target.value)}
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
-                                            errors.pic_mitigasi ? 'border-red-300' : 'border-gray-300'
-                                        }`}
+                                        className={`w-full pl-10 pr-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${errors.pic_mitigasi ? 'border-red-300' : 'border-gray-300'
+                                            }`}
                                         placeholder="Nama penanggung jawab"
                                         required
                                     />
@@ -311,9 +344,8 @@ export default function Create() {
                                         type="date"
                                         value={data.target_selesai}
                                         onChange={(e) => setData('target_selesai', e.target.value)}
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
-                                            errors.target_selesai ? 'border-red-300' : 'border-gray-300'
-                                        }`}
+                                        className={`w-full pl-10 pr-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${errors.target_selesai ? 'border-red-300' : 'border-gray-300'
+                                            }`}
                                         required
                                     />
                                 </div>
@@ -331,11 +363,10 @@ export default function Create() {
                                     <Wallet className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                                     <input
                                         type="text"
-                                        value={data.biaya_mitigasi}
+                                        value={new Intl.NumberFormat('id-ID').format(parseInt(data.biaya_mitigasi) || 0)}
                                         onChange={handleCurrencyChange}
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
-                                            errors.biaya_mitigasi ? 'border-red-300' : 'border-gray-300'
-                                        }`}
+                                        className={`w-full pl-10 pr-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${errors.biaya_mitigasi ? 'border-red-300' : 'border-gray-300'
+                                            }`}
                                         placeholder="0"
                                     />
                                 </div>
@@ -348,9 +379,8 @@ export default function Create() {
 
                     {/* Status and Progress */}
                     <div>
-                        <h2 className="text-lg font-medium text-gray-900 mb-4">Status dan Progress</h2>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+                        <h2 className="text-lg font-medium text-gray-900 mb-4">Status dan Analisis Risiko</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full items-start">
                             {/* Status Mitigasi */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -359,9 +389,8 @@ export default function Create() {
                                 <select
                                     value={data.status_mitigasi}
                                     onChange={(e) => setData('status_mitigasi', e.target.value)}
-                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                        errors.status_mitigasi ? 'border-red-300' : 'border-gray-300'
-                                    }`}
+                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${errors.status_mitigasi ? 'border-red-300' : 'border-gray-300'
+                                        }`}
                                 >
                                     {Object.entries(statusOptions).map(([key, label]) => (
                                         <option key={key} value={key}>{label}</option>
@@ -385,9 +414,8 @@ export default function Create() {
                                         max="100"
                                         value={data.progress_percentage}
                                         onChange={(e) => setData('progress_percentage', parseInt(e.target.value))}
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
-                                            errors.progress_percentage ? 'border-red-300' : 'border-gray-300'
-                                        }`}
+                                        className={`w-full pl-10 pr-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${errors.progress_percentage ? 'border-red-300' : 'border-gray-300'
+                                            }`}
                                         placeholder="0"
                                     />
                                 </div>
@@ -395,7 +423,54 @@ export default function Create() {
                                     <p className="mt-1 text-sm text-red-600">{errors.progress_percentage}</p>
                                 )}
                             </div>
+                            
+                            {/* Empty div for alignment */}
+                            <div className="hidden lg:block"></div>
 
+                            {/* Probability */}
+                            <div>
+                                <label className="mb-1 block text-sm font-medium text-gray-700">Probabilitas (1-5)</label>
+                                <select
+                                    value={data.probability}
+                                    onChange={(e) => setData('probability', parseInt(e.target.value))}
+                                    className={`w-full rounded-md border p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none ${errors.probability ? 'border-red-300' : 'border-gray-300'}`}
+                                    required
+                                >
+                                    <option value={1}>1 - Sangat Rendah</option>
+                                    <option value={2}>2 - Rendah</option>
+                                    <option value={3}>3 - Sedang</option>
+                                    <option value={4}>4 - Tinggi</option>
+                                    <option value={5}>5 - Sangat Tinggi</option>
+                                </select>
+                                {errors.probability && <div className="mt-1 text-sm text-red-500">{errors.probability}</div>}
+                            </div>
+
+                            {/* Impact */}
+                            <div>
+                                <label className="mb-1 block text-sm font-medium text-gray-700">Dampak (1-5)</label>
+                                <select
+                                    value={data.impact}
+                                    onChange={(e) => setData('impact', parseInt(e.target.value))}
+                                    className={`w-full rounded-md border p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none ${errors.impact ? 'border-red-300' : 'border-gray-300'}`}
+                                    required
+                                >
+                                    <option value={1}>1 - Sangat Rendah</option>
+                                    <option value={2}>2 - Rendah</option>
+                                    <option value={3}>3 - Sedang</option>
+                                    <option value={4}>4 - Tinggi</option>
+                                    <option value={5}>5 - Sangat Tinggi</option>
+                                </select>
+                                {errors.impact && <div className="mt-1 text-sm text-red-500">{errors.impact}</div>}
+                            </div>
+
+                            {/* Risk Level Display */}
+                            <div className="flex flex-col justify-start items-start">
+                                <label className="mb-1 block text-sm font-medium text-gray-700">Level Mitigasi</label>
+                                <div className={`inline-block rounded-lg px-4 py-2 font-semibold ${getRiskLevelColor(riskLevel)}`}>
+                                    {getRiskLevelText(riskLevel)} ({riskLevel}/25)
+                                </div>
+                            </div>
+                            
                             {/* Catatan Progress */}
                             <div className="md:col-span-2 lg:col-span-3">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -405,9 +480,8 @@ export default function Create() {
                                     value={data.catatan_progress}
                                     onChange={(e) => setData('catatan_progress', e.target.value)}
                                     rows={3}
-                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                        errors.catatan_progress ? 'border-red-300' : 'border-gray-300'
-                                    }`}
+                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${errors.catatan_progress ? 'border-red-300' : 'border-gray-300'
+                                        }`}
                                     placeholder="Catatan mengenai progress implementasi mitigasi"
                                 />
                                 {errors.catatan_progress && (
@@ -420,7 +494,6 @@ export default function Create() {
                     {/* Files and Documentation */}
                     <div>
                         <h2 className="text-lg font-medium text-gray-900 mb-4">Dokumentasi</h2>
-
                         <div className="space-y-6 w-full">
                             {/* Bukti Implementasi */}
                             <div>
@@ -430,7 +503,7 @@ export default function Create() {
                                 <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md w-full">
                                     <div className="space-y-1 text-center w-full">
                                         <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                                        <div className="flex text-sm text-gray-600">
+                                        <div className="flex text-sm text-gray-600 justify-center">
                                             <label className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
                                                 <span>Upload files</span>
                                                 <input
@@ -490,9 +563,8 @@ export default function Create() {
                                     value={data.evaluasi_efektivitas}
                                     onChange={(e) => setData('evaluasi_efektivitas', e.target.value)}
                                     rows={3}
-                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                        errors.evaluasi_efektivitas ? 'border-red-300' : 'border-gray-300'
-                                    }`}
+                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${errors.evaluasi_efektivitas ? 'border-red-300' : 'border-gray-300'
+                                        }`}
                                     placeholder="Evaluasi efektivitas mitigasi yang telah diimplementasikan"
                                 />
                                 {errors.evaluasi_efektivitas && (
@@ -509,9 +581,8 @@ export default function Create() {
                                     value={data.rekomendasi_lanjutan}
                                     onChange={(e) => setData('rekomendasi_lanjutan', e.target.value)}
                                     rows={3}
-                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                        errors.rekomendasi_lanjutan ? 'border-red-300' : 'border-gray-300'
-                                    }`}
+                                    className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${errors.rekomendasi_lanjutan ? 'border-red-300' : 'border-gray-300'
+                                        }`}
                                     placeholder="Rekomendasi untuk tindak lanjut atau perbaikan mitigasi"
                                 />
                                 {errors.rekomendasi_lanjutan && (
@@ -521,8 +592,9 @@ export default function Create() {
                         </div>
                     </div>
 
+
                     {/* Form Actions */}
-                    <div className="flex items-center justify-end space-x-4">
+                    <div className="flex items-center justify-end space-x-4 pt-4 border-t">
                         <Link
                             href="/mitigasi"
                             className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
@@ -542,7 +614,7 @@ export default function Create() {
                             ) : (
                                 <>
                                     <Save className="w-4 h-4 mr-2" />
-                                    Simpan Mitigasi
+                                    {isEdit ? 'Update Mitigasi' : 'Simpan Mitigasi'}
                                 </>
                             )}
                         </button>

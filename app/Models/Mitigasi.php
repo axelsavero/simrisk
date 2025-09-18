@@ -23,6 +23,8 @@ class Mitigasi extends Model
         'biaya_mitigasi',
         'status_mitigasi',
         'progress_percentage',
+        'probability', // TAMBAHAN
+        'impact',      // TAMBAHAN
         'catatan_progress',
         'bukti_implementasi',
         'evaluasi_efektivitas',
@@ -39,12 +41,16 @@ class Mitigasi extends Model
         'target_selesai' => 'date',
         'biaya_mitigasi' => 'decimal:2',
         'progress_percentage' => 'integer',
+        'probability' => 'integer', // TAMBAHAN
+        'impact' => 'integer',      // TAMBAHAN
         'bukti_implementasi' => 'array',
         'validation_processed_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
 
-     protected $appends = ['status_label', 'strategi_label'];
+    protected $appends = ['status_label', 'strategi_label'];
+
+    // ... (Konstanta tidak berubah)
 
     // Status constants
     const STATUS_BELUM_DIMULAI = 'belum_dimulai';
@@ -61,11 +67,12 @@ class Mitigasi extends Model
     const VALIDATION_STATUS_REJECTED = 'rejected';
 
     // Strategi constants
-    const STRATEGI_AVOID = 'avoid';        // Menghindari
-    const STRATEGI_REDUCE = 'reduce';      // Mengurangi
-    const STRATEGI_TRANSFER = 'transfer';  // Mentransfer
-    const STRATEGI_ACCEPT = 'accept';      // Menerima
+    const STRATEGI_AVOID = 'avoid';      // Menghindari
+    const STRATEGI_REDUCE = 'reduce';    // Mengurangi
+    const STRATEGI_TRANSFER = 'transfer';// Mentransfer
+    const STRATEGI_ACCEPT = 'accept';    // Menerima
 
+    // ... (Relasi tidak berubah)
     /**
      * Get the identify risk that owns the mitigasi.
      */
@@ -98,6 +105,8 @@ class Mitigasi extends Model
         return $this->belongsTo(User::class, 'validation_processed_by');
     }
 
+
+    // ... (Scopes tidak berubah)
     // Scopes
     public function scopeByStatus($query, $status)
     {
@@ -147,6 +156,7 @@ class Mitigasi extends Model
             ->whereNotIn('status_mitigasi', [self::STATUS_SELESAI, self::STATUS_DIBATALKAN]);
     }
 
+    // ... (Accessors tidak berubah)
     // Accessors
     public function getStatusLabelAttribute(): string
     {
@@ -193,6 +203,8 @@ class Mitigasi extends Model
         return max(0, now()->diffInDays($this->target_selesai, false));
     }
 
+
+    // ... (Methods tidak berubah)
     // Methods
     public function canBeEdited(): bool
     {
@@ -254,6 +266,7 @@ class Mitigasi extends Model
         return $this->save();
     }
 
+
     // Static methods
     public static function getStatusOptions(): array
     {
@@ -284,10 +297,12 @@ class Mitigasi extends Model
             'deskripsi_mitigasi' => 'required|string',
             'strategi_mitigasi' => 'required|in:avoid,reduce,transfer,accept',
             'pic_mitigasi' => 'required|string|max:255',
-            'target_selesai' => 'required|date|after:today',
+            'target_selesai' => 'required|date|after_or_equal:today', // Mengizinkan hari ini
             'biaya_mitigasi' => 'nullable|numeric|min:0',
             'status_mitigasi' => 'required|in:belum_dimulai,sedang_berjalan,selesai,tertunda,dibatalkan',
             'progress_percentage' => 'nullable|integer|min:0|max:100',
+            'probability' => 'required|integer|min:1|max:5', // TAMBAHAN
+            'impact' => 'required|integer|min:1|max:5',      // TAMBAHAN
             'catatan_progress' => 'nullable|string',
             'evaluasi_efektivitas' => 'nullable|string',
             'rekomendasi_lanjutan' => 'nullable|string',
@@ -304,7 +319,7 @@ class Mitigasi extends Model
         ];
     }
 
-    // Boot method
+    // ... (Boot method tidak berubah)
     protected static function boot(): void
     {
         parent::boot();

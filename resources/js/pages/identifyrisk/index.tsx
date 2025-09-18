@@ -323,9 +323,9 @@ export default function Index() {
                             <th className="border border-black p-2 text-left">Kode Risiko</th>
                             <th className="border border-black p-2 text-left">Deskripsi</th>
                             <th className="border border-black p-2 text-left">Penyebab</th>
-                            <th className="border border-black p-2 text-left">Probabilitas Inherent</th>
-                            <th className="border border-black p-2 text-left">Impact Inherent</th>
-                            <th className="border border-black p-2 text-left">Tingkat Risiko Inherent</th>
+                            <th className="border border-black p-2 text-left">Probabilitas</th>
+                            <th className="border border-black p-2 text-left">Dampak</th>
+                            <th className="border border-black p-2 text-left">Tingkat Risiko</th>
                             <th className="border border-black p-2 text-left">Status</th>
                             <th className="border border-black p-2 text-left">Aksi</th>
                         </tr>
