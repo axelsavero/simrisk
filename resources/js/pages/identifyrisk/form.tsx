@@ -234,7 +234,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
                         >
                             <option value="">Pilih Kategori</option>
                             <option value="Operasional">Operasional</option>
-                            <option value="Finansial">Keuangan</option>
+                            <option value="Keuangan">Keuangan</option>
                             <option value="Kepatuhan">Kepatuhan</option>
                             <option value="Strategis">Strategis</option>
                             <option value="Reputasi">Kecurangan</option>

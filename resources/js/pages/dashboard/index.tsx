@@ -260,14 +260,14 @@ export default function Dashboard({ riskMatrixData, mitigasiMatrixData, filterOp
                                     }),
                                 }}
                                 options={units.map((unitOption) => ({
-                                    value: unitOption.name,
-                                    label: unitOption.name,
-                                }))}
-                                value={unit ? { value: unit, label: unit } : null}
-                                onChange={(selected) => setUnit(selected ? selected.value : '')}
-                                isLoading={loadingUnits}
-                                placeholder={loadingUnits ? 'Memuat unit...' : 'Pilih Unit'}
-                                isClearable
+                                    value: unitOption.id.toString(),
+                                    label: unitOption.name,
+                                }))}
+                                value={unit ? units.find(u => u.id.toString() === unit) ? { value: unit, label: units.find(u => u.id.toString() === unit)?.name || '' } : null : null}
+                                onChange={(selected) => setUnit(selected ? selected.value : '')}
+                                isLoading={loadingUnits}
+                                placeholder={loadingUnits ? 'Memuat unit...' : 'Pilih Unit'}
+                                isClearable
                             />
                             <ReactSelect
                                 className="w-full"

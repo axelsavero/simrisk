@@ -243,9 +243,9 @@ class IdentifyRisk extends Model
     public function scopeByKategori(Builder $query, ?string $kategori): Builder
     {
         if ($kategori) {
-            return $query->where('kategori_risiko', $kategori);
+            return $query->where('risk_category', $kategori);
         }
-        return $query;
+        return $query;  
     }
 
     /**
