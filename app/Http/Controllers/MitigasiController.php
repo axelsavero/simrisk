@@ -88,30 +88,31 @@ class MitigasiController extends Controller
      */
     public function index(Request $request): Response
     {
-        // Ensure user and roles are loaded
         $user = Auth::user();
         if ($user && !$user->relationLoaded('roles')) {
             $user->load('roles');
         }
 
-        $query = Mitigasi::with(['identifyRisk', 'identifyRisk.user', 'validationProcessor']);
+        $query = Mitigasi::with(['identifyRisk.user', 'validationProcessor']);
 
-        // Terapkan aturan akses generik
         if ($this->isOwnerRisk($user)) {
-            // Owner Risk melihat semua mitigasi miliknya, termasuk draft.
+            // Owner Risk melihat semua mitigasi dari risiko yang ia buat.
             $query->whereHas('identifyRisk', function ($q) use ($user) {
                 $q->where('user_id', $user->id);
             });
         } else {
             // Role lain (Super Admin, Admin, Pimpinan) hanya melihat yang BUKAN draft.
             $query->where('validation_status', '!=', self::VALIDATION_STATUS_DRAFT);
-            
-            // Batasi view untuk Admin dan Pimpinan berdasarkan unit kerja
-            if ($this->isAdmin($user) || $this->isPimpinan($user)) {
-                $query->whereHas('identifyRisk', function ($q) use ($user) {
-                    $q->where('unit_kerja', $user->unit_kerja);
+
+            // Admin dan Pimpinan hanya melihat mitigasi dari unit mereka.
+            if (($this->isAdmin($user) || $this->isPimpinan($user)) && $user->unit_id) {
+                // INI PERBAIKAN UTAMA:
+                // Filter mitigasi berdasarkan unit_id dari USER yang membuat risiko.
+                $query->whereHas('identifyRisk.user', function ($userQuery) use ($user) {
+                    $userQuery->where('unit_id', $user->unit_id);
                 });
             }
+            // Super Admin tidak memerlukan filter unit tambahan, bisa melihat semua.
         }
 
         // Filter berdasarkan status
@@ -183,7 +184,7 @@ class MitigasiController extends Controller
             'strategiOptions' => $strategiOptions,
         ]);
     }
-    
+
     /**
      * Display dashboard with risk matrix and mitigation data.
      */
@@ -205,10 +206,10 @@ class MitigasiController extends Controller
                 $q->where('unit_kerja', $user->unit_kerja);
             });
         }
-        
+
         // Apply dashboard filters
         if ($request->filled('unit')) {
-             $mitigasiQuery->whereHas('identifyRisk', function ($q) use ($request) {
+            $mitigasiQuery->whereHas('identifyRisk', function ($q) use ($request) {
                 $q->where('unit_kerja', $request->unit);
             });
         }
@@ -220,7 +221,7 @@ class MitigasiController extends Controller
         if ($request->filled('tahun')) {
             $mitigasiQuery->whereYear('created_at', $request->tahun);
         }
-        
+
         $mitigasis = $mitigasiQuery->get();
 
         $mitigasiPoints = $mitigasis->map(function ($mitigasi) {
@@ -288,7 +289,7 @@ class MitigasiController extends Controller
         if ($riskId) {
             $identifyRisk = IdentifyRisk::findOrFail($riskId);
         }
-        
+
         // 🔥 PERUBAHAN: Sekarang mengambil semua field yang dibutuhkan
         $identifyRisksQuery = IdentifyRisk::select('id', 'id_identify', 'description', 'probability', 'impact')
             ->where('validation_status', 'approved');
@@ -361,26 +362,30 @@ class MitigasiController extends Controller
             $user->load('roles');
         }
 
-        // Authorization logic remains the same
-        if ($this->isSuperAdmin($user) || $this->isPimpinan($user)) {
-            // Full access
+        // Memuat relasi yang dibutuhkan untuk otorisasi
+        $mitigasi->load('identifyRisk.user');
+        
+        $isAuthorized = false;
+        
+        if ($this->isSuperAdmin($user)) {
+            $isAuthorized = true;
         } elseif ($this->isOwnerRisk($user)) {
-            if ($mitigasi->identifyRisk->user_id !== $user->id) {
-                abort(403, 'Unauthorized');
+            if ($mitigasi->identifyRisk->user_id === $user->id) {
+                $isAuthorized = true;
             }
-        } elseif ($this->isAdmin($user)) {
-            if ($mitigasi->identifyRisk->unit_kerja !== $user->unit_kerja) {
-                abort(403, 'Unauthorized');
+        } elseif ($this->isAdmin($user) || $this->isPimpinan($user)) {
+            // PERBAIKAN OTORISASI: Bandingkan unit_id, bukan string unit_kerja
+            if ($mitigasi->identifyRisk->user && $mitigasi->identifyRisk->user->unit_id === $user->unit_id) {
+                $isAuthorized = true;
             }
-        } else {
-            abort(403, 'Unauthorized');
         }
 
-        $mitigasi->load(['identifyRisk', 'creator', 'updater']);
+        if (!$isAuthorized) {
+            abort(403, 'ANDA TIDAK MEMILIKI HAK AKSES UNTUK MELIHAT DATA INI.');
+        }
 
-        // The 'probability' and 'impact' fields are already part of the $mitigasi model object
-        // because we added them to the database and the $fillable array.
-        // No extra action is needed here to pass them to the view.
+        // Memuat relasi tambahan untuk ditampilkan di view
+        $mitigasi->load(['creator', 'updater']);
 
         return Inertia::render('mitigasi/show', [
             'mitigasi' => $mitigasi,
@@ -417,7 +422,7 @@ class MitigasiController extends Controller
     public function update(Request $request, Mitigasi $mitigasi): RedirectResponse
     {
         $rules = Mitigasi::getValidationRules();
-        
+
         $validated = $request->validate($rules);
 
         // Handle file uploads
