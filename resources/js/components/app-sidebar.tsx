@@ -33,11 +33,12 @@ type NavItem = {
 
 // 2. Tipe PageProps untuk akses auth.roles dari Inertia
 type PageProps = {
-  auth: {
-    user?: {
-      roles?: string[]; // misalnya: ['admin'], ['super-admin'], ['owner-risk']
+    auth: {
+        user?: {
+            // 'roles' bisa berupa array objek atau array string
+            roles?: Array<{ name: string; [key: string]: any } | string>;
+        };
     };
-  };
 };
 
 export function AppSidebar() {
@@ -123,9 +124,30 @@ export function AppSidebar() {
 
   // 4. Filter berdasarkan role user
   const mainNavItems = allNavItems.filter((item) => {
-    if (!item.role) return true;
-    return item.role.some((r) => auth.user?.roles?.includes(r));
-  });
+        // Jika item tidak butuh role, selalu tampilkan
+        if (!item.role) {
+            return true;
+        }
+
+        const roles = auth.user?.roles;
+
+        // Jika user tidak punya role, jangan tampilkan item
+        if (!roles || !Array.isArray(roles) || roles.length === 0) {
+            return false;
+        }
+
+        // Cek format 'roles'. Jika elemen pertama adalah objek dengan properti 'name',
+        // maka ini adalah array objek. Jika tidak, anggap sebagai array string.
+        const isObjectRoles = typeof roles[0] === 'object' && roles[0] !== null && 'name' in roles[0];
+
+        // Normalisasi data 'roles' menjadi array string sederhana
+        const userRoleNames: string[] = isObjectRoles
+            ? (roles as { name: string }[]).map((role) => role.name)
+            : (roles as string[]);
+
+        // Lakukan perbandingan yang aman
+        return item.role.some((requiredRole) => userRoleNames.includes(requiredRole));
+    });
 
   return (
     <Sidebar variant="inset" className={collapsed ? 'w-16' : 'w-64'}>
