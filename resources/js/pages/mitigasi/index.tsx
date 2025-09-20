@@ -487,7 +487,7 @@ export default function Index() {
                                 {' '}
                                 {searchTerm || filters.status_mitigasi || filters.strategi_mitigasi || filters.validation_status
                                     ? `Tidak ada mitigasi yang cocok dengan filter${filters.status_mitigasi ? ` status "${statusOptions[filters.status_mitigasi]}"` : ''}${filters.strategi_mitigasi ? ` strategi "${strategiOptions[filters.strategi_mitigasi]}"` : ''}${filters.validation_status ? ` validasi "${getValidationStatusLabel(filters.validation_status)}"` : ''}${searchTerm ? ` atau pencarian "${searchTerm}"` : ''}.`
-                                    : 'Belum ada mitigasi yang dibuat.'}
+                                    : ''}
                             </p>
                         </div>
                     ) : (

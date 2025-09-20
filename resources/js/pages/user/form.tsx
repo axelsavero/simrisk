@@ -388,7 +388,7 @@ export default function AdminForm({ allRoles, user = null }: FormProps) {
                             options={allRoles.map((role) => ({ value: role, label: role }))}
                             value={{ value: data.role, label: data.role }}
                             onChange={(selected) => selected && setData('role', selected.value)}
-                            isDisabled={!!user}
+                            isDisabled={true}
                             placeholder="-- Pilih Role --"
                             classNamePrefix="react-select"
                         />

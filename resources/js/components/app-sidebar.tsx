@@ -117,6 +117,7 @@ export function AppSidebar() {
       title: 'Laporan',
       href: '/laporan',
       icon: BookOpen,
+      role: ['super-admin', 'admin', 'pimpinan'],
     },
   ];
 
