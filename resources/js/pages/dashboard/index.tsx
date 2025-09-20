@@ -40,6 +40,7 @@ interface Props {
             unit_kerja: string;
             level: number;
             level_text: string;
+            validation_status: string;
         }>;
         totalMitigasi: number;
         statusStats: Record<string, number>;
@@ -116,7 +117,7 @@ export default function Dashboard({ riskMatrixData, mitigasiMatrixData, filterOp
     // Only show validated risks (exclude pending/submitted)
     const riskPointsSebelum = (riskMatrixData?.riskPointsSebelum || []).filter((p) => p.validation_status === 'approved');
 
-    const riskPointsSesudah = (riskMatrixData?.riskPointsSesudah || []).filter((p) => p.validation_status === 'approved');
+    const riskPointsSesudah = (mitigasiMatrixData?.mitigasiPoints || []).filter((p) => p.validation_status === 'approved');
 
     const tingkatRisiko = riskMatrixData?.tingkatRisiko || [
         { tingkat: 'Sangat Rendah', inheren: 0, residual: 2, color: 'bg-green-500' },

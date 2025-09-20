@@ -113,22 +113,23 @@ class DashboardController extends Controller
             abort(401, 'Unauthenticated');
         }
 
+        // Mengambil mitigasi yang sudah disetujui beserta relasi ke risikonya
         $query = Mitigasi::with(['identifyRisk'])
             ->where('validation_status', Mitigasi::VALIDATION_STATUS_APPROVED);
 
-        // Filter berdasarkan role
+        // Filter berdasarkan peran pengguna
         if ($user->hasRole('owner-risk')) {
             $query->whereHas('identifyRisk', function ($q) use ($user) {
                 $q->where('user_id', $user->id);
             });
-        } elseif ($user->hasRole('pimpinan')) {
-            $query->whereHas('identifyRisk', function ($q) use ($user) {
-                $q->where('unit_kerja', $user->unit_kerja);
+        } elseif ($user->hasAnyRole(['admin', 'pimpinan'])) {
+            $query->whereHas('identifyRisk.user', function ($q) use ($user) {
+                $q->where('unit_id', $user->unit_id);
             });
         }
-        // Super admin bisa melihat semua mitigasi yang approved
+        // Super-admin dapat melihat semua
 
-        // Apply filters
+        // Terapkan filter dari dashboard
         if ($unit) {
             $query->whereHas('identifyRisk', function ($q) use ($unit) {
                 $q->where('unit_kerja', $unit);
@@ -137,76 +138,58 @@ class DashboardController extends Controller
 
         if ($kategori) {
             $query->whereHas('identifyRisk', function ($q) use ($kategori) {
-                $q->where('kategori_risiko', $kategori);
+                $q->where('risk_category', $kategori); // Menggunakan risk_category
             });
         }
 
         if ($tahun) {
-            $query->whereHas('identifyRisk', function ($q) use ($tahun) {
-                $q->where('tahun', $tahun);
-            });
+            $query->whereYear('created_at', $tahun);
         }
 
         $mitigasis = $query->get();
 
-        // Format data untuk matrix
-        $mitigasiPoints = [];
-        $statusStats = [
-            'belum_dimulai' => 0,
-            'sedang_berjalan' => 0,
-            'selesai' => 0,
-            'tertunda' => 0,
-            'dibatalkan' => 0
-        ];
-
-        $strategiStats = [
-            'menghindari' => 0,
-            'mengurangi' => 0,
-            'mentransfer' => 0,
-            'menerima' => 0
-        ];
-
-        foreach ($mitigasis as $mitigasi) {
+        // Memformat data untuk ditampilkan di peta risiko
+        $mitigasiPoints = $mitigasis->map(function ($mitigasi) {
             $risk = $mitigasi->identifyRisk;
+            $level = ($mitigasi->probability ?: 1) * ($mitigasi->impact ?: 1); // Hitung level dari mitigasi
 
-            if ($risk && $risk->probability_residual && $risk->impact_residual) {
-                $mitigasiPoints[] = [
-                    'id' => $mitigasi->id,
-                    'x' => $risk->probability_residual,
-                    'y' => $risk->impact_residual,
-                    'label' => $mitigasi->id,
-                    'judul_mitigasi' => $mitigasi->judul_mitigasi,
-                    'kode_risiko' => $risk->id_identify,
-                    'nama_risiko' => $risk->description,
-                    'strategi_mitigasi' => $mitigasi->strategi_mitigasi,
-                    'status_mitigasi' => $mitigasi->status_mitigasi,
-                    'progress_percentage' => $mitigasi->progress_percentage,
-                    'pic_mitigasi' => $mitigasi->pic_mitigasi,
-                    'target_selesai' => $mitigasi->target_selesai?->format('Y-m-d'),
-                    'unit_kerja' => $risk->unit_kerja,
-                    'level' => $risk->level_residual,
-                    'level_text' => $risk->residual_risk_level
-                ];
-            }
+            $levelText = 'Sangat Rendah';
+            if ($level >= 17) $levelText = 'Tinggi';
+            elseif ($level >= 9) $levelText = 'Sedang';
+            elseif ($level >= 3) $levelText = 'Rendah';
 
-            // Count statistics
-            if (isset($statusStats[$mitigasi->status_mitigasi])) {
-                $statusStats[$mitigasi->status_mitigasi]++;
-            }
+            return [
+                'id' => $mitigasi->id,
+                'x' => $mitigasi->probability,       // PERUBAHAN: Ambil dari mitigasi
+                'y' => $mitigasi->impact,           // PERUBAHAN: Ambil dari mitigasi
+                'label' => $mitigasi->id,
+                'judul_mitigasi' => $mitigasi->judul_mitigasi,
+                'kode_risiko' => $risk->id_identify ?? 'N/A',
+                'nama_risiko' => $risk->description ?? 'N/A',
+                'strategi_mitigasi' => $mitigasi->strategi_mitigasi,
+                'status_mitigasi' => $mitigasi->status_mitigasi,
+                'progress_percentage' => $mitigasi->progress_percentage,
+                'pic_mitigasi' => $mitigasi->pic_mitigasi,
+                'target_selesai' => $mitigasi->target_selesai?->format('Y-m-d'),
+                'unit_kerja' => $risk->unit_kerja ?? 'N/A', // Tetap ambil dari risk
+                'level' => $level,
+                'level_text' => $levelText,
+                'validation_status' => $mitigasi->validation_status, // Penting untuk frontend
+            ];
+        })->filter(); // filter() untuk menghapus item null jika ada
 
-            if (isset($strategiStats[$mitigasi->strategi_mitigasi])) {
-                $strategiStats[$mitigasi->strategi_mitigasi]++;
-            }
-        }
+        $statusStats = $mitigasis->countBy('status_mitigasi');
+        $strategiStats = $mitigasis->countBy('strategi_mitigasi');
+        $totalMitigasi = $mitigasis->count();
+        $completedCount = $statusStats->get(Mitigasi::STATUS_SELESAI, 0);
 
         return [
             'mitigasiPoints' => $mitigasiPoints,
-            'totalMitigasi' => $mitigasis->count(),
+            'totalMitigasi' => $totalMitigasi,
             'statusStats' => $statusStats,
             'strategiStats' => $strategiStats,
-            'completionRate' => $mitigasis->count() > 0 ?
-                round(($statusStats['selesai'] / $mitigasis->count()) * 100, 1) : 0,
-            'averageProgress' => $mitigasis->avg('progress_percentage') ?? 0
+            'completionRate' => $totalMitigasi > 0 ? round(($completedCount / $totalMitigasi) * 100) : 0,
+            'averageProgress' => round($mitigasis->avg('progress_percentage') ?? 0),
         ];
     }
 
