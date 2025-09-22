@@ -22,7 +22,9 @@ class DashboardController extends Controller
         $statusMitigasi = $request->get('status_mitigasi');
 
         // --- Query untuk Data Risiko Inheren (Sebelum) ---
-        $riskQuery = IdentifyRisk::query()->where('validation_status', 'approved');
+        $riskQuery = IdentifyRisk::with(['user.unit'])
+            ->where('validation_status', 'approved');
+
 
         if ($user->hasRole('owner-risk')) {
             $riskQuery->where('user_id', $user->id);
@@ -38,7 +40,7 @@ class DashboardController extends Controller
         $risks = $riskQuery->get();
 
         // --- PERBAIKAN 1: Query data mitigasi (Residual) di sini ---
-        $mitigasiQuery = Mitigasi::with(['identifyRisk'])
+        $mitigasiQuery = Mitigasi::with(['identifyRisk.user.unit']) // <-- UBAH INI
             ->where('validation_status', Mitigasi::VALIDATION_STATUS_APPROVED);
 
         if ($user->hasRole('owner-risk')) {
@@ -88,7 +90,7 @@ class DashboardController extends Controller
                     'label' => $risk->id,
                     'kode_risiko' => $risk->id_identify,
                     'nama_risiko' => $risk->description,
-                    'unit_kerja' => $risk->unit_kerja,
+                    'unit_kerja' => $risk->user?->unit?->nama_unit ?? $risk->user?->unit ?? $risk->unit_kerja ?? 'Tidak Diketahui',
                     'validation_status' => $risk->validation_status,
                 ];
             }
@@ -128,7 +130,7 @@ class DashboardController extends Controller
                 'progress_percentage' => $mitigasi->progress_percentage,
                 'pic_mitigasi' => $mitigasi->pic_mitigasi,
                 'target_selesai' => $mitigasi->target_selesai?->format('Y-m-d'),
-                'unit_kerja' => $risk->unit_kerja,
+                'unit_kerja' => $risk->user?->unit?->nama_unit ?? $risk->user?->unit ?? $risk->unit_kerja ?? 'Tidak Diketahui',
                 'level' => $level,
                 'level_text' => $levelText,
                 'validation_status' => $mitigasi->validation_status,

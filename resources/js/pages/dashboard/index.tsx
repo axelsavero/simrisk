@@ -204,7 +204,6 @@ export default function Dashboard({ riskMatrixData, mitigasiMatrixData, filterOp
     const openPopupForCell = (type: 'sebelum' | 'sesudah', x: number, y: number, value: number) => {
         if (type === 'sesudah' && mitigasiMatrixData?.mitigasiPoints) {
             let items = mitigasiMatrixData.mitigasiPoints.filter((p) => p.x === x && p.y === y) as any[];
-            // Fallback: if unit_kerja missing on mitigasi points, enrich from residual risk points of the same cell
             const residualCellRisks = riskPointsSesudah.filter((p) => p.x === x && p.y === y);
             const fallbackUnit = residualCellRisks.length > 0 ? (residualCellRisks[0] as any).unit_kerja : undefined;
             if (fallbackUnit) {

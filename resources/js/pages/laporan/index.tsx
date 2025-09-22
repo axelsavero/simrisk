@@ -27,6 +27,7 @@ interface Risk {
   diperiksa_spi?: boolean;
   diperiksa_urm?: boolean;
   pemilik?: string;
+  unit?: string; // Added unit property
   pelaksana?: string;
   penanggung?: string;
   rekomendasi?: string;
@@ -182,17 +183,11 @@ const Index: FC = () => {
                 <th rowSpan={2} className="border border-gray-800 bg-gray-200 px-2 py-1 text-center align-middle font-semibold">
                   STATUS PENGENDALIAN
                 </th>
-                <th colSpan={2} className="border border-gray-800 bg-gray-200 px-2 py-1 text-center align-middle font-semibold">
-                  DIPERIKSA OLEH
-                </th>
                 <th rowSpan={2} className="border border-gray-800 bg-gray-200 px-2 py-1 text-center align-middle font-semibold">
                   PEMILIK RISIKO
                 </th>
                 <th rowSpan={2} className="border border-gray-800 bg-gray-200 px-2 py-1 text-center align-middle font-semibold">
-                  PELAKSANA PENANGANAN RISIKO
-                </th>
-                <th rowSpan={2} className="border border-gray-800 bg-gray-200 px-2 py-1 text-center align-middle font-semibold">
-                  PENANGGUNG JAWAB PENANGANAN RISIKO
+                  UNIT
                 </th>
                 <th rowSpan={2} className="border border-gray-800 bg-gray-200 px-2 py-1 text-center align-middle font-semibold">
                   REKOMENDASI / TINDAKAN LEBIH LANJUT
@@ -200,13 +195,11 @@ const Index: FC = () => {
               </tr>
               <tr>
                 <th className="border border-gray-800 bg-gray-200 px-2 py-1 text-center align-middle font-semibold">
-                  SESUAI / TIDAK SESUAI
+                  MULAI
                 </th>
-                <th className="border border-gray-800 bg-gray-200 px-2 py-1 text-center align-middle font-semibold">KET</th>
+                <th className="border border-gray-800 bg-gray-200 px-2 py-1 text-center align-middle font-semibold">SELESAI</th>
                 <th className="border border-gray-800 bg-gray-200 px-2 py-1 text-center align-middle font-semibold">RENCANA</th>
                 <th className="border border-gray-800 bg-gray-200 px-2 py-1 text-center align-middle font-semibold">REALISASI</th>
-                <th className="border border-gray-800 bg-gray-200 px-2 py-1 text-center align-middle font-semibold">SPI</th>
-                <th className="border border-gray-800 bg-gray-200 px-2 py-1 text-center align-middle font-semibold">URM</th>
               </tr>
             </thead>
             <tbody>
@@ -224,11 +217,8 @@ const Index: FC = () => {
                   <td className="border border-gray-800 px-2 py-1 text-right align-middle">{row.realisasi || '0'}</td>
                   <td className="border border-gray-800 px-2 py-1 text-center align-middle">{row.varian || '0'}</td>
                   <td className="border border-gray-800 px-2 py-1 text-center align-middle">{row.status || 'BAK'}</td>
-                  <td className="border border-gray-800 px-2 py-1 text-center align-middle">{row.diperiksa_spi ? '✓' : ''}</td>
-                  <td className="border border-gray-800 px-2 py-1 text-center align-middle">{row.diperiksa_urm ? '✓' : ''}</td>
                   <td className="border border-gray-800 px-2 py-1 align-middle break-words">{row.pemilik || '-'}</td>
-                  <td className="border border-gray-800 px-2 py-1 align-middle break-words">{row.pelaksana || '-'}</td>
-                  <td className="border border-gray-800 px-2 py-1 align-middle break-words">{row.penanggung || '-'}</td>
+                  <td className="border border-gray-800 px-2 py-1 align-middle break-words">{row.unit || '-'}</td>
                   <td className="border border-gray-800 px-2 py-1 align-middle break-words">{row.rekomendasi || '-'}</td>
                 </tr>
               )) || <tr><td colSpan={16} className="border border-gray-800 px-2 py-1 text-center text-gray-500">No data available</td></tr>}
