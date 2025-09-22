@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
 use App\Exports\RiskReportExport;
+use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -18,6 +19,8 @@ class LaporanController extends Controller
      */
     public function index(Request $request)
     {
+        $user = Auth::user();
+        
         $unitFilter = $request->query('unit');
         $kategoriFilter = $request->query('kategori');
         $tahunFilter = $request->query('tahun');
@@ -33,19 +36,33 @@ class LaporanController extends Controller
             }
         ])->where('validation_status', 'approved');
 
-        $risksQuery->when($unitFilter, function ($query, $unitName) {
-            $query->whereHas('user.unit', function ($subQuery) use ($unitName) {
-                $subQuery->where('nama_unit', $unitName);
+        if ($user->hasAnyRole(['admin', 'pimpinan'])) {
+            $risksQuery->whereHas('user', function ($q) use ($user) {
+                $q->where('unit_id', $user->unit_id);
             });
-        });
+        } 
+        // Jika user adalah super-admin, terapkan filter dari UI
+        elseif ($user->hasRole('super-admin')) {
+            $unitFilter = $request->query('unit');
+            $kategoriFilter = $request->query('kategori');
+            $tahunFilter = $request->query('tahun');
 
-        $risksQuery->when($kategoriFilter, function ($query, $kategori) {
-            $query->where('risk_category', $kategori);
-        });
+            $risksQuery->when($unitFilter, function ($query, $unitName) {
+                $query->whereHas('user.unit', function ($subQuery) use ($unitName) {
+                    $subQuery->where('nama_unit', $unitName);
+                });
+            });
 
-        $risksQuery->when($tahunFilter, function ($query, $tahun) {
-            $query->where('tahun', $tahun);
-        });
+            $risksQuery->when($kategoriFilter, function ($query, $kategori) {
+                $query->where('risk_category', $kategori);
+            });
+
+            $risksQuery->when($tahunFilter, function ($query, $tahun) {
+                $query->where('tahun', $tahun);
+            });
+        } else {
+            $risksQuery->where('user_id', $user->id);
+        }
             
         // Lakukan paginasi
         $paginatedRisks = $risksQuery->paginate(50)->withQueryString();
@@ -101,7 +118,7 @@ class LaporanController extends Controller
             'metaData' => [
                 'generated_at' => now()->isoFormat('D MMMM YYYY, HH:mm:ss'),
                 'generated_by' => auth()->user()->name,
-            ],
+            ],'isSuperAdmin' => $user->hasRole('super-admin'),
         ]);
     }
 
@@ -150,6 +167,8 @@ class LaporanController extends Controller
      */
     private function getReportData(Request $request, bool $paginate = false)
     {
+        $user = Auth::user(); // Dapatkan user yang login
+        
         $requestData = $paginate ? $request->query() : $request->input('data', []);
 
         $unitFilter = $requestData['unit'] ?? null;
@@ -165,6 +184,25 @@ class LaporanController extends Controller
         ->when($unitFilter, fn($q, $unit) => $q->whereHas('user.unit', fn($sq) => $sq->where('nama_unit', $unit)))
         ->when($kategoriFilter, fn($q, $kategori) => $q->where('risk_category', $kategori))
         ->when($tahunFilter, fn($q, $tahun) => $q->where('tahun', $tahun));
+
+        if ($user->hasAnyRole(['admin', 'pimpinan'])) {
+            $risksQuery->whereHas('user', function ($q) use ($user) {
+                $q->where('unit_id', $user->unit_id);
+            });
+        } 
+        // Jika user adalah super-admin, terapkan filter dari UI yang dikirim saat ekspor
+        elseif ($user->hasRole('super-admin')) {
+            $unitFilter = $requestData['unit'] ?? null;
+            $kategoriFilter = $requestData['kategori'] ?? null;
+            $tahunFilter = $requestData['tahun'] ?? null;
+
+            $risksQuery->when($unitFilter, fn($q, $unit) => $q->whereHas('user.unit', fn($sq) => $sq->where('nama_unit', $unit)))
+                ->when($kategoriFilter, fn($q, $kategori) => $q->where('risk_category', $kategori))
+                ->when($tahunFilter, fn($q, $tahun) => $q->where('tahun', $tahun));
+        } else {
+            // Fallback untuk peran lain, misalnya hanya melihat data milik sendiri
+            $risksQuery->where('user_id', $user->id);
+        }
 
         $results = $paginate ? $risksQuery->paginate(50)->withQueryString() : $risksQuery->get();
         

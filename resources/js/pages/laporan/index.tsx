@@ -63,7 +63,7 @@ interface PageProps {
     filterOptions?: FilterOptions;
     filters?: Filters;
     metaData: {
-        generated_at: string;
+        [key: string]: string; // Add index signature
         generated_by: string;
     };
     statistik?: Record<string, any>;
@@ -75,6 +75,7 @@ const Index: FC = () => {
         filterOptions = { units: [], kategoris: [], tahuns: [] },
         filters = {},
         metaData,
+        isSuperAdmin, 
     } = usePage<PageProps>().props;
     const [search, setSearch] = useState(filters.search || '');
     const [unit, setUnit] = useState(filters.unit || '');
@@ -104,30 +105,6 @@ const Index: FC = () => {
             replace: true,
         });
     }, [search, unit, kategori, tahun]);
-
-    // Handle export PDF
-    const exportPdf = () => {
-        post(
-            '/laporan/export-pdf',
-            { search, unit, kategori, tahun },
-            {
-                onSuccess: () => alert('PDF export initiated'),
-                onError: () => alert('Error exporting PDF'),
-            },
-        );
-    };
-
-    // Handle export Excel
-    const exportExcel = () => {
-        post(
-            '/laporan/export-excel',
-            { search, unit, kategori, tahun },
-            {
-                onSuccess: () => alert('Excel export initiated'),
-                onError: () => alert('Error exporting Excel'),
-            },
-        );
-    };
 
     const handleOpenModal = (type: 'pdf' | 'excel') => {
         setExportType(type);
@@ -200,38 +177,41 @@ const Index: FC = () => {
             <Head title="Laporan" />
             <div className="min-h-screen bg-gray-100 p-4">
                 {/* Filter Section - Responsive and Centered */}
-                <div className="mb-6 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-                    <ReactSelect
-                        className="w-full text-base sm:w-64"
-                        styles={customSelectStyles}
-                        options={unitOptions}
-                        value={unit ? { value: unit, label: unit } : null}
-                        onChange={(selected) => setUnit(selected ? selected.value : '')}
-                        placeholder="Pilih Unit"
-                        isClearable
-                        isSearchable
-                    />
-                    <ReactSelect
-                        className="w-full text-base sm:w-64"
-                        styles={customSelectStyles}
-                        options={kategoriOptions}
-                        value={kategori ? { value: kategori, label: kategori } : null}
-                        onChange={(selected) => setKategori(selected ? selected.value : '')}
-                        placeholder="Kategori"
-                        isClearable
-                        isSearchable
-                    />
-                    <ReactSelect
-                        className="w-full text-base sm:w-64"
-                        styles={customSelectStyles}
-                        options={tahunOptions}
-                        value={tahun ? { value: tahun, label: tahun } : null}
-                        onChange={(selected) => setTahun(selected ? selected.value : '')}
-                        placeholder="Tahun"
-                        isClearable
-                        isSearchable
-                    />
-                </div>
+                {isSuperAdmin && (
+                    <div className="mb-6 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+                        <ReactSelect
+                            className="w-full text-base sm:w-64"
+                            styles={customSelectStyles}
+                            options={unitOptions}
+                            value={unit ? { value: unit, label: unit } : null}
+                            onChange={(selected) => setUnit(selected ? selected.value : '')}
+                            placeholder="Pilih Unit"
+                            isClearable
+                            isSearchable
+                        />
+                        <ReactSelect
+                            className="w-full text-base sm:w-64"
+                            styles={customSelectStyles}
+                            options={kategoriOptions}
+                            value={kategori ? { value: kategori, label: kategori } : null}
+                            onChange={(selected) => setKategori(selected ? selected.value : '')}
+                            placeholder="Kategori"
+                            isClearable
+                            isSearchable
+                        />
+                        <ReactSelect
+                            className="w-full text-base sm:w-64"
+                            styles={customSelectStyles}
+                            options={tahunOptions}
+                            value={tahun ? { value: tahun, label: tahun } : null}
+                            onChange={(selected) => setTahun(selected ? selected.value : '')}
+                            placeholder="Tahun"
+                            isClearable
+                            isSearchable
+
+                        />
+                    </div>
+                )}
 
                 {/* Table Container - Responsive with Enhanced Styling */}
                 <div className="w-full overflow-x-auto rounded-lg bg-white p-4 shadow-lg">
