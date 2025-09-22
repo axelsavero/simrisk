@@ -48,13 +48,14 @@ export default function Index({ sasaranUnits, flash }: IndexProps) {
     };
 
     const sortedData = [...sasaranUnits.data].sort((a, b) => {
-        const valA = a[sortField] ?? '';
-        const valB = b[sortField] ?? '';
-
+        // Perhatikan: Sorting untuk 'id_sasaran_unit' tetap menggunakan ID asli untuk konsistensi data
         if (sortField === 'id_sasaran_unit') {
             return sortOrderAsc ? a.id_sasaran_unit - b.id_sasaran_unit : b.id_sasaran_unit - a.id_sasaran_unit;
         }
 
+        const valA = a[sortField] ?? '';
+        const valB = b[sortField] ?? '';
+        
         return sortOrderAsc ? String(valA).localeCompare(String(valB)) : String(valB).localeCompare(String(valA));
     });
 
@@ -82,6 +83,7 @@ export default function Index({ sasaranUnits, flash }: IndexProps) {
 
     const headerClass = 'cursor-pointer px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase border border-black';
 
+    // Mengganti nama kolom ID menjadi "NO." untuk lebih jelas
     const renderSortArrow = (field: typeof sortField) => (sortField === field ? (sortOrderAsc ? '▲' : '▼') : '');
 
     return (
@@ -139,7 +141,7 @@ export default function Index({ sasaranUnits, flash }: IndexProps) {
                                     <thead className="bg-gray-100">
                                         <tr>
                                             <th onClick={() => handleSort('id_sasaran_unit')} className={headerClass}>
-                                                ID {renderSortArrow('id_sasaran_unit')}
+                                                NO. {renderSortArrow('id_sasaran_unit')}
                                             </th>
                                             <th onClick={() => handleSort('kategori')} className={headerClass}>
                                                 Kategori {renderSortArrow('kategori')}
@@ -158,9 +160,10 @@ export default function Index({ sasaranUnits, flash }: IndexProps) {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-200 bg-white border border-black">
-                                        {sortedData.map((item) => (
+                                        {sortedData.map((item, index) => (
                                             <tr key={item.id_sasaran_unit} className="hover:bg-gray-50">
-                                                <td className="px-6 py-4 text-sm text-gray-900 border border-black">{item.id_sasaran_unit}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-900 border border-black text-center">{index + 1}</td>
+                                                
                                                 <td className="px-6 py-4 text-sm text-gray-900 border border-black">
                                                     <span className="inline-flex rounded-full bg-blue-100 px-2 text-xs font-semibold text-blue-800">
                                                         {item.kategori}
