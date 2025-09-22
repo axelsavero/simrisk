@@ -75,7 +75,7 @@ const Index: FC = () => {
         filterOptions = { units: [], kategoris: [], tahuns: [] },
         filters = {},
         metaData,
-        isSuperAdmin, 
+        isSuperAdmin,
     } = usePage<PageProps>().props;
     const [search, setSearch] = useState(filters.search || '');
     const [unit, setUnit] = useState(filters.unit || '');
@@ -176,42 +176,59 @@ const Index: FC = () => {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Laporan" />
             <div className="min-h-screen bg-gray-100 p-4">
-                {/* Filter Section - Responsive and Centered */}
-                {isSuperAdmin && (
-                    <div className="mb-6 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-                        <ReactSelect
-                            className="w-full text-base sm:w-64"
-                            styles={customSelectStyles}
-                            options={unitOptions}
-                            value={unit ? { value: unit, label: unit } : null}
-                            onChange={(selected) => setUnit(selected ? selected.value : '')}
-                            placeholder="Pilih Unit"
-                            isClearable
-                            isSearchable
-                        />
-                        <ReactSelect
-                            className="w-full text-base sm:w-64"
-                            styles={customSelectStyles}
-                            options={kategoriOptions}
-                            value={kategori ? { value: kategori, label: kategori } : null}
-                            onChange={(selected) => setKategori(selected ? selected.value : '')}
-                            placeholder="Kategori"
-                            isClearable
-                            isSearchable
-                        />
-                        <ReactSelect
-                            className="w-full text-base sm:w-64"
-                            styles={customSelectStyles}
-                            options={tahunOptions}
-                            value={tahun ? { value: tahun, label: tahun } : null}
-                            onChange={(selected) => setTahun(selected ? selected.value : '')}
-                            placeholder="Tahun"
-                            isClearable
-                            isSearchable
+                <div className="mb-6 flex flex-col items-center justify-between gap-4 sm:flex-row">
+                    {/* Filter Section */}
+                    {isSuperAdmin && (
+                        <div className="flex flex-col items-center gap-4 sm:flex-row">
+                            <ReactSelect
+                                className="w-full text-base sm:w-52"
+                                styles={customSelectStyles}
+                                options={unitOptions}
+                                value={unit ? { value: unit, label: unit } : null}
+                                onChange={(selected) => setUnit(selected ? selected.value : '')}
+                                placeholder="Pilih Unit"
+                                isClearable
+                                isSearchable
+                            />
+                            <ReactSelect
+                                className="w-full text-base sm:w-48"
+                                styles={customSelectStyles}
+                                options={kategoriOptions}
+                                value={kategori ? { value: kategori, label: kategori } : null}
+                                onChange={(selected) => setKategori(selected ? selected.value : '')}
+                                placeholder="Kategori"
+                                isClearable
+                                isSearchable
+                            />
+                            <ReactSelect
+                                className="w-full text-base sm:w-36"
+                                styles={customSelectStyles}
+                                options={tahunOptions}
+                                value={tahun ? { value: tahun, label: tahun } : null}
+                                onChange={(selected) => setTahun(selected ? selected.value : '')}
+                                placeholder="Tahun"
+                                isClearable
+                                isSearchable
+                            />
+                        </div>
+                    )}
 
-                        />
+                    {/* Export Buttons */}
+                    <div className="flex w-full justify-end gap-4 sm:w-auto">
+                        <button
+                            className="flex-1 rounded-lg bg-blue-500 px-6 py-2 text-white transition-colors hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:outline-none sm:flex-none"
+                            onClick={() => handleOpenModal('pdf')}
+                        >
+                            Export PDF
+                        </button>
+                        <button
+                            className="flex-1 rounded-lg bg-green-500 px-6 py-2 text-white transition-colors hover:bg-green-600 focus:ring-2 focus:ring-green-500 focus:outline-none sm:flex-none"
+                            onClick={() => handleOpenModal('excel')}
+                        >
+                            Export Excel
+                        </button>
                     </div>
-                )}
+                </div>
 
                 {/* Table Container - Responsive with Enhanced Styling */}
                 <div className="w-full overflow-x-auto rounded-lg bg-white p-4 shadow-lg">
@@ -291,23 +308,6 @@ const Index: FC = () => {
                     </table>
                 </div>
 
-                {/* Export Buttons - Diubah untuk membuka modal */}
-                <div className="mt-6 flex justify-center gap-4">
-                    <button
-                        className="rounded-lg bg-blue-500 px-6 py-2 text-white transition-colors hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        onClick={() => handleOpenModal('pdf')}
-                    >
-                        Export PDF
-                    </button>
-                    <button
-                        className="rounded-lg bg-green-500 px-6 py-2 text-white transition-colors hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
-                        onClick={() => handleOpenModal('excel')}
-                    >
-                        Export Excel
-                    </button>
-                </div>
-
-
                 {/* Pagination - Centered and Styled */}
                 <div className="mt-4 flex items-center justify-center gap-2">
                     <button
@@ -363,8 +363,8 @@ const Index: FC = () => {
           }
         }
       `}</style>
-      {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            {isModalOpen && (
+                <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
                     <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
                         <h3 className="mb-4 text-lg font-semibold">Detail Penanggung Jawab Laporan</h3>
                         <div className="space-y-4">
