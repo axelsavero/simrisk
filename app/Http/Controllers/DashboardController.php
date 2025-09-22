@@ -15,40 +15,50 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        // Ambil parameter filter dari request ('unit' sekarang adalah unit_id)
+        // Ambil parameter filter dari request
         $unitId = $request->get('unit');
         $kategori = $request->get('kategori');
         $tahun = $request->get('tahun', date('Y'));
         $statusMitigasi = $request->get('status_mitigasi');
 
-        // --- Query untuk Data Risiko (Peta Sebelum) ---
-        $riskQuery = IdentifyRisk::query()
-            ->where('validation_status', 'approved');
+        // --- Query untuk Data Risiko Inheren (Sebelum) ---
+        $riskQuery = IdentifyRisk::query()->where('validation_status', 'approved');
 
-        // Terapkan filter peran
         if ($user->hasRole('owner-risk')) {
             $riskQuery->where('user_id', $user->id);
         } elseif ($user->hasAnyRole(['admin', 'pimpinan'])) {
-            $riskQuery->whereHas('user', function ($q) use ($user) {
-                $q->where('unit_id', $user->unit_id);
-            });
+            $riskQuery->whereHas('user', fn($q) => $q->where('unit_id', $user->unit_id));
         }
-        
-        // --- PERBAIKAN UTAMA ADA DI SINI ---
-        // Terapkan filter UI menggunakan relasi yang benar
-        if ($unitId) {
-            // Langsung filter melalui relasi 'user' ke 'unit_id', sama seperti logika mitigasi
-            $riskQuery->whereHas('user', fn($q) => $q->where('unit_id', $unitId));
-        }
+
+        if ($unitId) $riskQuery->whereHas('user', fn($q) => $q->where('unit_id', $unitId));
         if ($kategori) $riskQuery->byKategori($kategori);
         if ($tahun) $riskQuery->byTahun($tahun);
         if ($statusMitigasi) $riskQuery->byStatusMitigasi($statusMitigasi);
 
         $risks = $riskQuery->get();
+
+        // --- PERBAIKAN 1: Query data mitigasi (Residual) di sini ---
+        $mitigasiQuery = Mitigasi::with(['identifyRisk'])
+            ->where('validation_status', Mitigasi::VALIDATION_STATUS_APPROVED);
+
+        if ($user->hasRole('owner-risk')) {
+            $mitigasiQuery->whereHas('identifyRisk', fn($q) => $q->where('user_id', $user->id));
+        } elseif ($user->hasAnyRole(['admin', 'pimpinan'])) {
+            $mitigasiQuery->whereHas('identifyRisk.user', fn($q) => $q->where('unit_id', $user->unit_id));
+        }
+
+        if ($unitId) $mitigasiQuery->whereHas('identifyRisk.user', fn($q) => $q->where('unit_id', $unitId));
+        if ($kategori) $mitigasiQuery->whereHas('identifyRisk', fn($q) => $q->where('risk_category', $kategori));
+        if ($tahun) $mitigasiQuery->whereYear('created_at', $tahun);
+        if ($statusMitigasi) $mitigasiQuery->where('status_mitigasi', $statusMitigasi);
         
+        $mitigasis = $mitigasiQuery->get();
+
+        // Render Inertia dengan data yang sudah dipisahkan
         return Inertia::render('dashboard/index', [
-            'riskMatrixData' => $this->formatRiskMatrixData($risks),
-            'mitigasiMatrixData' => $this->formatMitigasiMatrixData($unitId, $kategori, $tahun, $statusMitigasi),
+            // PERBAIKAN 2: Kirim kedua koleksi ke formatRiskMatrixData untuk kalkulasi
+            'riskMatrixData' => $this->formatRiskMatrixData($risks, $mitigasis),
+            'mitigasiMatrixData' => $this->formatMitigasiMatrixData($mitigasis), // Hanya kirim mitigasi
             'dashboardStats' => $this->getDashboardStatistics($risks),
             'riskTrends' => $this->getRiskTrends($tahun),
             'filters' => ['unit' => $unitId, 'kategori' => $kategori, 'tahun' => $tahun, 'statusMitigasi' => $statusMitigasi],
@@ -68,7 +78,7 @@ class DashboardController extends Controller
         ])->where('is_active', true)->where('validation_status', 'approved');
     }
 
-    private function formatRiskMatrixData($risks)
+    private function formatRiskMatrixData($risks, $mitigasis)
     {
         $riskPointsInherent = $risks->map(function ($risk) {
             if ($risk->probability && $risk->impact) {
@@ -87,44 +97,17 @@ class DashboardController extends Controller
 
         return [
             'riskPointsSebelum' => $riskPointsInherent,
-            'riskPointsSesudah' => [], // Data ini sekarang murni dari mitigasi
-            'tingkatRisiko' => $this->calculateRiskLevels($risks),
+            'riskPointsSesudah' => [],
+            // PERBAIKAN 4: Panggil calculateRiskLevels dengan kedua koleksi
+            'tingkatRisiko' => $this->calculateRiskLevels($risks, $mitigasis),
         ];
     }
 
-    private function formatMitigasiMatrixData($unitId = null, $kategori = null, $tahun = null, $statusMitigasi = null)
+    private function formatMitigasiMatrixData($mitigasis)
     {
-        $user = Auth::user();
-
-        $query = Mitigasi::with(['identifyRisk'])
-            ->where('validation_status', Mitigasi::VALIDATION_STATUS_APPROVED);
-
-        // Filter peran
-        if ($user->hasRole('owner-risk')) {
-            $query->whereHas('identifyRisk', fn($q) => $q->where('user_id', $user->id));
-        } elseif ($user->hasAnyRole(['admin', 'pimpinan'])) {
-            $query->whereHas('identifyRisk.user', fn($q) => $q->where('unit_id', $user->unit_id));
-        }
-
-        // Terapkan filter UI
-        if ($unitId) {
-            $query->whereHas('identifyRisk.user', fn($q) => $q->where('unit_id', $unitId));
-        }
-        if ($kategori) {
-            $query->whereHas('identifyRisk', fn($q) => $q->where('risk_category', $kategori));
-        }
-        if ($tahun) {
-            $query->whereYear('created_at', $tahun);
-        }
-        if ($statusMitigasi) {
-            $query->where('status_mitigasi', $statusMitigasi);
-        }
-
-        $mitigasis = $query->get();
-        
         $mitigasiPoints = $mitigasis->map(function ($mitigasi) {
             $risk = $mitigasi->identifyRisk;
-            if (!$risk) return null; // Tambahkan safety check
+            if (!$risk) return null;
 
             $level = ($mitigasi->probability ?: 1) * ($mitigasi->impact ?: 1);
 
@@ -155,34 +138,42 @@ class DashboardController extends Controller
 
         return [
             'mitigasiPoints' => $mitigasiPoints,
-            // ... sisa statistik
+            // ... sisa statistik bisa ditambahkan di sini jika perlu
         ];
     }
 
-    private function calculateRiskLevels($risks)
+     private function calculateRiskLevels($risks, $mitigasis)
     {
         $levels = [
-            'Sangat Rendah' => ['inheren' => 0, 'residual' => 0, 'color' => 'bg-green-500'],   // 1-2
-            'Rendah' => ['inheren' => 0, 'residual' => 0, 'color' => 'bg-yellow-300'],         // 3-8
-            'Sedang' => ['inheren' => 0, 'residual' => 0, 'color' => 'bg-orange-400'],         // 9-16
-            'Tinggi' => ['inheren' => 0, 'residual' => 0, 'color' => 'bg-red-500'],            // 17-25
+            'Sangat Rendah' => ['inheren' => 0, 'residual' => 0, 'color' => 'bg-green-500'],
+            'Rendah' => ['inheren' => 0, 'residual' => 0, 'color' => 'bg-yellow-300'],
+            'Sedang' => ['inheren' => 0, 'residual' => 0, 'color' => 'bg-orange-400'],
+            'Tinggi' => ['inheren' => 0, 'residual' => 0, 'color' => 'bg-red-500'],
         ];
 
+        // Hitung jumlah risiko inheren dari koleksi $risks
         foreach ($risks as $risk) {
-            // Count inherent risk levels
             $inherentLevel = $risk->inherent_risk_level;
             if (isset($levels[$inherentLevel])) {
                 $levels[$inherentLevel]['inheren']++;
             }
+        }
 
-            // Count residual risk levels
-            $residualLevel = $risk->residual_risk_level;
-            if (isset($levels[$residualLevel])) {
-                $levels[$residualLevel]['residual']++;
+        // Hitung jumlah risiko residual dari koleksi $mitigasis
+        foreach ($mitigasis as $mitigasi) {
+            $residualLevelValue = ($mitigasi->probability ?: 1) * ($mitigasi->impact ?: 1);
+            
+            $residualLevelText = 'Sangat Rendah';
+            if ($residualLevelValue >= 17) $residualLevelText = 'Tinggi';
+            elseif ($residualLevelValue >= 9) $residualLevelText = 'Sedang';
+            elseif ($residualLevelValue >= 3) $residualLevelText = 'Rendah';
+            
+            if (isset($levels[$residualLevelText])) {
+                $levels[$residualLevelText]['residual']++;
             }
         }
 
-        // Format for frontend
+        // Format untuk frontend
         return collect($levels)->map(function ($data, $tingkat) {
             return [
                 'tingkat' => $tingkat,
