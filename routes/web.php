@@ -42,6 +42,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('mitigasi', MitigasiController::class);
 
+    Route::prefix('laporan')->name('laporan.')->group(function () {
+        Route::get('/', [LaporanController::class, 'index'])->name('index');
+        Route::post('/export-pdf', [LaporanController::class, 'exportPdf'])->name('export-pdf');
+        Route::post('/export-excel', [LaporanController::class, 'exportExcel'])->name('export-excel');
+    });
+
     Route::prefix('mitigasi')->name('mitigasi.')->group(function () {
         Route::patch('{mitigasi}/progress', [MitigasiController::class, 'updateProgress'])->name('update-progress');
         Route::get('{mitigasi}/download-bukti', [MitigasiController::class, 'downloadBukti'])->name('download-bukti');
@@ -60,15 +66,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('sasaran-univ/{sasaranUniv}/dokumen/{dokumenId}/download', [SasaranUnivController::class, 'downloadDokumen'])->name('sasaran-univ.download-dokumen');
 });
 
-
-
-Route::prefix('laporan')->name('laporan.')->group(function () {
-    Route::get('/', [LaporanController::class, 'index'])->name('index');
-    Route::get('/risk-matrix', [LaporanController::class, 'riskMatrix'])->name('risk-matrix');
-    Route::get('/risk-detail', [LaporanController::class, 'riskDetail'])->name('risk-detail');
-    Route::get('/export-pdf', [LaporanController::class, 'exportPdf'])->name('export-pdf');
-    Route::get('/export-excel', [LaporanController::class, 'exportExcel'])->name('export-excel');
-});
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('sasaran-unit', SasaranUnitController::class);
