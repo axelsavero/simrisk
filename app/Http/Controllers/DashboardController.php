@@ -58,7 +58,7 @@ class DashboardController extends Controller
         return Inertia::render('dashboard/index', [
             // PERBAIKAN 2: Kirim kedua koleksi ke formatRiskMatrixData untuk kalkulasi
             'riskMatrixData' => $this->formatRiskMatrixData($risks, $mitigasis),
-            'mitigasiMatrixData' => $this->formatMitigasiMatrixData($mitigasis), // Hanya kirim mitigasi
+            'mitigasiMatrixData' => $this->formatMitigasiMatrixData($mitigasis),
             'dashboardStats' => $this->getDashboardStatistics($risks),
             'riskTrends' => $this->getRiskTrends($tahun),
             'filters' => ['unit' => $unitId, 'kategori' => $kategori, 'tahun' => $tahun, 'statusMitigasi' => $statusMitigasi],
@@ -98,7 +98,6 @@ class DashboardController extends Controller
         return [
             'riskPointsSebelum' => $riskPointsInherent,
             'riskPointsSesudah' => [],
-            // PERBAIKAN 4: Panggil calculateRiskLevels dengan kedua koleksi
             'tingkatRisiko' => $this->calculateRiskLevels($risks, $mitigasis),
         ];
     }
@@ -138,7 +137,6 @@ class DashboardController extends Controller
 
         return [
             'mitigasiPoints' => $mitigasiPoints,
-            // ... sisa statistik bisa ditambahkan di sini jika perlu
         ];
     }
 
