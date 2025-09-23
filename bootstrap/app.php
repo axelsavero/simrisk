@@ -22,6 +22,10 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
+
+        $middleware->validateCsrfTokens(
+        except: ['laporan/export-pdf', 'laporan/export-excel']
+    );
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
