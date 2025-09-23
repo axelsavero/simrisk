@@ -514,8 +514,8 @@ export default function Show() {
 
                 {/* Progress Update Modal */}
                 {showProgressModal && (
-                    <div className="bg-opacity-50 fixed inset-0 z-50 h-full w-full overflow-y-auto bg-gray-600 backdrop-blur-sm">
-                        <div className="relative top-20 mx-auto w-96 rounded-md border bg-white p-5 shadow-lg">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+                        <div className="w-full max-w-md rounded-md border bg-white p-5 shadow-lg">
                             <div className="mt-3">
                                 <h3 className="mb-4 text-lg font-medium text-gray-900">Update Progress</h3>
                                 <div className="space-y-4">
