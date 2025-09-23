@@ -133,8 +133,10 @@ class LaporanController extends Controller
             'nip' => $requestData['nip'] ?? '',
         ];
 
+        // Load user dengan relasi unit
+        $user = Auth::user()->load('unit');
+
         $risks = $this->getReportData($request, false);
-        $user = Auth::user();
 
         $data = [
             'risks' => $risks,
@@ -167,8 +169,10 @@ class LaporanController extends Controller
             'nip' => $requestData['nip'] ?? '',
         ];
 
+        // Load user dengan relasi unit
+        $user = Auth::user()->load('unit');
+
         $risks = $this->getReportData($request, false);
-        $user = Auth::user();
 
         // Tentukan nama unit untuk filename
         $unitName = $this->getUnitNameForFilename($request, $user);
@@ -197,10 +201,23 @@ class LaporanController extends Controller
 
         // Untuk admin dan pimpinan, gunakan unit mereka
         if ($user->hasAnyRole(['admin', 'pimpinan'])) {
-            return $user->unit?->nama_unit ?? 'unit_tidak_diketahui';
+            // Jika relasi unit null, coba ambil manual dari database
+            if (!$user->unit) {
+                $user->load('unit'); // Reload jika belum ter-load
+            }
+            $namaUnit = $user->unit;
+            if (!$namaUnit) {
+                // Fallback: Ambil dari Unit model berdasarkan unit_id user
+                $unit = Unit::find($user->unit_id);
+                $namaUnit = $unit?->nama_unit ?? 'unit_tidak_diketahui';
+            }
+            return $namaUnit;
         }
 
         // Untuk user biasa, gunakan unit mereka
+        if (!$user->unit) {
+            $user->load('unit');
+        }
         return $user->unit?->nama_unit ?? 'unit_pengguna';
     }
 
