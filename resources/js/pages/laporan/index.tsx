@@ -364,7 +364,7 @@ const Index: FC = () => {
         }
       `}</style>
             {isModalOpen && (
-                <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
+                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
                     <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
                         <h3 className="mb-4 text-lg font-semibold">Detail Penanggung Jawab Laporan</h3>
                         <div className="space-y-4">
