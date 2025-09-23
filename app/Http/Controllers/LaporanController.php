@@ -11,6 +11,7 @@ use App\Exports\RiskReportExport;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Str;
 
 class LaporanController extends Controller
 {
@@ -20,7 +21,7 @@ class LaporanController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        
+
         $unitFilter = $request->query('unit');
         $kategoriFilter = $request->query('kategori');
         $tahunFilter = $request->query('tahun');
@@ -40,7 +41,7 @@ class LaporanController extends Controller
             $risksQuery->whereHas('user', function ($q) use ($user) {
                 $q->where('unit_id', $user->unit_id);
             });
-        } 
+        }
         // Jika user adalah super-admin, terapkan filter dari UI
         elseif ($user->hasRole('super-admin')) {
             $unitFilter = $request->query('unit');
@@ -63,7 +64,7 @@ class LaporanController extends Controller
         } else {
             $risksQuery->where('user_id', $user->id);
         }
-            
+
         // Lakukan paginasi
         $paginatedRisks = $risksQuery->paginate(50)->withQueryString();
 
@@ -118,21 +119,22 @@ class LaporanController extends Controller
             'metaData' => [
                 'generated_at' => now()->isoFormat('D MMMM YYYY, HH:mm:ss'),
                 'generated_by' => auth()->user()->name,
-            ],'isSuperAdmin' => $user->hasRole('super-admin'),
+            ],
+            'isSuperAdmin' => $user->hasRole('super-admin'),
         ]);
     }
 
     public function exportPdf(Request $request)
     {
-        // PERBAIKAN UTAMA DI SINI
-        $requestData = $request->input('data', []);
+        $requestData = $request->all();
         $signature = [
             'jabatan' => $requestData['jabatan'] ?? '',
-            'nama' => $requestData['nama'] ?? '',       
-            'nip' => $requestData['nip'] ?? '',         
+            'nama' => $requestData['nama'] ?? '',
+            'nip' => $requestData['nip'] ?? '',
         ];
 
         $risks = $this->getReportData($request, false);
+        $user = Auth::user();
 
         $data = [
             'risks' => $risks,
@@ -140,27 +142,68 @@ class LaporanController extends Controller
             'tanggal' => now()->isoFormat('D MMMM YYYY'),
         ];
 
+        // Tentukan nama unit untuk filename
+        $unitName = $this->getUnitNameForFilename($request, $user);
+        $date = now()->format('Y-m-d');
+
+        // Format: laporan-risiko-nama_unit-tanggal_sekarang
+        $safeUnitName = Str::slug($unitName, '_');
+        $fileName = 'laporan-risiko-' . $safeUnitName . '-' . $date . '.pdf';
+
         $pdf = Pdf::loadView('laporan.pdf', $data)->setPaper('a4', 'landscape');
-        return $pdf->download('laporan-risiko-' . now()->format('Y-m-d') . '.pdf');
+        return $pdf->download($fileName);
     }
+
 
     /**
      * Menangani ekspor ke Excel.
      */
     public function exportExcel(Request $request)
     {
-        // PERBAIKAN UTAMA DI SINI
-        $requestData = $request->input('data', []);
+        $requestData = $request->all();
         $signature = [
             'jabatan' => $requestData['jabatan'] ?? '',
             'nama' => $requestData['nama'] ?? '',
             'nip' => $requestData['nip'] ?? '',
         ];
-        
+
         $risks = $this->getReportData($request, false);
-        
-        return Excel::download(new RiskReportExport($risks, $signature), 'laporan-risiko-' . now()->format('Y-m-d') . '.xlsx');
+        $user = Auth::user();
+
+        // Tentukan nama unit untuk filename
+        $unitName = $this->getUnitNameForFilename($request, $user);
+        $date = now()->format('Y-m-d');
+
+        // Format: laporan-risiko-nama_unit-tanggal_sekarang
+        $safeUnitName = Str::slug($unitName, '_');
+        $fileName = 'laporan-risiko-' . $safeUnitName . '-' . $date . '.xlsx';
+
+        return Excel::download(new RiskReportExport($risks, $signature), $fileName);
     }
+
+    /**
+     * Tentukan nama unit untuk filename berdasarkan role dan filter
+     */
+    private function getUnitNameForFilename(Request $request, $user)
+    {
+        // Untuk super-admin, gunakan filter unit dari request
+        if ($user->hasRole('super-admin')) {
+            $unitFromFilter = $request->query('unit') ?? $request->input('data.unit');
+            if ($unitFromFilter) {
+                return $unitFromFilter;
+            }
+            return 'semua_unit'; // Jika tidak ada filter unit
+        }
+
+        // Untuk admin dan pimpinan, gunakan unit mereka
+        if ($user->hasAnyRole(['admin', 'pimpinan'])) {
+            return $user->unit?->nama_unit ?? 'unit_tidak_diketahui';
+        }
+
+        // Untuk user biasa, gunakan unit mereka
+        return $user->unit?->nama_unit ?? 'unit_pengguna';
+    }
+
 
     /**
      * Method private untuk mengambil dan memformat data laporan.
@@ -168,7 +211,7 @@ class LaporanController extends Controller
     private function getReportData(Request $request, bool $paginate = false)
     {
         $user = Auth::user(); // Dapatkan user yang login
-        
+
         $requestData = $paginate ? $request->query() : $request->input('data', []);
 
         $unitFilter = $requestData['unit'] ?? null;
@@ -180,16 +223,16 @@ class LaporanController extends Controller
             'penangananRisiko',
             'mitigasis' => fn($q) => $q->where('validation_status', 'approved')->latest(),
         ])
-        ->where('validation_status', 'approved')
-        ->when($unitFilter, fn($q, $unit) => $q->whereHas('user.unit', fn($sq) => $sq->where('nama_unit', $unit)))
-        ->when($kategoriFilter, fn($q, $kategori) => $q->where('risk_category', $kategori))
-        ->when($tahunFilter, fn($q, $tahun) => $q->where('tahun', $tahun));
+            ->where('validation_status', 'approved')
+            ->when($unitFilter, fn($q, $unit) => $q->whereHas('user.unit', fn($sq) => $sq->where('nama_unit', $unit)))
+            ->when($kategoriFilter, fn($q, $kategori) => $q->where('risk_category', $kategori))
+            ->when($tahunFilter, fn($q, $tahun) => $q->where('tahun', $tahun));
 
         if ($user->hasAnyRole(['admin', 'pimpinan'])) {
             $risksQuery->whereHas('user', function ($q) use ($user) {
                 $q->where('unit_id', $user->unit_id);
             });
-        } 
+        }
         // Jika user adalah super-admin, terapkan filter dari UI yang dikirim saat ekspor
         elseif ($user->hasRole('super-admin')) {
             $unitFilter = $requestData['unit'] ?? null;
@@ -205,7 +248,7 @@ class LaporanController extends Controller
         }
 
         $results = $paginate ? $risksQuery->paginate(50)->withQueryString() : $risksQuery->get();
-        
+
         $collection = $paginate ? $results->getCollection() : $results;
 
         $collection->transform(function ($risk) {
