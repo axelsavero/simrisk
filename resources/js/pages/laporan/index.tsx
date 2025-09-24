@@ -312,7 +312,8 @@ const Index: FC = () => {
                 <div className="mt-4 flex items-center justify-center gap-2">
                     <button
                         className="rounded-lg bg-gray-300 px-4 py-2 transition-colors hover:bg-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
-                        onClick={() => router.get('/laporan/risk-detail', { ...filters, page: risks.current_page - 1 }, { preserveState: true })}
+                        // highlight-next-line
+                        onClick={() => router.get('/laporan', { ...filters, page: (risks.current_page || 1) - 1 }, { preserveState: true })}
                         disabled={risks.current_page === 1 || !risks.data?.length}
                     >
                         Previous
@@ -322,7 +323,8 @@ const Index: FC = () => {
                     </span>
                     <button
                         className="rounded-lg bg-gray-300 px-4 py-2 transition-colors hover:bg-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
-                        onClick={() => router.get('/laporan/risk-detail', { ...filters, page: risks.current_page + 1 }, { preserveState: true })}
+                        // highlight-next-line
+                        onClick={() => router.get('/laporan', { ...filters, page: (risks.current_page || 1) + 1 }, { preserveState: true })}
                         disabled={risks.current_page === risks.last_page || !risks.data?.length}
                     >
                         Next
@@ -364,7 +366,7 @@ const Index: FC = () => {
         }
       `}</style>
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
                     <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
                         <h3 className="mb-4 text-lg font-semibold">Detail Penanggung Jawab Laporan</h3>
                         <div className="space-y-4">
