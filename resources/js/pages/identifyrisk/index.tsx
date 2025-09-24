@@ -42,22 +42,39 @@ type PageProps = {
     };
 };
 
-const Pagination = ({ links }: { links: Array<{ url: string | null; label: string; active: boolean }> }) =>
-    !links || links.length <= 3 ? null : (
-        <nav aria-label="Page navigation" className="pagination-wrapper">
-            <ul className="pagination flex space-x-1">
+// Kode Baru (sebagai pengganti)
+const Pagination = ({ links }: { links: Array<{ url: string | null; label: string; active: boolean }> }) => {
+    if (!links || links.length <= 3) {
+        return null;
+    }
+    return (
+        <nav aria-label="Page navigation" className="mt-6">
+            <ul className="flex justify-center space-x-1">
                 {links.map((link, index) => (
-                    <li key={index} className={`page-item ${link.active ? 'active' : ''} ${!link.url ? 'disabled' : ''}`}>
+                    <li key={index}>
                         {link.url ? (
-                            <Link className="page-link" href={link.url} dangerouslySetInnerHTML={{ __html: link.label }} preserveScroll />
+                            <Link
+                                className={`rounded border px-3 py-2 text-sm ${
+                                    link.active
+                                        ? 'border-[#12745a] bg-[#12745a] text-white'
+                                        : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                                }`}
+                                href={link.url}
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                                preserveScroll
+                            />
                         ) : (
-                            <span className="page-link" dangerouslySetInnerHTML={{ __html: link.label }} />
+                            <span
+                                className="rounded border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-400"
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                            />
                         )}
                     </li>
                 ))}
             </ul>
         </nav>
     );
+};
 
 export default function Index() {
     const { identifyRisks, flash, auth, permissions } = usePage<PageProps>().props;
@@ -163,8 +180,7 @@ export default function Index() {
         auth?.user?.roles?.includes('super-admin')
             ? item.validation_status === 'draft' || item.validation_status === 'rejected'
             : item.validation_status === 'draft' || item.validation_status === 'rejected';
-    const canShowSubmit = (item: IdentifyRisk) =>
-        item.validation_status === 'draft' || item.validation_status === 'rejected';
+    const canShowSubmit = (item: IdentifyRisk) => item.validation_status === 'draft' || item.validation_status === 'rejected';
     const getRiskLevelInfo = (probability: number, impact: number) => {
         const risk = probability * impact;
         return risk >= 20
@@ -340,7 +356,7 @@ export default function Index() {
                                     const validationInfo = getValidationStatusInfo(item.validation_status);
                                     return (
                                         <tr key={item.id} className={`risk-row ${item.validation_status === 'draft' ? 'bg-yellow-50' : ''}`}>
-                                            <td className="border border-black p-2">{index + 1}</td>
+                                            <td className="border border-black p-2">{item.no}</td>
                                             <td className="border border-black p-2">
                                                 <div className="flex items-center gap-2">
                                                     {item.id_identify}
@@ -421,7 +437,8 @@ export default function Index() {
                                                                 </button>
                                                             )}
                                                             {/* Super Admin: hanya setujui/tolak */}
-                                                            {isSuperAdmin && showValidationActions &&
+                                                            {isSuperAdmin &&
+                                                                showValidationActions &&
                                                                 (item.validation_status === 'submitted' || item.validation_status === 'pending') && (
                                                                     <>
                                                                         {permissions?.canApprove && (

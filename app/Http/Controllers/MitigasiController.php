@@ -143,7 +143,7 @@ class MitigasiController extends Controller
                     ->orWhere('deskripsi_mitigasi', 'like', "%{$searchTerm}%")
                     ->orWhere('strategi_mitigasi', 'like', "%{$searchTerm}%")
                     ->orWhereHas('identifyRisk', function ($subQ) use ($searchTerm) {
-                        $subQ->where('description', 'like', "%{$searchTerm}%"); // Changed from judul_risiko to description
+                        $subQ->where('description', 'like', "%{$searchTerm}%"); // C  hanged from judul_risiko to description
                     });
             });
         }
@@ -364,9 +364,9 @@ class MitigasiController extends Controller
 
         // Memuat relasi yang dibutuhkan untuk otorisasi
         $mitigasi->load('identifyRisk.user');
-        
+
         $isAuthorized = false;
-        
+
         if ($this->isSuperAdmin($user)) {
             $isAuthorized = true;
         } elseif ($this->isOwnerRisk($user)) {

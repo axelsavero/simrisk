@@ -3,7 +3,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, IdentifyRisk } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { Hourglass, Lightbulb, Paperclip, Save, SquarePen, X } from 'lucide-react';
+import { Hourglass, Lightbulb, Paperclip, Save, SquarePen, Wallet, X } from 'lucide-react';
 import React from 'react';
 
 interface FormProps {
@@ -48,7 +48,7 @@ export default function Form({ identifyRisk = null }: FormProps) {
         no_kontak: identifyRisk?.no_kontak || '',
         strategi: identifyRisk?.strategi || '',
         pengendalian_internal: identifyRisk?.pengendalian_internal || '',
-        biaya_penangan: identifyRisk?.biaya_penangan?.toString() || '',
+        biaya_penangan: (identifyRisk?.biaya_penangan?.toString() || '0').split('.')[0],
         probability: identifyRisk?.probability || 1,
         impact: identifyRisk?.impact || 1,
         penyebab: identifyRisk?.penyebab || [{ description: '' }],
@@ -143,6 +143,12 @@ export default function Form({ identifyRisk = null }: FormProps) {
             });
         }
     }
+
+    const handleCurrencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        // Remove non-digit characters (like dots) to store a raw number string
+        const value = e.target.value.replace(/[^\d]/g, '');
+        setData('biaya_penangan', value);
+    };
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
@@ -466,17 +472,20 @@ export default function Form({ identifyRisk = null }: FormProps) {
                             {errors.pengendalian_internal && <div className="mt-1 text-sm text-red-500">{errors.pengendalian_internal}</div>}
                         </div>
 
-                        <div>
+                         <div>
                             <label className="mb-1 block font-medium">Biaya Penanganan</label>
-                            <input
-                                type="number"
-                                value={data.biaya_penangan}
-                                onChange={(e) => setData('biaya_penangan', e.target.value)}
-                                className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                placeholder="Estimasi biaya"
-                                min="0"
-                                step="0.01"
-                            />
+                            <div className="relative">
+                                <Wallet className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                <input
+                                    type="text"
+                                    value={new Intl.NumberFormat('id-ID').format(parseInt(data.biaya_penangan) || 0)}
+                                    onChange={handleCurrencyChange}
+                                    className={`w-full rounded-md border p-2 pl-10 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+                                        errors.biaya_penangan ? 'border-red-500' : 'border-gray-300'
+                                    }`}
+                                    placeholder="0"
+                                />
+                            </div>
                             {errors.biaya_penangan && <div className="mt-1 text-sm text-red-500">{errors.biaya_penangan}</div>}
                         </div>
                     </div>

@@ -32,9 +32,9 @@ class IdentifyRiskController extends Controller
 
     public function index()
     {
-        $query = IdentifyRisk::with(['penyebab', 'dampakKualitatif', 'penangananRisiko'])->latest();
+        $query = IdentifyRisk::with(['penyebab', 'dampakKualitatif', 'penangananRisiko'])->oldest('id');
 
-        // Terapkan scope akses data: super-admin & pimpinan -> semua, admin -> unit, owner-risk -> miliknya
+        // Terapkan scope akses data
         $query = $this->applyRoleScope($query, [
             'userColumn' => 'user_id',
             'unitColumn' => null,
@@ -42,47 +42,43 @@ class IdentifyRiskController extends Controller
             'userRelation' => 'user',
         ])->where('is_active', true);
 
-        $identifyRisks = $query->paginate(12)->through(fn ($risk) => [
-            'id' => $risk->id,
-            'id_identify' => $risk->id_identify,
-            'status' => $risk->status,
-            'is_active' => $risk->is_active,
-            'risk_category' => $risk->risk_category,
-            'identification_date_start' => $risk->identification_date_start->format('Y-m-d'),
-            'identification_date_end' => $risk->identification_date_end->format('Y-m-d'),
-            'description' => $risk->description,
-            'nama_risiko' => $risk->nama_risiko,
-            'jabatan_risiko' => $risk->jabatan_risiko,
-            'no_kontak' => $risk->no_kontak,
-            'strategi' => $risk->strategi,
-            'pengendalian_internal' => $risk->pengendalian_internal,
-            'biaya_penangan' => $risk->biaya_penangan,
-            'probability' => $risk->probability,
-            'impact' => $risk->impact,
-            'level' => $risk->level,
-            'validation_status' => $risk->validation_status,
-            'validation_processed_at' => $risk->validation_processed_at ? $risk->validation_processed_at->format('Y-m-d H:i') : null,
-            'rejection_reason' => $risk->rejection_reason,
+        $paginatedRisks = $query->paginate(10);
 
-            // Status flags untuk UI sesuai preferensi indikator status yang tepat
-            'can_be_submitted' => $risk->canBeSubmitted(),
-            'can_be_edited' => $risk->canBeEdited(),
-            'is_draft' => $risk->isDraft(),
+        $identifyRisks = $paginatedRisks->through(function ($risk, $key) use ($paginatedRisks) {
+            return [
+                'no' => $paginatedRisks->firstItem() + $key,
+                'id' => $risk->id,
+                'id_identify' => $risk->id_identify,
+                'status' => $risk->status,
+                'is_active' => $risk->is_active,
+                'risk_category' => $risk->risk_category,
+                'identification_date_start' => $risk->identification_date_start->format('Y-m-d'),
+                'identification_date_end' => $risk->identification_date_end->format('Y-m-d'),
+                'description' => $risk->description,
+                'nama_risiko' => $risk->nama_risiko,
+                'jabatan_risiko' => $risk->jabatan_risiko,
+                'no_kontak' => $risk->no_kontak,
+                'strategi' => $risk->strategi,
+                'pengendalian_internal' => $risk->pengendalian_internal,
+                'biaya_penangan' => $risk->biaya_penangan,
+                'probability' => $risk->probability,
+                'impact' => $risk->impact,
+                'level' => $risk->level,
+                'validation_status' => $risk->validation_status,
+                'validation_processed_at' => $risk->validation_processed_at ? $risk->validation_processed_at->format('Y-m-d H:i') : null,
+                'rejection_reason' => $risk->rejection_reason,
 
-            // Relationships
-            'penyebab' => $risk->penyebab->map(fn($p) => [
-                'id' => $p->id,
-                'description' => $p->description
-            ])->toArray(),
-            'dampak_kualitatif' => $risk->dampakKualitatif->map(fn($d) => [
-                'id' => $d->id,
-                'description' => $d->description
-            ])->toArray(),
-            'penanganan_risiko' => $risk->penangananRisiko->map(fn($pr) => [
-                'id' => $pr->id,
-                'description' => $pr->description
-            ])->toArray(),
-        ]);
+                // Status flags
+                'can_be_submitted' => $risk->canBeSubmitted(),
+                'can_be_edited' => $risk->canBeEdited(),
+                'is_draft' => $risk->isDraft(),
+
+                // Relationships
+                'penyebab' => $risk->penyebab->map(fn($p) => ['id' => $p->id, 'description' => $p->description])->toArray(),
+                'dampak_kualitatif' => $risk->dampakKualitatif->map(fn($d) => ['id' => $d->id, 'description' => $d->description])->toArray(),
+                'penanganan_risiko' => $risk->penangananRisiko->map(fn($pr) => ['id' => $pr->id, 'description' => $pr->description])->toArray(),
+            ];
+        });
 
         return Inertia::render('identifyrisk/index', [
             'identifyRisks' => $identifyRisks,

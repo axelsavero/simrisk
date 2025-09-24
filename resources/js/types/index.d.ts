@@ -131,6 +131,7 @@ export interface Mitigasi {
 
 // Main IdentifyRisk interface
 export interface IdentifyRisk {
+    [x: string]: ReactNode;
     unit_kerja?: string;
     bukti_files?: string[];
     id: number;
