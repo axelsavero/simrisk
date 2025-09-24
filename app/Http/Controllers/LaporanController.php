@@ -126,7 +126,8 @@ class LaporanController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $requestData = $request->all();
+        $requestData = $request->input('data', []);
+
         $signature = [
             'jabatan' => $requestData['jabatan'] ?? '',
             'nama' => $requestData['nama'] ?? '',
@@ -162,7 +163,8 @@ class LaporanController extends Controller
      */
     public function exportExcel(Request $request)
     {
-        $requestData = $request->all();
+        $requestData = $request->input('data', []);
+
         $signature = [
             'jabatan' => $requestData['jabatan'] ?? '',
             'nama' => $requestData['nama'] ?? '',
