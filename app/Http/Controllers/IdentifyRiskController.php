@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage; 
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
@@ -60,15 +60,15 @@ class IdentifyRiskController extends Controller
             'probability' => $risk->probability,
             'impact' => $risk->impact,
             'level' => $risk->level,
-            'validation_status' => $risk->validation_status, 
-            'validation_processed_at' => $risk->validation_processed_at ? $risk->validation_processed_at->format('Y-m-d H:i') : null, 
+            'validation_status' => $risk->validation_status,
+            'validation_processed_at' => $risk->validation_processed_at ? $risk->validation_processed_at->format('Y-m-d H:i') : null,
             'rejection_reason' => $risk->rejection_reason,
-            
+
             // Status flags untuk UI sesuai preferensi indikator status yang tepat
             'can_be_submitted' => $risk->canBeSubmitted(),
             'can_be_edited' => $risk->canBeEdited(),
             'is_draft' => $risk->isDraft(),
-            
+
             // Relationships
             'penyebab' => $risk->penyebab->map(fn($p) => [
                 'id' => $p->id,
@@ -116,24 +116,24 @@ class IdentifyRiskController extends Controller
             'identification_date_start' => 'required|date',
             'identification_date_end' => 'required|date|after_or_equal:identification_date_start',
             'description' => 'required|string',
-            'nama_risiko' => 'nullable|string|max:255',
-            'jabatan_risiko' => 'nullable|string|max:255',
-            'no_kontak' => 'nullable|string|max:255',
-            'strategi' => 'nullable|string|max:255',
-            'pengendalian_internal' => 'nullable|string|max:255',
+            'nama_risiko' => 'required|string|max:255',
+            'jabatan_risiko' => 'required|string|max:255',
+            'no_kontak' => 'required|string|max:255',
+            'strategi' => 'required|string|max:255',
+            'pengendalian_internal' => 'required|string|max:255',
             'biaya_penangan' => 'nullable|numeric|min:0',
             'probability' => 'required|integer|min:1|max:5',
             'impact' => 'required|integer|min:1|max:5',
             'penyebab' => 'required|array|min:1',
             'penyebab.*.description' => 'required|string|max:1000',
-            'dampak_kualitatif' => 'required|array|min:1', 
+            'dampak_kualitatif' => 'required|array|min:1',
             'dampak_kualitatif.*.description' => 'required|string|max:1000',
             'penanganan_risiko' => 'required|array|min:1',
             'penanganan_risiko.*.description' => 'required|string|max:1000',
             'bukti_risiko_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png|max:10240',
             'bukti_risiko_nama' => 'nullable|string|max:255',
             'unit_kerja' => 'nullable|string|max:255',
-            'kategori_risiko' => 'nullable|string|max:255', 
+            'kategori_risiko' => 'nullable|string|max:255',
             'tahun' => 'nullable|integer|min:2020|max:' . (date('Y') + 5),
             'probability_residual' => 'nullable|integer|min:1|max:5',
             'impact_residual' => 'nullable|integer|min:1|max:5',
@@ -141,7 +141,7 @@ class IdentifyRiskController extends Controller
 
         // Calculate risk level
         $validated['level'] = (int)$validated['probability'] * (int)$validated['impact'];
-        
+
         // Set status berdasarkan role dengan logic yang tepat
         if (Auth::user()->hasRole('owner-risk')) {
             $validated['validation_status'] = IdentifyRisk::STATUS_DRAFT; // Draft untuk owner-risk
@@ -156,7 +156,7 @@ class IdentifyRiskController extends Controller
 
         // Data untuk tabel utama
         $identifyRiskData = collect($validated)->except([
-            'penyebab', 'dampak_kualitatif', 'penanganan_risiko', 
+            'penyebab', 'dampak_kualitatif', 'penanganan_risiko',
             'bukti_risiko_file', 'bukti_risiko_nama'
         ])->toArray();
 
@@ -203,7 +203,7 @@ class IdentifyRiskController extends Controller
                 if (isset($filePath) && Storage::disk('public')->exists($filePath)) {
                     Storage::disk('public')->delete($filePath);
                 }
-                
+
                 return Redirect::back()
                     ->withInput()
                     ->with('error', 'Gagal mengupload bukti: ' . $e->getMessage());
@@ -211,7 +211,7 @@ class IdentifyRiskController extends Controller
         }
 
         // Message sesuai role dan status
-        $message = Auth::user()->hasRole('owner-risk') 
+        $message = Auth::user()->hasRole('owner-risk')
             ? 'Risiko berhasil disimpan sebagai draft. Klik "Kirim" untuk mengirim ke validator.'
             : 'Identifikasi Risiko berhasil dibuat dan menunggu validasi.';
 
@@ -246,20 +246,20 @@ class IdentifyRiskController extends Controller
                 'rejection_reason' => $identifyRisk->rejection_reason,
                 'created_at' => $identifyRisk->created_at->format('Y-m-d H:i'),
                 'updated_at' => $identifyRisk->updated_at->format('Y-m-d H:i'),
-                
+
                 'bukti_files' => $identifyRisk->bukti_files ?? [],
-                
+
                 // Status flags
                 'can_be_submitted' => $identifyRisk->canBeSubmitted(),
                 'can_be_edited' => $identifyRisk->canBeEdited(),
                 'is_draft' => $identifyRisk->isDraft(),
-                
+
                 // Validation processor info
                 'validation_processor' => $identifyRisk->validationProcessor ? [
                     'id' => $identifyRisk->validationProcessor->id,
                     'name' => $identifyRisk->validationProcessor->name,
                 ] : null,
-                
+
                 // Relationships
                 'penyebab' => $identifyRisk->penyebab->map(fn($p) => [
                     'id' => $p->id,
@@ -301,12 +301,12 @@ class IdentifyRiskController extends Controller
                 'impact' => $identifyRisk->impact,
                 'level' => $identifyRisk->level,
                 'validation_status' => $identifyRisk->validation_status,
-                
+
                 // Status flags untuk edit form
                 'can_be_submitted' => $identifyRisk->canBeSubmitted(),
                 'can_be_edited' => $identifyRisk->canBeEdited(),
                 'is_draft' => $identifyRisk->isDraft(),
-                
+
                 // Relationships data untuk form
                 'penyebab' => $identifyRisk->penyebab->map(fn($p) => [
                     'description' => $p->description
@@ -347,14 +347,14 @@ class IdentifyRiskController extends Controller
                 'impact' => 'required|integer|min:1|max:5',
                 'penyebab' => 'required|array|min:1',
                 'penyebab.*.description' => 'required|string|max:1000',
-                'dampak_kualitatif' => 'required|array|min:1', 
+                'dampak_kualitatif' => 'required|array|min:1',
                 'dampak_kualitatif.*.description' => 'required|string|max:1000',
                 'penanganan_risiko' => 'required|array|min:1',
                 'penanganan_risiko.*.description' => 'required|string|max:1000',
                 'bukti_risiko_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png|max:10240',
                 'bukti_risiko_nama' => 'nullable|string|max:255',
                 'unit_kerja' => 'nullable|string|max:255',
-                'kategori_risiko' => 'nullable|string|max:255', 
+                'kategori_risiko' => 'nullable|string|max:255',
                 'tahun' => 'nullable|integer|min:2020|max:' . (date('Y') + 5),
                 'probability_residual' => 'nullable|integer|min:1|max:5',
                 'impact_residual' => 'nullable|integer|min:1|max:5',
@@ -415,7 +415,7 @@ class IdentifyRiskController extends Controller
             $identifyRisk->penyebab()->delete();
             $identifyRisk->dampakKualitatif()->delete();
             $identifyRisk->penangananRisiko()->delete();
-            
+
             // Buat relationships baru
             if (!empty($penyebabData)) {
                 $identifyRisk->penyebab()->createMany($penyebabData);
@@ -459,7 +459,7 @@ class IdentifyRiskController extends Controller
 
         // Soft delete with cascade relationships
         $identifyRisk->delete();
-        
+
         return Redirect::route('identify-risk.index')
             ->with('success', 'Identifikasi Risiko berhasil dihapus.');
     }
@@ -557,11 +557,11 @@ class IdentifyRiskController extends Controller
             ->with('success', "Risiko '{$identifyRisk->id_identify}' berhasil ditolak.");
     }
 
-    //  Download bukti method 
+    //  Download bukti method
     public function downloadBukti(IdentifyRisk $identifyRisk)
     {
         $buktiFiles = $identifyRisk->bukti_files ?? [];
-        
+
         if (empty($buktiFiles)) {
             abort(404, 'Tidak ada bukti file yang ditemukan');
         }
@@ -569,7 +569,7 @@ class IdentifyRiskController extends Controller
         // Jika hanya ada satu file, download langsung
         if (count($buktiFiles) === 1) {
             $bukti = $buktiFiles[0];
-            
+
             if (!Storage::disk('public')->exists($bukti['file_path'])) {
                 abort(404, 'File tidak ditemukan');
             }
@@ -582,7 +582,7 @@ class IdentifyRiskController extends Controller
 
         // Jika lebih dari satu file, download file pertama saja (untuk sekarang)
         $bukti = $buktiFiles[0];
-        
+
         if (!Storage::disk('public')->exists($bukti['file_path'])) {
             abort(404, 'File tidak ditemukan');
         }
@@ -590,22 +590,22 @@ class IdentifyRiskController extends Controller
         return Storage::disk('public')->download(
             $bukti['file_path'],
             $bukti['file_name']
-        ); 
+        );
     }
 
-    // Method untuk export/report 
+    // Method untuk export/report
     public function export()
     {
-        // Implementasi export Excel/PDF 
+        // Implementasi export Excel/PDF
         return response()->download(storage_path('app/exports/identify-risks.xlsx'));
     }
 
-    // Method untuk statistics/dashboard 
+    // Method untuk statistics/dashboard
     public function statistics()
     {
         $stats = IdentifyRisk::getCountByStatus();
         $distribution = IdentifyRisk::getRiskDistributionByCategory();
-        
+
         return response()->json([
             'status_counts' => $stats,
             'category_distribution' => $distribution,
