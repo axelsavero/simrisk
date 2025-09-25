@@ -50,7 +50,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::prefix('mitigasi')->name('mitigasi.')->group(function () {
         Route::patch('{mitigasi}/progress', [MitigasiController::class, 'updateProgress'])->name('update-progress');
-        Route::get('{mitigasi}/download-bukti', [MitigasiController::class, 'downloadBukti'])->name('download-bukti');
+        Route::get('{mitigasi}/bukti/{filename}', [MitigasiController::class, 'downloadBukti'])->name('downloadBukti');
         Route::delete('{mitigasi}/remove-bukti', [MitigasiController::class, 'removeBukti'])->name('remove-bukti');
         Route::get('statistics', [MitigasiController::class, 'getStatistics'])->name('statistics');
         Route::post('{mitigasi}/submit', [MitigasiController::class, 'submit'])->name('submit');

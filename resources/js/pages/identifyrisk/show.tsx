@@ -10,6 +10,7 @@ import {
     CircleHelp,
     Cog,
     CornerDownLeft,
+    Download,
     FileText,
     Hourglass,
     Info,
@@ -17,6 +18,7 @@ import {
     SearchCheck,
     ShieldCheck,
     TriangleAlert,
+    View,
     X,
 } from 'lucide-react';
 
@@ -391,7 +393,7 @@ export default function Show() {
                                             target="_blank"
                                             rel="noopener noreferrer"
                                         >
-                                            📥 Download
+                                            <Download /> Download
                                         </a>
                                         <a
                                             href={`/storage/${bukti.file_path}`}
@@ -399,7 +401,7 @@ export default function Show() {
                                             target="_blank"
                                             rel="noopener noreferrer"
                                         >
-                                            👁️ Preview
+                                            <View /> Preview
                                         </a>
                                     </div>
                                 </div>

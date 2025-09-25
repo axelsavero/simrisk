@@ -477,13 +477,13 @@ export default function Show() {
                                                 >
                                                     <Download className="h-4 w-4" />
                                                 </button>
-                                                <button
+                                                {/* <button
                                                     onClick={() => handleRemoveBukti(file.file_name || file.original_name)}
                                                     className="text-red-600 hover:text-red-800"
                                                     title="Hapus"
                                                 >
                                                     <Trash2 className="h-4 w-4" />
-                                                </button>
+                                                </button> */}
                                             </div>
                                         </div>
                                     ))}
