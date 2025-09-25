@@ -26,7 +26,7 @@ return new class extends Migration {
             $table->string('no_kontak');
             $table->string('strategi');
             $table->string('pengendalian_internal');
-            $table->decimal('biaya_penangan', 15, 2);
+            $table->decimal('biaya_penangan', 15, 2)->nullable()->default(0);
 
             // Risk assessment
             $table->integer('probability');
