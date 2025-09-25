@@ -401,12 +401,15 @@ export default function Index() {
                                                 {validationInfo.icon} {validationInfo.label}
                                             </td>
                                             <td className="border border-black p-2">
-                                                <div className="flex flex-col gap-2 sm:flex-row">
+                                                <div className="flex items-center justify-center gap-1">
+                                                    {' '}
+                                                    {/* MODIFIKASI: Tambahkan justify-center dan gap-1 */}
                                                     <Link
                                                         href={route('identify-risk.show', item.id)}
-                                                        className="action-btn rounded bg-[#12745a] px-2 py-1 text-white hover:bg-[#0c4435]"
+                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-green-300 text-green-900 hover:bg-green-500 hover:text-white"
+                                                        title="Detail"
                                                     >
-                                                        <Eye className="inline" /> Detail
+                                                        <Eye size={20} />
                                                     </Link>
                                                     {/* Admin: hanya lihat detail */}
                                                     {!isAdmin && (
@@ -415,25 +418,28 @@ export default function Index() {
                                                             {isOwnerRisk && permissions?.canSubmit && canShowSubmit(item) && (
                                                                 <button
                                                                     onClick={() => submitItem(item)}
-                                                                    className="action-btn rounded bg-blue-600 px-2 py-1 text-white hover:bg-blue-700"
+                                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-sky-700 hover:bg-sky-500 hover:text-white"
+                                                                    title="Kirim"
                                                                 >
-                                                                    <Upload className="inline" /> Kirim
+                                                                    <Upload size={20} />
                                                                 </button>
                                                             )}
                                                             {isOwnerRisk && permissions?.canEdit && canShowEdit(item) && (
                                                                 <Link
                                                                     href={route('identify-risk.edit', item.id)}
-                                                                    className="action-btn rounded bg-green-500 px-2 py-1 text-white hover:bg-green-600"
+                                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-yellow-300 text-yellow-700 hover:bg-yellow-500 hover:text-white"
+                                                                    title="Edit"
                                                                 >
-                                                                    <Pencil className="inline" /> Edit
+                                                                    <Pencil size={20} />
                                                                 </Link>
                                                             )}
                                                             {isOwnerRisk && permissions?.canDelete && item.validation_status === 'draft' && (
                                                                 <button
                                                                     onClick={() => deleteItem(item)}
-                                                                    className="action-btn rounded bg-red-500 px-2 py-1 text-white hover:bg-red-600"
+                                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-700 hover:bg-red-500 hover:text-white"
+                                                                    title="Hapus"
                                                                 >
-                                                                    <Trash2 className="inline" /> Hapus
+                                                                    <Trash2 size={20} />
                                                                 </button>
                                                             )}
                                                             {/* Super Admin: hanya setujui/tolak */}
@@ -444,17 +450,19 @@ export default function Index() {
                                                                         {permissions?.canApprove && (
                                                                             <button
                                                                                 onClick={() => approveItem(item)}
-                                                                                className="action-btn rounded bg-green-500 px-2 py-1 text-white hover:bg-green-600"
+                                                                                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-teal-100 text-teal-700 hover:bg-teal-500 hover:text-white"
+                                                                                title="Setujui"
                                                                             >
-                                                                                <CircleCheck className="inline" /> Setujui
+                                                                                <CircleCheck size={20} />
                                                                             </button>
                                                                         )}
                                                                         {permissions?.canReject && (
                                                                             <button
                                                                                 onClick={() => rejectItem(item)}
-                                                                                className="action-btn rounded bg-red-500 px-2 py-1 text-white hover:bg-red-600"
+                                                                                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-rose-100 text-rose-700 hover:bg-rose-500 hover:text-white"
+                                                                                title="Revisi"
                                                                             >
-                                                                                <X className="inline" /> Revisi
+                                                                                <X size={20} />
                                                                             </button>
                                                                         )}
                                                                     </>

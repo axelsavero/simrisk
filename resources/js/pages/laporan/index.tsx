@@ -1,5 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { FC, useEffect, useState } from 'react';
 import ReactSelect from 'react-select';
 
@@ -56,6 +56,7 @@ interface Risks {
     current_page?: number;
     per_page?: number;
     last_page?: number;
+    links?: Array<{ url: string | null; label: string; active: boolean }>;
 }
 
 interface PageProps {
@@ -68,6 +69,40 @@ interface PageProps {
     };
     statistik?: Record<string, any>;
 }
+
+const Pagination = ({ links }: { links: Array<{ url: string | null; label: string; active: boolean }> }) => {
+    if (!links || links.length <= 3) {
+        return null;
+    }
+    return (
+        <nav aria-label="Page navigation" className="mt-6">
+            <ul className="flex justify-center space-x-1">
+                {links.map((link, index) => (
+                    <li key={index}>
+                        {link.url ? (
+                            <Link
+                                className={`rounded border px-3 py-2 text-sm ${
+                                    link.active
+                                        ? 'border-[#12745a] bg-[#12745a] text-white'
+                                        : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                                }`}
+                                href={link.url}
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                                preserveState
+                                preserveScroll
+                            />
+                        ) : (
+                            <span
+                                className="rounded border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-400"
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                            />
+                        )}
+                    </li>
+                ))}
+            </ul>
+        </nav>
+    );
+};
 
 const Index: FC = () => {
     const {
@@ -309,25 +344,7 @@ const Index: FC = () => {
                 </div>
 
                 {/* Pagination - Centered and Styled */}
-                <div className="mt-4 flex items-center justify-center gap-2">
-                    <button
-                        className="rounded-lg bg-gray-300 px-4 py-2 transition-colors hover:bg-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
-                        onClick={() => router.get('/laporan', { ...filters, page: (risks.current_page || 1) - 1 }, { preserveState: true })}
-                        disabled={risks.current_page === 1 || !risks.data?.length}
-                    >
-                        Previous
-                    </button>
-                    <span className="px-4 py-2 text-gray-700">
-                        Page {risks.current_page || 1} of {risks.last_page || 1}
-                    </span>
-                    <button
-                        className="rounded-lg bg-gray-300 px-4 py-2 transition-colors hover:bg-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
-                        onClick={() => router.get('/laporan', { ...filters, page: (risks.current_page || 1) + 1 }, { preserveState: true })}
-                        disabled={risks.current_page === risks.last_page || !risks.data?.length}
-                    >
-                        Next
-                    </button>
-                </div>
+                {risks.links && <Pagination links={risks.links} />}
             </div>
 
             {/* Print Styles */}
