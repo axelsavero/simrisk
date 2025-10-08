@@ -28,7 +28,6 @@ export default function OperatorForm({ user = null }: { user?: any }) {
         ? roles.some((r: any) => (r?.name ? r.name === 'admin' : r === 'admin'))
         : roles === 'admin';
 
-    // Inisialisasi units dari currentUser.unit
     const [units, setUnits] = useState<Unit[]>(currentUser?.unit_id && currentUser?.unit ? [{ id: currentUser.unit_id, name: currentUser.unit }] : []);
     const [pegawaiUnit, setPegawaiUnit] = useState<Pegawai[]>([]);
     const [loading, setLoading] = useState({ units: false, pegawai: false });
@@ -36,12 +35,14 @@ export default function OperatorForm({ user = null }: { user?: any }) {
 
     const { data, setData, post, put, processing, errors } = useForm({
         unit_id: user?.unit_id?.toString() || (currentUser?.unit_id?.toString() || ''),
-        unit: user?.unit || currentUser?.unit || '', // Menggunakan unit dari nama_unit
+        unit: user?.unit || currentUser?.unit || '',
         name: user?.name || '',
         email: user?.email || '',
         password: '',
         role: 'owner-risk',
     });
+
+    // ... (sisa fungsi apiCall dan fetchPegawaiByUnit tetap sama) ...
 
     const apiCall = async (endpoint: string, options: RequestInit = {}) => {
         const defaultOptions: RequestInit = {
@@ -81,10 +82,9 @@ export default function OperatorForm({ user = null }: { user?: any }) {
 
         try {
             const encodedUnitName = encodeURIComponent(unitName);
-            const result = await apiCall(`/pegawai?unit_kerja=${encodedUnitName}`); // Menggunakan unit_kerja sesuai ekspektasi API
+            const result = await apiCall(`/pegawai?unit_kerja=${encodedUnitName}`);
 
             const pegawaiData = result.data?.data || result.data || [];
-            console.debug(`Pegawai by unit (${unitName}) response:`, result.data);
 
             const filtered = pegawaiData
                 .filter((p: any) => {
@@ -103,7 +103,6 @@ export default function OperatorForm({ user = null }: { user?: any }) {
                     };
                 });
 
-            console.debug(`Ditemukan ${filtered.length} pegawai untuk unit "${unitName}"`, filtered);
             setPegawaiUnit(filtered);
 
             if (!filtered.length) {
@@ -148,19 +147,31 @@ export default function OperatorForm({ user = null }: { user?: any }) {
             setData('email', '');
             return;
         }
-        fetchPegawaiByUnit(data.unit); // Menggunakan data.unit untuk unit_kerja
+        fetchPegawaiByUnit(data.unit);
     }, [data.unit]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        setApiError(''); // Bersihkan error sebelumnya
+
         if (!isAdmin) {
             setApiError('Akses ditolak: hanya admin yang dapat menambahkan operator.');
             return;
         }
+
+        // Validasi 1: Kelengkapan data
         if (!data.unit_id || !data.unit || !data.name || !data.email) {
-            setApiError('Unit, nama unit, nama, dan email harus diisi.');
+            setApiError('❌ Unit, nama, dan email harus diisi.');
             return;
         }
+
+        // Validasi 2: Domain email
+        if (!data.email.endsWith('@unj.ac.id')) {
+            setApiError('❌ Domain email harus @unj.ac.id');
+            return;
+        }
+
+        // Jika lolos validasi, lanjutkan submit
         if (user) {
             put(`/user/operator/${user.id}`);
         } else {
@@ -174,6 +185,7 @@ export default function OperatorForm({ user = null }: { user?: any }) {
         { title: user ? 'Edit Operator' : 'Tambah Operator', href: '#' },
     ];
 
+    // ... (sisa return statement untuk non-admin tetap sama) ...
     if (!isAdmin) {
         return (
             <AppLayout breadcrumbs={breadcrumbs}>
@@ -192,6 +204,7 @@ export default function OperatorForm({ user = null }: { user?: any }) {
         );
     }
 
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={user ? 'Edit Operator' : 'Tambah Operator'} />
@@ -205,26 +218,13 @@ export default function OperatorForm({ user = null }: { user?: any }) {
                         }`}
                     >
                         <span className={apiError.startsWith('✅') ? 'text-green-700' : 'text-red-700'}>{apiError}</span>
-                        {!apiError.startsWith('✅') && (
-                            <div className="flex gap-2">
-                                <Button
-                                    type="button"
-                                    variant="link"
-                                    className="h-auto p-0 text-sm text-red-600 underline hover:text-red-800 disabled:cursor-not-allowed disabled:text-gray-400"
-                                    onClick={() => {
-                                        if (data.unit) fetchPegawaiByUnit(data.unit);
-                                    }}
-                                    disabled={loading.pegawai}
-                                >
-                                    {loading.pegawai ? 'Memuat...' : 'Coba Lagi'}
-                                </Button>
-                            </div>
-                        )}
+                        {/* ... tombol coba lagi ... */}
                     </div>
                 )}
 
                 <form onSubmit={handleSubmit} className="w-full space-y-6 rounded-xl border-2 border-gray-300 bg-white p-6 shadow-md">
-                    <div>
+                    {/* ... Select untuk Unit ... */}
+                     <div>
                         <label className="mb-1 block font-medium">Unit</label>
                         <Select
                             options={units.map((unit) => ({ value: unit.id.toString(), label: unit.name }))}
@@ -249,6 +249,7 @@ export default function OperatorForm({ user = null }: { user?: any }) {
                         {errors.unit_id && <div className="text-sm text-red-500">{errors.unit_id}</div>}
                     </div>
 
+                    {/* ... Select untuk Nama Operator ... */}
                     <div>
                         <label className="mb-1 block font-medium">Nama Operator</label>
                         <Select
@@ -277,6 +278,7 @@ export default function OperatorForm({ user = null }: { user?: any }) {
                         {errors.name && <div className="text-sm text-red-500">{errors.name}</div>}
                     </div>
 
+
                     <div>
                         <label className="mb-1 block font-medium">Email</label>
                         <input
@@ -284,11 +286,12 @@ export default function OperatorForm({ user = null }: { user?: any }) {
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
                             className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            readOnly
+                            // Properti readOnly dihapus
                         />
                         {errors.email && <div className="text-sm text-red-500">{errors.email}</div>}
                     </div>
 
+                    {/* ... Sisa form (Password, Role, Buttons) ... */}
                     <div>
                         <label className="mb-1 block font-medium">Password</label>
                         <input

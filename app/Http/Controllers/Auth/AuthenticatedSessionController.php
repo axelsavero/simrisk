@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -18,9 +19,14 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(Request $request): Response
     {
+        $sso_response = Http::withoutVerifying()->post(env('SSO_API_URL').'/user-aplikasi/login-aplikasi', [
+            'client_id' => env('SSO_CLIENT_ID'),
+        ]);
+
         return Inertia::render('auth/login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => $request->session()->get('status'),
+            'public_key' => $sso_response->json()['data']['public_key'],
         ]);
     }
 

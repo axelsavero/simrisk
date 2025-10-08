@@ -11,6 +11,7 @@ use App\Http\Controllers\MitigasiController;
 use App\Http\Controllers\SipegProxyController;
 use App\Http\Controllers\ReferensiController;
 use App\Http\Controllers\SasaranUnitController;
+use App\Http\Controllers\SSO\SSOController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -82,6 +83,10 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::resource('referensi', ReferensiController::class);
+
+Route::get('/callback', [SSOController::class, 'handleCallback'])->name('sso.callback');
+
+require __DIR__.'/auth.php';
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

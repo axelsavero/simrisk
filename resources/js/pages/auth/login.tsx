@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import AuthSplitLayout from '@/layouts/auth-layout'; // Updated import
+import AuthSplitLayout from '@/layouts/auth-layout';
 
 type LoginForm = {
     email: string;
@@ -16,12 +16,15 @@ type LoginForm = {
     remember: boolean;
 };
 
+// 1. Tambahkan 'public_key' ke interface props
 interface LoginProps {
     status?: string;
     canResetPassword: boolean;
+    public_key: string; // Prop ini diterima dari controller
 }
 
-export default function Login({ status, canResetPassword }: LoginProps) {
+// 2. Terima 'public_key' di parameter fungsi
+export default function Login({ status, canResetPassword, public_key }: LoginProps) {
     const { data, setData, post, processing, errors, reset } = useForm<Required<LoginForm>>({
         email: '',
         password: '',
@@ -36,7 +39,12 @@ export default function Login({ status, canResetPassword }: LoginProps) {
     };
 
     return (
-        <AuthSplitLayout title="Login (Super Admi" description="">
+        // 3. Teruskan 'public_key' sebagai prop 'publicKey' ke layout
+        <AuthSplitLayout
+            title="Login (Super Admin)"
+            description=""
+            publicKey={public_key}
+        >
             <Head title="Log in" />
 
             <div className="text-center mb-8">
