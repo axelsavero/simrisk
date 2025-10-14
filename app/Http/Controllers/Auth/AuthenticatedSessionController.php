@@ -22,7 +22,7 @@ class AuthenticatedSessionController extends Controller
         $sso_response = Http::withoutVerifying()->post(env('SSO_API_URL').'/user-aplikasi/login-aplikasi', [
             'client_id' => env('SSO_CLIENT_ID'),
         ]);
-
+        // dd($sso_response);
         return Inertia::render('auth/login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => $request->session()->get('status'),
