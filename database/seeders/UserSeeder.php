@@ -6,6 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Unit;
 use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
@@ -19,7 +20,7 @@ class UserSeeder extends Seeder
 
         // Cari role 'super admin'
         $superAdminRole = Role::where('name', 'super-admin')->first();
-        
+
         // Jika rolenya ada, buat user dan pasangkan rolenya
         if ($superAdminRole) {
             $superAdminUser = User::firstOrCreate(
@@ -31,6 +32,37 @@ class UserSeeder extends Seeder
             );
             $superAdminUser->roles()->sync($superAdminRole->id);
             $this->command->info("User 'Super Admin User' dibuat dan diberi peran 'super admin'.");
+
+            // Cari unit SPI (Satuan Penjamin Internal)
+            $spiUnit = Unit::where('nama_unit', 'Satuan Penjamin Internal (SPI)')->first();
+
+            // Tambahkan user Bambang Setiawan Mauludin (super-admin, unit SPI)
+            $bambang = User::firstOrCreate(
+                ['email' => 'bambang_1512622011@mhs.unj.ac.id'],
+                [
+                    'name' => 'Bambang Setiawan Mauludin',
+                    'password' => Hash::make('password'),
+                    'unit_id' => $spiUnit ? $spiUnit->id_unit : null,
+                    'unit' => $spiUnit ? $spiUnit->nama_unit : null,
+                    'kode_unit' => $spiUnit ? $spiUnit->kode_unit : null,
+                ]
+            );
+            $bambang->roles()->sync($superAdminRole->id);
+            $this->command->info("User 'Bambang Setiawan Mauludin' dibuat dan diberi peran 'super admin'.");
+
+            // Tambahkan user Muhammad Axel Saver (super-admin, unit SPI)
+            $axel = User::firstOrCreate(
+                ['email' => 'MUHAMMAD.AXEL.SAVERO@mhs.unj.ac.id'],
+                [
+                    'name' => 'Muhammad Axel Savero',
+                    'password' => Hash::make('password'),
+                    'unit_id' => $spiUnit ? $spiUnit->id_unit : null,
+                    'unit' => $spiUnit ? $spiUnit->nama_unit : null,
+                    'kode_unit' => $spiUnit ? $spiUnit->kode_unit : null,
+                ]
+            );
+            $axel->roles()->sync($superAdminRole->id);
+            $this->command->info("User 'Muhammad Axel Savero' dibuat dan diberi peran 'super admin'.");
         }
 
         // --- 2. Membuat User untuk Role 'Admin' ---
