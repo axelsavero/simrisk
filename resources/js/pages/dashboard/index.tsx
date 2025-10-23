@@ -143,7 +143,7 @@ export default function Dashboard({ riskMatrixData, mitigasiMatrixData, filterOp
                 throw new Error(`HTTP ${response.status}: Gagal mengambil data unit.`);
             }
             const data = await response.json();
-            
+
             if (!data.success || !data.units || !data.units.length) {
                 throw new Error('Tidak ada data unit yang ditemukan.');
             }
@@ -152,7 +152,7 @@ export default function Dashboard({ riskMatrixData, mitigasiMatrixData, filterOp
                 id: unit.id,
                 name: unit.nama_unit,
             }));
-            
+
             setUnits(transformedUnits);
         } catch (error) {
             setApiError(`❌ Gagal memuat unit: ${error.message}`);
@@ -361,7 +361,7 @@ export default function Dashboard({ riskMatrixData, mitigasiMatrixData, filterOp
 
                     {popupData && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                            <div className="max-h-[85vh] w-full max-w-5xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+                            <div className="max-h-[85vh] w-full max-w-5xl overflow-y-auto overflow-x-auto rounded-lg bg-white p-6 shadow-lg">
                                 <h4 className="mb-4 text-xl font-semibold">
                                     {popupData.type === 'sebelum' ? 'Detail Risiko (Inheren)' : 'Detail Mitigasi (Residual)'} • Bobot{' '}
                                     {popupData.value}
@@ -441,7 +441,7 @@ type RiskPoint = {
 
 function RiskMatrixTable({ riskPoints, onCellClick }: { riskPoints: RiskPoint[]; onCellClick: (x: number, y: number, value: number) => void }) {
     return (
-        <div className="w-full overflow-x-hidden">
+        <div className="w-full overflow-x-auto">
             <table className="w-full border border-black">
                 <thead>
                     <tr>

@@ -331,7 +331,7 @@ export default function Index() {
             </div>
 
             {/* Risk Table */}
-            <div className="risk-table-container w-full">
+            <div className="risk-table-container w-full overflow-x-auto">
                 <table className="risk-table w-full border border-black">
                     <thead>
                         <tr className="bg-gray-100">

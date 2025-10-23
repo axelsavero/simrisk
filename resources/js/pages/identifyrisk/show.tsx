@@ -128,7 +128,7 @@ export default function Show() {
             <div className="mx-auto w-screen max-w-6xl px-6 py-8">
                 {/* Header Section */}
                 <div className="mb-6 rounded-lg bg-white p-6 shadow-md">
-                    <div className="mb-4 flex items-start justify-between">
+                    <div className="mb-4 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                         <div>
                             <h1 className="mb-2 text-3xl font-bold text-gray-900">{identifyRisk.id_identify}</h1>
                             <p className="text-lg text-gray-600">{identifyRisk.kategori_risiko || identifyRisk.risk_category}</p>
@@ -144,7 +144,7 @@ export default function Show() {
                     </div>
 
                     {/* Action Buttons by role */}
-                    <div className="flex gap-3 border-t pt-4">
+                    <div className="flex flex-wrap gap-3 border-t pt-4">
                         {/* Owner Risk: edit + submit saat draft */}
                         {isOwnerRisk && identifyRisk.validation_status === 'draft' && (
                             <>
