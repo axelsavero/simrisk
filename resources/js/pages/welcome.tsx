@@ -28,12 +28,12 @@ export default function Welcome() {
                                 >
                                     Log in
                                 </Link>
-                                <Link
+                                {/* <Link
                                     href={route('register')}
                                     className="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm leading-normal text-white hover:border-[#1915014a]"
                                 >
                                     Register
-                                </Link>
+                                </Link> */}
                             </>
                         )}
                     </nav>
