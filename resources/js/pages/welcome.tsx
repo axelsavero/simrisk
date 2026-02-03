@@ -1,8 +1,16 @@
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
+import { useEffect } from 'react';
 
-export default function Welcome() {
+export default function Welcome(props: any) {
+    const { silentLoginUrl } = props;
     const { auth } = usePage<SharedData>().props;
+
+    useEffect(() => {
+        if (silentLoginUrl) {
+            window.location.href = silentLoginUrl;
+        }
+    }, [silentLoginUrl]);
 
     return (
         <>

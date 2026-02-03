@@ -58,6 +58,9 @@ class HandleInertiaRequests extends Middleware
             'error' => fn () => $request->session()->get('error'),
         ],
         
+        // Share SSO public_key globally for all pages
+        'public_key' => $request->session()->get('sso_public_key'),
+        
             'ziggy' => fn (): array => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),

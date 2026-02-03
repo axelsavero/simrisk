@@ -12,10 +12,9 @@ use App\Http\Controllers\SipegProxyController;
 use App\Http\Controllers\ReferensiController;
 use App\Http\Controllers\SasaranUnitController;
 use App\Http\Controllers\SSO\SSOController;
+use App\Http\Controllers\WelcomeController;
 
-Route::get('/', function () {
-    return Inertia::render('welcome');
-})->name('home');
+Route::get('/', [WelcomeController::class, 'index'])->name('home');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/user/manage', [UserManageController::class, 'index'])->name('user.manage.index');

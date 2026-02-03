@@ -38,6 +38,7 @@ export default function Login({ status, canResetPassword, public_key }: LoginPro
         });
     };
 
+
     return (
         // 3. Teruskan 'public_key' sebagai prop 'publicKey' ke layout
         <AuthSplitLayout
@@ -108,6 +109,28 @@ export default function Login({ status, canResetPassword, public_key }: LoginPro
                         {processing && <LoaderCircle className="h-5 w-5 animate-spin mr-2" />}
                         MASUK
                     </Button>
+
+                    {/* SSO Button - Always visible - Using anchor tag for reliable redirect */}
+                    <a
+                        href={public_key ? `${import.meta.env.VITE_SSO_API_URL}/user-aplikasi/login-microsoft?public_key=${public_key}` : '#'}
+                        onClick={(e) => {
+                            console.log('SSO link clicked');
+                            console.log('Public Key:', public_key);
+
+                            if (!public_key) {
+                                e.preventDefault();
+                                console.error('No public key available');
+                                alert('Terjadi kesalahan: Public key tidak tersedia. Silakan refresh halaman.');
+                            } else {
+                                console.log('Navigating to SSO via anchor tag...');
+                            }
+                        }}
+                        className={`mt-4 w-full flex items-center justify-center gap-3 ${public_key ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed pointer-events-none'} text-white rounded-xl py-4 text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]`}
+                        tabIndex={6}
+                    >
+                        <img src="/microsoft.png" alt="Microsoft" className="h-6 w-auto" />
+                        <span>LOGIN DENGAN SSO</span>
+                    </a>
                 </div>
 
                 {/* <div className="text-center text-sm text-gray-600 mt-6">

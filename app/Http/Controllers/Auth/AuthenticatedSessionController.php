@@ -22,11 +22,15 @@ class AuthenticatedSessionController extends Controller
         $sso_response = Http::withoutVerifying()->post(env('SSO_API_URL').'/user-aplikasi/login-aplikasi', [
             'client_id' => env('SSO_CLIENT_ID'),
         ]);
-        // dd($sso_response);
+        
+        // Store private_key in session for JWT decoding later
+        $ssoData = $sso_response->json()['data'];
+        $request->session()->put('sso_private_key', $ssoData['private_key']);
+        
         return Inertia::render('auth/login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => $request->session()->get('status'),
-            'public_key' => $sso_response->json()['data']['public_key'],
+            'public_key' => $ssoData['public_key'],
         ]);
     }
 
@@ -45,13 +49,17 @@ class AuthenticatedSessionController extends Controller
     /**
      * Destroy an authenticated session.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request)
     {
         Auth::guard('web')->logout();
 
+        // Clear silent login flag to allow retry after logout
+        $request->session()->forget('silent_login_attempted');
+        
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        // Redirect to SSO logout to clear Microsoft session
+        return Inertia::location(env('SSO_API_URL').'/user/logout');
     }
 }

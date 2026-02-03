@@ -6,14 +6,14 @@ import { type PropsWithChildren } from 'react';
 interface AuthLayoutProps {
     title?: string;
     description?: string;
-    publicKey: string; // Prop ini diterima dari halaman login.tsx
+    publicKey?: string; // Prop ini diterima dari halaman login.tsx
 }
 
 // 2. Terima 'publicKey' dari props
 export default function AuthSplitLayout({ children, publicKey }: PropsWithChildren<AuthLayoutProps>) {
 
     // Pastikan Anda menggunakan `import.meta.env.VITE_...` untuk variabel environment di sisi klien (Vite)
-    const ssoUrl = `${import.meta.env.VITE_SSO_API_URL}/user-aplikasi/login-microsoft?public_key=${publicKey}`;
+    const ssoUrl = publicKey ? `${import.meta.env.VITE_SSO_API_URL}/user-aplikasi/login-microsoft?public_key=${publicKey}` : '#';
 
     return (
         <div className="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0">
@@ -36,16 +36,7 @@ export default function AuthSplitLayout({ children, publicKey }: PropsWithChildr
                     Aplikasi ManRisk mendukung Anda untuk mengidentifikasi, menganalisis, mengevaluasi,
                     menindak lanjuti dan memonitoring risiko dimanapun dan kapanpun.
                 </p>
-                {/* Tombol Login SSO */}
-                <div>
-                    {/* 3. Gunakan variabel 'publicKey' yang sudah digabung ke dalam 'ssoUrl' */}
-                    <a
-                        href={ssoUrl}
-                        className="inline-block bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-4xl text-base transition ml-10 w-auto"
-                    >
-                        LOGIN DENGAN SSO
-                    </a>
-                </div>
+                
             </div>
             {/* Kanan */}
             <div className="w-full lg:p-8">
