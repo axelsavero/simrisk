@@ -63,6 +63,20 @@ class UserSeeder extends Seeder
             );
             $axel->roles()->sync($superAdminRole->id);
             $this->command->info("User 'Muhammad Axel Savero' dibuat dan diberi peran 'super admin'.");
+
+
+            $taufiq = User::firstOrCreate(
+                ['email' => 'tspiunj@gmail.com'],
+                [
+                    'name' => 'Muhammad Taufiq Almubarak',
+                    'password' => Hash::make('password'),
+                    'unit_id' => $spiUnit ? $spiUnit->nama_unit : null,
+                    'unit' => $spiUnit ? $spiUnit->nama_unit : null,
+                    'kode_unit' => $spiUnit ? $spiUnit->kode_unit : null,
+                ]
+            );
+            $taufiq->roles()->sync($superAdminRole->id);
+            $this->command->info("User 'Muhammad Taufiq Almubarak' dibuat dan diberi peran 'super admin'.");
         }
 
         // --- 2. Membuat User untuk Role 'Admin' ---
