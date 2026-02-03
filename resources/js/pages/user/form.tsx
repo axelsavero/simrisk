@@ -4,6 +4,7 @@ import { BreadcrumbItem, User } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-select';
+import CreatableSelect from 'react-select/creatable';
 
 interface Unit {
     id: number;
@@ -140,8 +141,8 @@ export default function AdminForm({ allRoles, user = null }: FormProps) {
             const errorMessage = error.message.includes('429')
                 ? `❌ Terlalu banyak permintaan (HTTP 429). Tunggu beberapa saat.`
                 : error.message.includes('404')
-                  ? `❌ Endpoint /allunit tidak ditemukan. Silakan hubungi admin API SIPEG.`
-                  : `❌ Gagal memuat unit: ${error.message}`;
+                    ? `❌ Endpoint /allunit tidak ditemukan. Silakan hubungi admin API SIPEG.`
+                    : `❌ Gagal memuat unit: ${error.message}`;
             setApiError(errorMessage);
             if (process.env.NODE_ENV === 'development') {
                 setUnits([
@@ -200,12 +201,12 @@ export default function AdminForm({ allRoles, user = null }: FormProps) {
             }
         } catch (error: any) {
             const errorMessage = error.message.includes('429')
-            ? `❌ Terlalu banyak permintaan (HTTP 429). Tunggu beberapa saat.`
-            : error.message.includes('400')
-            ? `❌ ${error.message}`
-            : error.message.includes('404')
-                ? `❌ Endpoint /pegawai?unit_kerja=${encodedUnitName} tidak ditemukan. Silakan hubungi admin API SIPEG.`
-                : `❌ Gagal memuat pegawai: ${error.message}`;
+                ? `❌ Terlalu banyak permintaan (HTTP 429). Tunggu beberapa saat.`
+                : error.message.includes('400')
+                    ? `❌ ${error.message}`
+                    : error.message.includes('404')
+                        ? `❌ Endpoint /pegawai?unit_kerja=${encodedUnitName} tidak ditemukan. Silakan hubungi admin API SIPEG.`
+                        : `❌ Gagal memuat pegawai: ${error.message}`;
             setApiError(errorMessage);
             if (process.env.NODE_ENV === 'development') {
                 const dummyPegawai = [
@@ -279,18 +280,17 @@ export default function AdminForm({ allRoles, user = null }: FormProps) {
 
                 {apiError && (
                     <div
-                        className={`mb-4 flex items-center justify-between rounded-md border p-4 ${
-                            apiError.startsWith('✅') ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'
-                        }`}
+                        className={`mb-4 flex items-center justify-between rounded-md border p-4 ${apiError.startsWith('✅') ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'
+                            }`}
                     >
                         <span className={apiError.startsWith('✅') ? 'text-green-700' : 'text-red-700'}>{apiError}</span>
-                         {/* ... tombol coba lagi ... */}
+                        {/* ... tombol coba lagi ... */}
                     </div>
                 )}
 
                 <form onSubmit={handleSubmit} className="w-full space-y-6 rounded-xl border-2 border-gray-300 bg-white p-6 shadow-md">
                     {/* ... Select untuk Unit ... */}
-                     <div>
+                    <div>
                         <label className="mb-1 block font-medium">Unit</label>
                         <Select
                             options={units.map((unit) => ({ value: unit.id.toString(), label: unit.name }))}
@@ -317,33 +317,45 @@ export default function AdminForm({ allRoles, user = null }: FormProps) {
                     </div>
 
 
-                    {/* ... Select untuk Nama Pegawai ... */}
-                     <div>
+                    {/* ... Select untuk Nama Pegawai (dengan input manual) ... */}
+                    <div>
                         <label className="mb-1 block font-medium">Nama Pegawai</label>
-                        <Select
+                        <CreatableSelect
                             options={pegawaiUnit.map((p) => ({
                                 value: p.nama,
                                 label: p.nama,
                                 email: p.email,
                                 unit_id: p.unit_id,
                             }))}
-                            value={data.name ? { value: data.name, label: data.name, email: data.email, unit_id: data.unit_id } : null}
+                            value={data.name ? { value: data.name, label: data.name } : null}
                             onChange={(selected) => {
                                 if (selected) {
                                     setData('name', selected.value || '');
-                                    setData('email', selected.email || '');
-                                    setData('unit_id', selected.unit_id?.toString() || data.unit_id);
+                                    // Jika dipilih dari dropdown, isi email otomatis
+                                    if (selected.email) {
+                                        setData('email', selected.email || '');
+                                        setData('unit_id', selected.unit_id?.toString() || data.unit_id);
+                                    }
+                                    // Jika input manual, biarkan email kosong untuk diisi manual
                                 } else {
                                     setData('name', '');
                                     setData('email', '');
                                 }
                             }}
+                            onCreateOption={(inputValue) => {
+                                // Ketika user mengetik manual dan menekan Enter
+                                setData('name', inputValue);
+                                // Email dibiarkan kosong, user harus isi manual
+                            }}
                             isLoading={!data.unit || loading.pegawai || isThrottled}
                             isDisabled={!data.unit || loading.pegawai || isThrottled}
-                            placeholder={loading.pegawai ? 'Memuat daftar pegawai...' : !data.unit ? 'Pilih unit terlebih dahulu' : '-- Pilih Pegawai --'}
+                            placeholder={loading.pegawai ? 'Memuat daftar pegawai...' : !data.unit ? 'Pilih unit terlebih dahulu' : '-- Pilih atau ketik nama pegawai --'}
                             classNamePrefix="react-select"
+                            formatCreateLabel={(inputValue) => `Gunakan: "${inputValue}"`}
+                            isClearable
                         />
                         {errors.name && <div className="text-sm text-red-500">{errors.name}</div>}
+                        <p className="mt-1 text-xs text-gray-500">💡 Pilih dari daftar atau ketik nama baru</p>
                     </div>
 
                     <div>
@@ -353,7 +365,7 @@ export default function AdminForm({ allRoles, user = null }: FormProps) {
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
                             className="w-full rounded-md border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            // Properti readOnly dihapus
+                        // Properti readOnly dihapus
                         />
                         {errors.email && <div className="text-sm text-red-500">{errors.email}</div>}
                     </div>

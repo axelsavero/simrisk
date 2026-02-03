@@ -259,7 +259,7 @@ export default function Dashboard({ riskMatrixData, mitigasiMatrixData, filterOp
                                     }),
                                 }}
                                 options={units.map((unitOption) => ({
-                                    value: unitOption.id.toString(),
+                                    value: unitOption.id.toString(),
                                     label: unitOption.name,
                                 }))}
                                 value={unit ? units.find(u => u.id.toString() === unit) ? { value: unit, label: units.find(u => u.id.toString() === unit)?.name || '' } : null : null}
