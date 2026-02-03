@@ -7,21 +7,21 @@ use App\Models\User; // Pastikan model User di-import
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http; // Jika perlu validasi token ke server SSO lagi
-use Illuminate\Support\Str; // Untuk generate password random jika user baru
+
 
 class SSOController extends Controller
 {
     /**
      * Handle the callback from the SSO server.
+     * Implements silent login for existing users only.
      */
     public function handleCallback(Request $request)
     {
         // 1. Ambil token dari URL
         $token = $request->input('token');
 
-        // Di sini Anda HARUS mem-parsing dan memvalidasi token JWT.
-        // Untuk sekarang, kita akan melakukan decode sederhana (INI TIDAK AMAN UNTUK PRODUKSI)
-        // Anda sebaiknya menggunakan library seperti firebase/php-jwt untuk validasi yang benar.
+        // Validasi token JWT
+        // CATATAN: Untuk produksi, gunakan library seperti firebase/php-jwt untuk validasi yang lebih aman
         try {
             $payload = json_decode(base64_decode(str_replace('_', '/', str_replace('-','+',explode('.', $token)[1]))));
 
@@ -36,22 +36,18 @@ class SSOController extends Controller
         // 2. Cari pengguna di database berdasarkan email dari token
         $user = User::where('email', $payload->email)->first();
 
-        // 3. Jika pengguna tidak ada, buat akun baru untuknya
+        // 3. VALIDASI: Hanya izinkan login jika user sudah ada di database
         if (!$user) {
-            $user = User::create([
-                'name' => $payload->name,
-                'email' => $payload->email,
-                // SSO user biasanya tidak punya password di sistem kita
-                'password' => bcrypt(Str::random(16)),
-            ]);
+            return redirect('/login')->with('error', 'Akun Anda belum terdaftar di sistem. Silakan hubungi administrator untuk mendaftarkan akun Anda.');
         }
 
-        // 4. Login-kan pengguna tersebut
+        // 4. Silent Login - Login pengguna yang sudah terdaftar
         Auth::login($user);
 
-        // 5. Regenerate session dan arahkan ke dashboard
+        // 5. Regenerate session untuk keamanan
         $request->session()->regenerate();
 
+        // 6. Redirect ke dashboard
         return redirect()->intended(route('dashboard', absolute: false));
     }
 }
