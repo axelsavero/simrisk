@@ -43,7 +43,7 @@ export default function Operator({ users }: PageProps<{ users: User[] }>) {
                 <div className="mb-4 flex items-center justify-between">
                     <h3 className="text-xl font-semibold">User Operator</h3>
                     {isAdmin && (
-                        <Button asChild className="rounded-lg border bg-[#12745A] px-4 py-2 font-medium text-white">
+                        <Button asChild className="rounded-lg border bg-[#006d77] px-4 py-2 font-medium text-white">
                             <Link href="/user/operator/create">
                                 <UserRoundPlus />
                                 Tambah Operator

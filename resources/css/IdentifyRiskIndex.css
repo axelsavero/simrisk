@@ -50,7 +50,7 @@
 }
 
 .btn-create {
-    background: linear-gradient(135deg, #12745A, #12745b);
+    background: linear-gradient(135deg, #006d77, #12745b);
     color: white;
     border: none;
     padding: 0.875rem 1.5rem;
@@ -120,12 +120,15 @@
 .stat-total {
     border-left: 4px solid #667eea;
 }
+
 .stat-pending {
     border-left: 4px solid #f6ad55;
 }
+
 .stat-approved {
     border-left: 4px solid #68d391;
 }
+
 .stat-rejected {
     border-left: 4px solid #fc8181;
 }
@@ -177,19 +180,19 @@
     display: flex;
     gap: 1.5rem;
     align-items: stretch;
-  }
+}
 
-  .risk-card {
+.risk-card {
     display: flex;
     flex-direction: column;
     height: 100%;
-  }
+}
 
-  .card-content {
+.card-content {
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
-  }
+}
 
 .filter-tabs {
     display: flex;
@@ -213,7 +216,7 @@
 }
 
 .filter-tab.active {
-    background: linear-gradient(135deg, #12745a, #12745b);
+    background: linear-gradient(135deg, #006d77, #12745b);
     color: white;
     border-color: transparent;
 }
@@ -937,12 +940,12 @@
     .table-actions {
         gap: 4px;
     }
-    
+
     .table-action-btn {
         padding: 4px 8px;
         font-size: 11px;
     }
-    
+
     .status-badge {
         padding: 3px 6px;
         font-size: 10px;

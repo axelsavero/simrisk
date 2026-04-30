@@ -47,7 +47,7 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
                 <div className="mb-4 flex items-center justify-between">
                     <h3 className="text-xl font-semibold">User Management</h3>
                     {isSuperAdmin && (
-                        <Button asChild className="rounded-lg border bg-[#12745A] px-4 py-2 font-medium text-white">
+                        <Button asChild className="rounded-lg border bg-[#006d77] px-4 py-2 font-medium text-white">
                             <Link href="/user/manage/create">
                                 <UserRoundPlus />
                                 Tambah Admin

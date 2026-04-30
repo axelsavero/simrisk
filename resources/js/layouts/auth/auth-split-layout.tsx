@@ -18,7 +18,7 @@ export default function AuthSplitLayout({ children, publicKey }: PropsWithChildr
     return (
         <div className="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0">
             {/* Kiri */}
-            <div className="bg-gradient-to-br from-green-700 to-teal-500 relative hidden h-full flex-col p-10 text-white lg:flex dark:border-r">
+            <div className="bg-gradient-to-br from-[#006d77] to-[#004950] relative hidden h-full flex-col p-10 text-white lg:flex dark:border-r">
                 {/* Logo UNJ */}
                 <div className="flex items-center mr-10">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Lambang_baru_UNJ.png/500px-Lambang_baru_UNJ.png" alt="Logo UNJ" className="mr-4 mx-20 my-15 w-30 h-30" />

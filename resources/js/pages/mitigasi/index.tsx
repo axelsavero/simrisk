@@ -52,11 +52,10 @@ const Pagination = ({ links }: { links: Array<{ url: string | null; label: strin
                     <li key={index}>
                         {link.url ? (
                             <Link
-                                className={`rounded border px-3 py-2 text-sm ${
-                                    link.active
-                                        ? 'border-[#12745a] bg-[#12745a] text-white'
+                                className={`rounded border px-3 py-2 text-sm ${link.active
+                                        ? 'border-[#006d77] bg-[#006d77] text-white'
                                         : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
-                                }`}
+                                    }`}
                                 href={link.url}
                                 dangerouslySetInnerHTML={{ __html: link.label }}
                                 preserveScroll
@@ -396,7 +395,7 @@ export default function Index() {
                                     placeholder="Cari judul atau deskripsi mitigasi..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full rounded-md border border-gray-300 py-2 pr-4 pl-10 focus:border-[#12745a] focus:ring-[#12745a]"
+                                    className="w-full rounded-md border border-gray-300 py-2 pr-4 pl-10 focus:border-[#006d77] focus:ring-[#006d77]"
                                     disabled={isLoading}
                                 />
                             </div>
@@ -413,7 +412,7 @@ export default function Index() {
                                 {isLoading ? 'Memuat...' : 'Filter'}
                             </button>
                             {(filters.status_mitigasi || filters.strategi_mitigasi || filters.validation_status || filters.search) && (
-                                <button onClick={clearFilters} className="text-sm text-[#12745a] hover:text-[#0c4435]" disabled={isLoading}>
+                                <button onClick={clearFilters} className="text-sm text-[#006d77] hover:text-[#0c4435]" disabled={isLoading}>
                                     Clear Filters
                                 </button>
                             )}
@@ -429,7 +428,7 @@ export default function Index() {
                                     <select
                                         value={filters.status_mitigasi || ''}
                                         onChange={(e) => handleFilter('status_mitigasi', e.target.value)}
-                                        className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#12745a] focus:ring-[#12745a]"
+                                        className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#006d77] focus:ring-[#006d77]"
                                         disabled={isLoading}
                                     >
                                         <option value="">Semua Status</option>
@@ -445,7 +444,7 @@ export default function Index() {
                                     <select
                                         value={filters.strategi_mitigasi || ''}
                                         onChange={(e) => handleFilter('strategi_mitigasi', e.target.value)}
-                                        className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#12745a] focus:ring-[#12745a]"
+                                        className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#006d77] focus:ring-[#006d77]"
                                         disabled={isLoading}
                                     >
                                         <option value="">Semua Strategi</option>
@@ -461,7 +460,7 @@ export default function Index() {
                                     <select
                                         value={filters.validation_status || ''}
                                         onChange={(e) => handleFilter('validation_status', e.target.value)}
-                                        className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#12745a] focus:ring-[#12745a]"
+                                        className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#006d77] focus:ring-[#006d77]"
                                         disabled={isLoading}
                                     >
                                         <option value="">Semua Status Validasi</option>
@@ -573,7 +572,7 @@ export default function Index() {
                                                     <div className="mb-1 text-xs text-gray-600">{mitigasi.progress_percentage}%</div>
                                                     <div className="h-2 w-full rounded-full bg-gray-200">
                                                         <div
-                                                            className="h-2 rounded-full bg-[#12745a]"
+                                                            className="h-2 rounded-full bg-[#006d77]"
                                                             style={{ width: `${mitigasi.progress_percentage}%` }}
                                                         ></div>
                                                     </div>

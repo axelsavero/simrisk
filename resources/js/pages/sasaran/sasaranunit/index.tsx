@@ -55,7 +55,7 @@ export default function Index({ sasaranUnits, flash }: IndexProps) {
 
         const valA = a[sortField] ?? '';
         const valB = b[sortField] ?? '';
-        
+
         return sortOrderAsc ? String(valA).localeCompare(String(valB)) : String(valB).localeCompare(String(valA));
     });
 
@@ -95,7 +95,7 @@ export default function Index({ sasaranUnits, flash }: IndexProps) {
                     {sortedData.length > 0 && (
                         <Link
                             href={route('sasaran-unit.create')}
-                            className="flex items-center gap-2 rounded-md bg-[#12745A] px-2 py-2 font-medium text-sm text-white transition hover:bg-green-900"
+                            className="flex items-center gap-2 rounded-md bg-[#006d77] px-2 py-2 font-medium text-sm text-white transition hover:bg-[#00575f]"
                         >
                             <FilePlus />
                             Tambah Dokumen
@@ -127,7 +127,7 @@ export default function Index({ sasaranUnits, flash }: IndexProps) {
                         <p className="mb-6 text-gray-500">Silakan tambahkan dokumen terlebih dahulu untuk mulai mengelola sasaran unit.</p>
                         <Link
                             href={route('sasaran-unit.create')}
-                            className="flex items-center gap-2 rounded-md bg-[#12745A] px-6 py-3 font-medium text-white transition hover:bg-green-900"
+                            className="flex items-center gap-2 rounded-md bg-[#006d77] px-6 py-3 font-medium text-white transition hover:bg-[#00575f]"
                         >
                             <FilePlus />
                             Tambah Dokumen
@@ -163,7 +163,7 @@ export default function Index({ sasaranUnits, flash }: IndexProps) {
                                         {sortedData.map((item, index) => (
                                             <tr key={item.id_sasaran_unit} className="hover:bg-gray-50">
                                                 <td className="px-6 py-4 text-sm text-gray-900 border border-black text-center">{index + 1}</td>
-                                                
+
                                                 <td className="px-6 py-4 text-sm text-gray-900 border border-black">
                                                     <span className="inline-flex rounded-full bg-blue-100 px-2 text-xs font-semibold text-blue-800">
                                                         {item.kategori}

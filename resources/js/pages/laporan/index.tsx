@@ -81,11 +81,10 @@ const Pagination = ({ links }: { links: Array<{ url: string | null; label: strin
                     <li key={index}>
                         {link.url ? (
                             <Link
-                                className={`rounded border px-3 py-2 text-sm ${
-                                    link.active
-                                        ? 'border-[#12745a] bg-[#12745a] text-white'
+                                className={`rounded border px-3 py-2 text-sm ${link.active
+                                        ? 'border-[#006d77] bg-[#006d77] text-white'
                                         : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
-                                }`}
+                                    }`}
                                 href={link.url}
                                 dangerouslySetInnerHTML={{ __html: link.label }}
                                 preserveState
@@ -333,12 +332,12 @@ const Index: FC = () => {
                                     <td className="border border-gray-800 px-2 py-1 align-middle break-words">{row.rekomendasi || '-'}</td>
                                 </tr>
                             )) || (
-                                <tr>
-                                    <td colSpan={16} className="border border-gray-800 px-2 py-1 text-center text-gray-500">
-                                        No data available
-                                    </td>
-                                </tr>
-                            )}
+                                    <tr>
+                                        <td colSpan={16} className="border border-gray-800 px-2 py-1 text-center text-gray-500">
+                                            No data available
+                                        </td>
+                                    </tr>
+                                )}
                         </tbody>
                     </table>
                 </div>

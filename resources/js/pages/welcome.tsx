@@ -18,7 +18,7 @@ export default function Welcome(props: any) {
                 <link rel="preconnect" href="https://fonts.bunny.net" />
                 <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
             </Head>
-            <div className="flex min-h-screen flex-col bg-[#FDFDFC] bg-gradient-to-br from-green-700 to-teal-500 p-6 text-[#1b1b18]">
+            <div className="flex min-h-screen flex-col bg-[#FDFDFC] bg-gradient-to-br from-[#006d77] to-[#004950] p-6 text-[#1b1b18]">
                 <header className="mb-6 w-full max-w-[335px] self-end text-sm not-has-[nav]:hidden lg:max-w-4xl">
                     <nav className="flex items-center justify-end gap-4">
                         {auth.user ? (

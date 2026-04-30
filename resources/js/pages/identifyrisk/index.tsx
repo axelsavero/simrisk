@@ -54,11 +54,10 @@ const Pagination = ({ links }: { links: Array<{ url: string | null; label: strin
                     <li key={index}>
                         {link.url ? (
                             <Link
-                                className={`rounded border px-3 py-2 text-sm ${
-                                    link.active
-                                        ? 'border-[#12745a] bg-[#12745a] text-white'
+                                className={`rounded border px-3 py-2 text-sm ${link.active
+                                        ? 'border-[#006d77] bg-[#006d77] text-white'
                                         : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
-                                }`}
+                                    }`}
                                 href={link.url}
                                 dangerouslySetInnerHTML={{ __html: link.label }}
                                 preserveScroll
@@ -151,9 +150,8 @@ export default function Index() {
                 <div class="text-left max-w-xs">
                     <div class="mb-2"><strong>Kode Risiko</strong>: ${item.id_identify}</div>
                     <div class="mb-2"><strong>Deskripsi Risiko</strong>: ${item.description}</div>
-                    <div class="mb-2"><strong>Penyebab Risiko</strong>: ${
-                        item.penyebab && Array.isArray(item.penyebab) ? item.penyebab.map((p: any) => p.description).join(', ') : ''
-                    }</div>
+                    <div class="mb-2"><strong>Penyebab Risiko</strong>: ${item.penyebab && Array.isArray(item.penyebab) ? item.penyebab.map((p: any) => p.description).join(', ') : ''
+                }</div>
                     <div class="mb-2"><strong>Alasan</strong>:</div>
                     <textarea id="swal-reject-reason" class="swal2-textarea w-full min-w-0 max-w-[95%] min-h-[100px] resize-y" placeholder="Tuliskan alasan revisi..."></textarea>
                 </div>
@@ -186,10 +184,10 @@ export default function Index() {
         return risk >= 20
             ? { level: 'Tinggi', color: 'high' }
             : risk >= 9
-              ? { level: 'Sedang', color: 'medium' }
-              : risk >= 3
-                ? { level: 'Rendah', color: 'low' }
-                : { level: 'Sangat Rendah', color: 'very-low' };
+                ? { level: 'Sedang', color: 'medium' }
+                : risk >= 3
+                    ? { level: 'Rendah', color: 'low' }
+                    : { level: 'Sangat Rendah', color: 'very-low' };
     };
     const getValidationStatusInfo = (status: string) =>
         ({
@@ -233,7 +231,7 @@ export default function Index() {
                 {permissions?.canCreate && isOwnerRisk && (
                     <Link
                         href={route('identify-risk.create')}
-                        className="btn btn-primary flex items-center gap-2 rounded bg-[#12745a] px-4 py-2 text-white hover:bg-[#0c4435]"
+                        className="btn btn-primary flex items-center gap-2 rounded bg-[#006d77] px-4 py-2 text-white hover:bg-[#0c4435]"
                     >
                         <CirclePlus size={28} className="btn-icon" />
                         Tambah Risiko Baru
@@ -305,7 +303,7 @@ export default function Index() {
                         placeholder="Cari berdasarkan ID, kategori, atau deskripsi..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="search-input w-full rounded-lg border p-2 focus:ring-2 focus:ring-[#12745a] focus:outline-none"
+                        className="search-input w-full rounded-lg border p-2 focus:ring-2 focus:ring-[#006d77] focus:outline-none"
                     />
                     <Search size={20} className="absolute top-2 right-3 text-gray-400" />
                 </div>
@@ -321,7 +319,7 @@ export default function Index() {
                         .map((status) => (
                             <button
                                 key={status}
-                                className={`filter-tab rounded-lg px-4 py-2 ${filterStatus === status ? 'bg-[#12745a] text-white' : 'bg-gray-200 text-gray-700'} transition hover:bg-[#0c4435] hover:text-white`}
+                                className={`filter-tab rounded-lg px-4 py-2 ${filterStatus === status ? 'bg-[#006d77] text-white' : 'bg-gray-200 text-gray-700'} transition hover:bg-[#0c4435] hover:text-white`}
                                 onClick={() => setFilterStatus(status)}
                             >
                                 {status === 'all' ? 'Semua' : status.charAt(0).toUpperCase() + status.slice(1)}
@@ -376,27 +374,25 @@ export default function Index() {
                                             <td className="border border-black p-2">{item.probability}/5</td>
                                             <td className="border border-black p-2">{item.impact}/5</td>
                                             <td
-                                                className={`border border-black p-2 ${
-                                                    {
+                                                className={`border border-black p-2 ${{
                                                         high: 'bg-red-100 text-red-800',
                                                         medium: 'bg-yellow-100 text-yellow-800',
                                                         low: 'bg-yellow-200 text-yellow-800',
                                                         'very-low': 'bg-green-100 text-green-800',
                                                     }[riskInfo.color]
-                                                }`}
+                                                    }`}
                                             >
                                                 {riskInfo.level} ({item.probability * item.impact}/25)
                                             </td>
                                             <td
-                                                className={`border border-black p-2 ${
-                                                    {
+                                                className={`border border-black p-2 ${{
                                                         draft: 'bg-yellow-100 text-yellow-800',
                                                         warning: 'bg-yellow-100 text-yellow-800',
                                                         success: 'bg-green-100 text-green-800',
                                                         danger: 'bg-red-100 text-red-800',
                                                         secondary: 'bg-gray-100 text-gray-800',
                                                     }[validationInfo.color]
-                                                }`}
+                                                    }`}
                                             >
                                                 {validationInfo.icon} {validationInfo.label}
                                             </td>

@@ -107,7 +107,7 @@ export default function Form({ sasaranUnit = null, sasaranUnivs = [] }: FormProp
                 )}
 
                 {!sasaranUnit && (
-                    <div className="mb-6 rounded-lg border-l-4 border-[#12745A] bg-blue-50 p-4">
+                    <div className="mb-6 rounded-lg border-l-4 border-[#006d77] bg-blue-50 p-4">
                         <div className="flex">
                             <div className="flex-shrink-0">
                                 <Lightbulb className="text-lg text-green-900" />
@@ -262,7 +262,7 @@ export default function Form({ sasaranUnit = null, sasaranUnivs = [] }: FormProp
                         <button
                             type="submit"
                             disabled={processing}
-                            className="flex items-center gap-2 rounded-md bg-[#12745A] px-8 py-3 font-medium text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex items-center gap-2 rounded-md bg-[#006d77] px-8 py-3 font-medium text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {processing ? (
                                 <>

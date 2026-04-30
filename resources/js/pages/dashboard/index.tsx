@@ -232,7 +232,7 @@ export default function Dashboard({ riskMatrixData, mitigasiMatrixData, filterOp
                         <div className="mb-2 flex flex-col justify-end gap-4 md:flex-row">
                             {/* Tombol Sinkron Data Unit */}
                             <button
-                                className="rounded bg-green-700 px-4 py-2 text-white font-semibold hover:bg-green-800 transition"
+                                className="rounded bg-[#006d77] px-4 py-2 text-white font-semibold hover:bg-green-800 transition"
                                 onClick={async () => {
                                     if (confirm('Sinkronisasi data unit dari SIPEG?')) {
                                         try {
@@ -259,14 +259,14 @@ export default function Dashboard({ riskMatrixData, mitigasiMatrixData, filterOp
                                     }),
                                 }}
                                 options={units.map((unitOption) => ({
-                                    value: unitOption.id.toString(),
-                                    label: unitOption.name,
-                                }))}
-                                value={unit ? units.find(u => u.id.toString() === unit) ? { value: unit, label: units.find(u => u.id.toString() === unit)?.name || '' } : null : null}
-                                onChange={(selected) => setUnit(selected ? selected.value : '')}
-                                isLoading={loadingUnits}
-                                placeholder={loadingUnits ? 'Memuat unit...' : 'Pilih Unit'}
-                                isClearable
+                                    value: unitOption.id.toString(),
+                                    label: unitOption.name,
+                                }))}
+                                value={unit ? units.find(u => u.id.toString() === unit) ? { value: unit, label: units.find(u => u.id.toString() === unit)?.name || '' } : null : null}
+                                onChange={(selected) => setUnit(selected ? selected.value : '')}
+                                isLoading={loadingUnits}
+                                placeholder={loadingUnits ? 'Memuat unit...' : 'Pilih Unit'}
+                                isClearable
                             />
                             <ReactSelect
                                 className="w-full"

@@ -27,7 +27,7 @@ function DropdownMenuTrigger({
       data-slot="dropdown-menu-trigger"
       className={cn(
         // "inline-flex items-center justify-center gap-2 rounded-md bg-[#0f4d3f] px-4 py-2 text-white shadow-md transition-colors",
-        // "hover:bg-[#12745a] focus:outline-none focus:ring-2 focus:ring-[#0f4d3f] data-[state=open]:bg-[#0f4d3f]",
+        // "hover:bg-[#006d77] focus:outline-none focus:ring-2 focus:ring-[#0f4d3f] data-[state=open]:bg-[#0f4d3f]",
         className
       )}
       {...props}
@@ -46,7 +46,7 @@ function DropdownMenuContent({
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
         className={cn(
-          "bg-[#12745a] text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-[8rem] overflow-hidden rounded-md border p-1 shadow-md",
+          "bg-[#006d77] text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-[8rem] overflow-hidden rounded-md border p-1 shadow-md",
           className
         )}
         {...props}
