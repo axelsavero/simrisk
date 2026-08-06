@@ -1,7 +1,9 @@
 // resources/js/pages/identifyrisk/index.tsx
 import AppLayout from '@/layouts/app-layout';
+import { DataTable } from '@/components/ui/data-table';
 import { BreadcrumbItem, IdentifyRisk } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
+import { ColumnDef } from '@tanstack/react-table';
 import {
     ChartColumnIncreasing,
     CheckCircle2,
@@ -40,9 +42,15 @@ type PageProps = {
         canApprove?: boolean;
         canReject?: boolean;
     };
+    totalStats?: {
+        total: number;
+        draft: number;
+        pending: number;
+        approved: number;
+        rejected: number;
+    };
 };
 
-// Kode Baru (sebagai pengganti)
 const Pagination = ({ links }: { links: Array<{ url: string | null; label: string; active: boolean }> }) => {
     if (!links || links.length <= 3) {
         return null;
@@ -76,7 +84,7 @@ const Pagination = ({ links }: { links: Array<{ url: string | null; label: strin
 };
 
 export default function Index() {
-    const { identifyRisks, flash, auth, permissions } = usePage<PageProps>().props;
+    const { identifyRisks, flash, auth, permissions, totalStats } = usePage<PageProps>().props;
     const roles: string[] = auth?.user?.roles || [];
     const isSuperAdmin = roles.includes('super-admin');
     const isAdmin = roles.includes('admin');
@@ -179,6 +187,7 @@ export default function Index() {
             ? item.validation_status === 'draft' || item.validation_status === 'rejected'
             : item.validation_status === 'draft' || item.validation_status === 'rejected';
     const canShowSubmit = (item: IdentifyRisk) => item.validation_status === 'draft' || item.validation_status === 'rejected';
+    
     const getRiskLevelInfo = (probability: number, impact: number) => {
         const risk = probability * impact;
         return risk >= 20
@@ -189,22 +198,22 @@ export default function Index() {
                     ? { level: 'Rendah', color: 'low' }
                     : { level: 'Sangat Rendah', color: 'very-low' };
     };
+
     const getValidationStatusInfo = (status: string) =>
         ({
-            draft: { label: 'Draft', color: 'draft', icon: <SquarePen /> },
-            submitted: { label: 'Menunggu Validasi', color: 'warning', icon: <Hourglass /> },
-            pending: { label: 'Menunggu Validasi', color: 'warning', icon: <Hourglass /> },
-            approved: { label: 'Disetujui', color: 'success', icon: <CheckCircle2 /> },
-            rejected: { label: 'Butuh Perbaikan', color: 'danger', icon: <Cog /> },
-            default: { label: 'Unknown', color: 'secondary', icon: <CircleHelp /> },
-        })[status] || { label: 'Unknown', color: 'secondary', icon: <CircleHelp /> };
+            draft: { label: 'Draft', color: 'draft', icon: <SquarePen className="h-4 w-4 inline mr-1" /> },
+            submitted: { label: 'Menunggu Validasi', color: 'warning', icon: <Hourglass className="h-4 w-4 inline mr-1" /> },
+            pending: { label: 'Menunggu Validasi', color: 'warning', icon: <Hourglass className="h-4 w-4 inline mr-1" /> },
+            approved: { label: 'Disetujui', color: 'success', icon: <CheckCircle2 className="h-4 w-4 inline mr-1" /> },
+            rejected: { label: 'Butuh Perbaikan', color: 'danger', icon: <Cog className="h-4 w-4 inline mr-1" /> },
+            default: { label: 'Unknown', color: 'secondary', icon: <CircleHelp className="h-4 w-4 inline mr-1" /> },
+        })[status] || { label: 'Unknown', color: 'secondary', icon: <CircleHelp className="h-4 w-4 inline mr-1" /> };
 
     const filteredRisks = identifyRisks.data.filter((item: IdentifyRisk) => {
-        // Role-based visibility: super-admin & admin cannot see drafts
         if ((isSuperAdmin || isAdmin) && item.validation_status === 'draft') {
             return false;
         }
-        const matchesSearch = [item.id_identify, item.risk_category, item.description].some((field) =>
+        const matchesSearch = [item.id_identify, item.risk_category, item.description, (item as any).unit_kerja || ''].some((field) =>
             field.toLowerCase().includes(searchTerm.toLowerCase()),
         );
         const matchesFilter =
@@ -214,8 +223,183 @@ export default function Index() {
         return matchesSearch && matchesFilter;
     });
 
-    // Reintroduce showValidationActions
     const showValidationActions = permissions?.canValidate;
+
+    const columns: ColumnDef<IdentifyRisk>[] = [
+        {
+            id: 'no',
+            header: () => <div className="text-center">No</div>,
+            cell: ({ row }) => <div className="text-center">{(row.original as any).no || row.index + 1}</div>,
+        },
+        {
+            accessorKey: 'id_identify',
+            header: 'Kode Risiko',
+            cell: ({ row }) => {
+                const item = row.original;
+                return (
+                    <div className="flex items-center gap-2 font-medium">
+                        {item.id_identify}
+                        {item.validation_status === 'draft' && (
+                            <span className="h-2 w-2 rounded-full bg-yellow-400" title="Draft"></span>
+                        )}
+                    </div>
+                );
+            },
+        },
+        {
+            accessorKey: 'unit_kerja',
+            header: 'Unit Kerja',
+            cell: ({ row }) => <div>{(row.original as any).unit_kerja || '-'}</div>,
+        },
+        {
+            accessorKey: 'description',
+            header: 'Deskripsi',
+            cell: ({ row }) => {
+                const desc = row.original.description || '';
+                return (
+                    <div className="max-w-xs truncate" title={desc}>
+                        {desc.length > 120 ? `${desc.substring(0, 120)}...` : desc}
+                    </div>
+                );
+            },
+        },
+        {
+            id: 'penyebab',
+            header: 'Penyebab',
+            cell: ({ row }) => {
+                const item = row.original;
+                return (
+                    <div>
+                        {item.penyebab && Array.isArray(item.penyebab)
+                            ? item.penyebab.map((p: any) => p.description).join(', ')
+                            : '-'}
+                    </div>
+                );
+            },
+        },
+        {
+            accessorKey: 'probability',
+            header: 'Probabilitas',
+            cell: ({ row }) => <div>{row.original.probability}/5</div>,
+        },
+        {
+            accessorKey: 'impact',
+            header: 'Dampak',
+            cell: ({ row }) => <div>{row.original.impact}/5</div>,
+        },
+        {
+            id: 'level',
+            header: 'Tingkat Risiko',
+            cell: ({ row }) => {
+                const item = row.original;
+                const riskInfo = getRiskLevelInfo(item.probability, item.impact);
+                const colorMap: Record<string, string> = {
+                    high: 'bg-red-100 text-red-800',
+                    medium: 'bg-yellow-100 text-yellow-800',
+                    low: 'bg-yellow-200 text-yellow-800',
+                    'very-low': 'bg-green-100 text-green-800',
+                };
+                return (
+                    <span className={`inline-flex rounded-md px-2 py-1 text-xs font-semibold ${colorMap[riskInfo.color] || ''}`}>
+                        {riskInfo.level} ({item.probability * item.impact}/25)
+                    </span>
+                );
+            },
+        },
+        {
+            accessorKey: 'validation_status',
+            header: 'Status',
+            cell: ({ row }) => {
+                const item = row.original;
+                const validationInfo = getValidationStatusInfo(item.validation_status);
+                const colorMap: Record<string, string> = {
+                    draft: 'bg-yellow-100 text-yellow-800',
+                    warning: 'bg-yellow-100 text-yellow-800',
+                    success: 'bg-green-100 text-green-800',
+                    danger: 'bg-red-100 text-red-800',
+                    secondary: 'bg-gray-100 text-gray-800',
+                };
+                return (
+                    <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold ${colorMap[validationInfo.color] || ''}`}>
+                        {validationInfo.icon} {validationInfo.label}
+                    </span>
+                );
+            },
+        },
+        {
+            id: 'actions',
+            header: () => <div className="text-center">Aksi</div>,
+            cell: ({ row }) => {
+                const item = row.original;
+                return (
+                    <div className="flex items-center justify-center gap-1">
+                        <Link
+                            href={route('identify-risk.show', item.id)}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-green-300 text-green-900 hover:bg-green-500 hover:text-white"
+                            title="Detail"
+                        >
+                            <Eye size={20} />
+                        </Link>
+                        {!isAdmin && (
+                            <>
+                                {isOwnerRisk && permissions?.canSubmit && canShowSubmit(item) && (
+                                    <button
+                                        onClick={() => submitItem(item)}
+                                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-sky-700 hover:bg-sky-500 hover:text-white"
+                                        title="Kirim"
+                                    >
+                                        <Upload size={20} />
+                                    </button>
+                                )}
+                                {isOwnerRisk && permissions?.canEdit && canShowEdit(item) && (
+                                    <Link
+                                        href={route('identify-risk.edit', item.id)}
+                                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-yellow-300 text-yellow-700 hover:bg-yellow-500 hover:text-white"
+                                        title="Edit"
+                                    >
+                                        <Pencil size={20} />
+                                    </Link>
+                                )}
+                                {isOwnerRisk && permissions?.canDelete && item.validation_status === 'draft' && (
+                                    <button
+                                        onClick={() => deleteItem(item)}
+                                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-700 hover:bg-red-500 hover:text-white"
+                                        title="Hapus"
+                                    >
+                                        <Trash2 size={20} />
+                                    </button>
+                                )}
+                                {isSuperAdmin &&
+                                    showValidationActions &&
+                                    (item.validation_status === 'submitted' || item.validation_status === 'pending') && (
+                                        <>
+                                            {permissions?.canApprove && (
+                                                <button
+                                                    onClick={() => approveItem(item)}
+                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-teal-100 text-teal-700 hover:bg-teal-500 hover:text-white"
+                                                    title="Setujui"
+                                                >
+                                                    <CircleCheck size={20} />
+                                                </button>
+                                            )}
+                                            {permissions?.canReject && (
+                                                <button
+                                                    onClick={() => rejectItem(item)}
+                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-rose-100 text-rose-700 hover:bg-rose-500 hover:text-white"
+                                                    title="Revisi"
+                                                >
+                                                    <X size={20} />
+                                                </button>
+                                            )}
+                                        </>
+                                    )}
+                            </>
+                        )}
+                    </div>
+                );
+            },
+        },
+    ];
 
     return (
         <div className="risk-index-container min-h-screen w-full bg-white px-2 md:px-6">
@@ -244,7 +428,7 @@ export default function Index() {
                 <div className="stat-card flex items-center rounded-lg bg-white p-4 shadow">
                     <ChartColumnIncreasing size={40} className="stat-icon text-blue-600" />
                     <div className="stat-content ml-4">
-                        <span className="stat-number text-2xl font-bold">{identifyRisks.data.length}</span>
+                        <span className="stat-number text-2xl font-bold">{totalStats?.total ?? identifyRisks.data.length}</span>
                         <span className="stat-label block text-gray-600">Total Risiko</span>
                     </div>
                 </div>
@@ -254,7 +438,7 @@ export default function Index() {
                             <SquarePen size={40} className="stat-icon" />
                             <div className="stat-content ml-4">
                                 <span className="stat-number text-2xl font-bold">
-                                    {identifyRisks.data.filter((item) => item.validation_status === 'draft').length}
+                                    {totalStats?.draft ?? identifyRisks.data.filter((item) => item.validation_status === 'draft').length}
                                 </span>
                                 <span className="stat-label block text-gray-600">Draft</span>
                             </div>
@@ -264,7 +448,7 @@ export default function Index() {
                             <div className="stat-content ml-4">
                                 <span className="stat-number text-2xl font-bold">
                                     {
-                                        identifyRisks.data.filter(
+                                        totalStats?.pending ?? identifyRisks.data.filter(
                                             (item) => item.validation_status === 'pending' || item.validation_status === 'submitted',
                                         ).length
                                     }
@@ -279,7 +463,7 @@ export default function Index() {
                     <CircleCheck size={40} className="stat-icon text-green-600" />
                     <div className="stat-content ml-4">
                         <span className="stat-number text-2xl font-bold">
-                            {identifyRisks.data.filter((item) => item.validation_status === 'approved').length}
+                            {totalStats?.approved ?? identifyRisks.data.filter((item) => item.validation_status === 'approved').length}
                         </span>
                         <span className="stat-label block text-gray-600">Disetujui</span>
                     </div>
@@ -288,7 +472,7 @@ export default function Index() {
                     <Cog size={40} className="stat-icon text-red-600" />
                     <div className="stat-content ml-4">
                         <span className="stat-number text-2xl font-bold">
-                            {identifyRisks.data.filter((item) => item.validation_status === 'rejected').length}
+                            {totalStats?.rejected ?? identifyRisks.data.filter((item) => item.validation_status === 'rejected').length}
                         </span>
                         <span className="stat-label block text-gray-600">Butuh Perbaikan</span>
                     </div>
@@ -300,7 +484,7 @@ export default function Index() {
                 <div className="search-box relative flex-1">
                     <input
                         type="text"
-                        placeholder="Cari berdasarkan ID, kategori, atau deskripsi..."
+                        placeholder="Cari berdasarkan ID, unit kerja, kategori, atau deskripsi..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="search-input w-full rounded-lg border p-2 focus:ring-2 focus:ring-[#006d77] focus:outline-none"
@@ -310,7 +494,6 @@ export default function Index() {
                 <div className="filter-tabs flex gap-2">
                     {['all', 'draft', 'pending', 'approved', 'rejected']
                         .filter((status) => {
-                            // Jika super-admin, hilangkan draft dan pending
                             if (auth?.user?.roles?.includes('super-admin')) {
                                 return !['draft', 'pending'].includes(status);
                             }
@@ -328,166 +511,8 @@ export default function Index() {
                 </div>
             </div>
 
-            {/* Risk Table */}
-            <div className="risk-table-container w-full overflow-x-auto">
-                <table className="risk-table w-full border border-black">
-                    <thead>
-                        <tr className="bg-gray-100">
-                            <th className="border border-black p-2 text-left">No</th>
-                            <th className="border border-black p-2 text-left">Kode Risiko</th>
-                            <th className="border border-black p-2 text-left">Deskripsi</th>
-                            <th className="border border-black p-2 text-left">Penyebab</th>
-                            <th className="border border-black p-2 text-left">Probabilitas</th>
-                            <th className="border border-black p-2 text-left">Dampak</th>
-                            <th className="border border-black p-2 text-left">Tingkat Risiko</th>
-                            <th className="border border-black p-2 text-left">Status</th>
-                            <th className="border border-black p-2 text-left">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredRisks.length > 0 ? (
-                            filteredRisks
-                                .slice() // Create a shallow copy to avoid mutating the original array
-                                .sort((a, b) => a.id - b.id) // Sort risks by ID in ascending order
-                                .map((item, index) => {
-                                    const riskInfo = getRiskLevelInfo(item.probability, item.impact);
-                                    const validationInfo = getValidationStatusInfo(item.validation_status);
-                                    return (
-                                        <tr key={item.id} className={`risk-row ${item.validation_status === 'draft' ? 'bg-yellow-50' : ''}`}>
-                                            <td className="border border-black p-2">{item.no}</td>
-                                            <td className="border border-black p-2">
-                                                <div className="flex items-center gap-2">
-                                                    {item.id_identify}
-                                                    {item.validation_status === 'draft' && (
-                                                        <span className="draft-badge h-2 w-2 rounded-full bg-yellow-400"></span>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className="border border-black p-2">
-                                                {item.description.length > 120 ? `${item.description.substring(0, 120)}...` : item.description}
-                                            </td>
-                                            <td className="border border-black p-2">
-                                                {item.penyebab && Array.isArray(item.penyebab)
-                                                    ? item.penyebab.map((p: any) => p.description).join(', ')
-                                                    : '-'}
-                                            </td>
-                                            <td className="border border-black p-2">{item.probability}/5</td>
-                                            <td className="border border-black p-2">{item.impact}/5</td>
-                                            <td
-                                                className={`border border-black p-2 ${{
-                                                        high: 'bg-red-100 text-red-800',
-                                                        medium: 'bg-yellow-100 text-yellow-800',
-                                                        low: 'bg-yellow-200 text-yellow-800',
-                                                        'very-low': 'bg-green-100 text-green-800',
-                                                    }[riskInfo.color]
-                                                    }`}
-                                            >
-                                                {riskInfo.level} ({item.probability * item.impact}/25)
-                                            </td>
-                                            <td
-                                                className={`border border-black p-2 ${{
-                                                        draft: 'bg-yellow-100 text-yellow-800',
-                                                        warning: 'bg-yellow-100 text-yellow-800',
-                                                        success: 'bg-green-100 text-green-800',
-                                                        danger: 'bg-red-100 text-red-800',
-                                                        secondary: 'bg-gray-100 text-gray-800',
-                                                    }[validationInfo.color]
-                                                    }`}
-                                            >
-                                                {validationInfo.icon} {validationInfo.label}
-                                            </td>
-                                            <td className="border border-black p-2">
-                                                <div className="flex items-center justify-center gap-1">
-                                                    {' '}
-                                                    {/* MODIFIKASI: Tambahkan justify-center dan gap-1 */}
-                                                    <Link
-                                                        href={route('identify-risk.show', item.id)}
-                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-green-300 text-green-900 hover:bg-green-500 hover:text-white"
-                                                        title="Detail"
-                                                    >
-                                                        <Eye size={20} />
-                                                    </Link>
-                                                    {/* Admin: hanya lihat detail */}
-                                                    {!isAdmin && (
-                                                        <>
-                                                            {/* Owner Risk: kirim/edit/hapus sesuai permission */}
-                                                            {isOwnerRisk && permissions?.canSubmit && canShowSubmit(item) && (
-                                                                <button
-                                                                    onClick={() => submitItem(item)}
-                                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-sky-700 hover:bg-sky-500 hover:text-white"
-                                                                    title="Kirim"
-                                                                >
-                                                                    <Upload size={20} />
-                                                                </button>
-                                                            )}
-                                                            {isOwnerRisk && permissions?.canEdit && canShowEdit(item) && (
-                                                                <Link
-                                                                    href={route('identify-risk.edit', item.id)}
-                                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-yellow-300 text-yellow-700 hover:bg-yellow-500 hover:text-white"
-                                                                    title="Edit"
-                                                                >
-                                                                    <Pencil size={20} />
-                                                                </Link>
-                                                            )}
-                                                            {isOwnerRisk && permissions?.canDelete && item.validation_status === 'draft' && (
-                                                                <button
-                                                                    onClick={() => deleteItem(item)}
-                                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-700 hover:bg-red-500 hover:text-white"
-                                                                    title="Hapus"
-                                                                >
-                                                                    <Trash2 size={20} />
-                                                                </button>
-                                                            )}
-                                                            {/* Super Admin: hanya setujui/tolak */}
-                                                            {isSuperAdmin &&
-                                                                showValidationActions &&
-                                                                (item.validation_status === 'submitted' || item.validation_status === 'pending') && (
-                                                                    <>
-                                                                        {permissions?.canApprove && (
-                                                                            <button
-                                                                                onClick={() => approveItem(item)}
-                                                                                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-teal-100 text-teal-700 hover:bg-teal-500 hover:text-white"
-                                                                                title="Setujui"
-                                                                            >
-                                                                                <CircleCheck size={20} />
-                                                                            </button>
-                                                                        )}
-                                                                        {permissions?.canReject && (
-                                                                            <button
-                                                                                onClick={() => rejectItem(item)}
-                                                                                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-rose-100 text-rose-700 hover:bg-rose-500 hover:text-white"
-                                                                                title="Revisi"
-                                                                            >
-                                                                                <X size={20} />
-                                                                            </button>
-                                                                        )}
-                                                                    </>
-                                                                )}
-                                                        </>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })
-                        ) : (
-                            <tr>
-                                <td colSpan={10} className="empty-state p-4 text-center text-gray-500">
-                                    <div className="flex flex-col items-center">
-                                        <Search size={40} className="empty-icon" />
-                                        <h3 className="mt-2 text-lg">Tidak Ada Risiko Ditemukan</h3>
-                                    </div>
-                                    <p className="mt-2">
-                                        {searchTerm || filterStatus !== 'all'
-                                            ? 'Tidak ada risiko yang sesuai dengan filter atau pencarian Anda.'
-                                            : 'Belum ada risiko yang dibuat. Mulai dengan menambah risiko baru.'}
-                                    </p>
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+            {/* Risk Table via Shadcn UI DataTable */}
+            <DataTable columns={columns} data={filteredRisks} />
 
             {/* Pagination */}
             {identifyRisks.links && <Pagination links={identifyRisks.links} />}

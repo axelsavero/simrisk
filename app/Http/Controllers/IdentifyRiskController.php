@@ -32,7 +32,9 @@ class IdentifyRiskController extends Controller
 
     public function index()
     {
-        $query = IdentifyRisk::with(['penyebab', 'dampakKualitatif', 'penangananRisiko'])->oldest('id');
+        $query = IdentifyRisk::with(['user.unit', 'penyebab', 'dampakKualitatif', 'penangananRisiko'])
+            ->orderByRaw("CASE WHEN validation_status IN ('pending', 'submitted') THEN 0 WHEN validation_status = 'draft' THEN 1 WHEN validation_status = 'rejected' THEN 2 ELSE 3 END")
+            ->oldest('id');
 
         // Terapkan scope akses data
         $query = $this->applyRoleScope($query, [
@@ -49,6 +51,7 @@ class IdentifyRiskController extends Controller
                 'no' => $paginatedRisks->firstItem() + $key,
                 'id' => $risk->id,
                 'id_identify' => $risk->id_identify,
+                'unit_kerja' => $risk->unit_kerja ?? $risk->user?->unit?->nama_unit ?? (is_string($risk->user?->unit) ? $risk->user?->unit : null) ?? '-',
                 'status' => $risk->status,
                 'is_active' => $risk->is_active,
                 'risk_category' => $risk->risk_category,
@@ -92,6 +95,13 @@ class IdentifyRiskController extends Controller
                 'canReject' => Auth::user()->hasRole('super-admin'),
             ],
             'userRole' => Auth::user()->getRoleNames(),
+            'totalStats' => [
+                'total' => $paginatedRisks->total(),
+                'draft' => (clone $query)->where('validation_status', 'draft')->count(),
+                'pending' => (clone $query)->whereIn('validation_status', ['pending', 'submitted'])->count(),
+                'approved' => (clone $query)->where('validation_status', 'approved')->count(),
+                'rejected' => (clone $query)->where('validation_status', 'rejected')->count(),
+            ],
         ]);
     }
 
@@ -217,7 +227,7 @@ class IdentifyRiskController extends Controller
     public function show(IdentifyRisk $identifyRisk)
     {
         // Load semua relationships untuk detail view
-        $identifyRisk->load(['penyebab', 'dampakKualitatif', 'penangananRisiko', 'validationProcessor']);
+        $identifyRisk->load(['user.unit', 'penyebab', 'dampakKualitatif', 'penangananRisiko', 'validationProcessor']);
 
         return Inertia::render('identifyrisk/show', [
             'identifyRisk' => [
@@ -243,6 +253,7 @@ class IdentifyRiskController extends Controller
                 'created_at' => $identifyRisk->created_at->format('Y-m-d H:i'),
                 'updated_at' => $identifyRisk->updated_at->format('Y-m-d H:i'),
 
+                'unit_kerja' => $identifyRisk->unit_kerja ?? $identifyRisk->user?->unit?->nama_unit ?? $identifyRisk->user?->unit ?? 'Tidak Diketahui',
                 'bukti_files' => $identifyRisk->bukti_files ?? [],
 
                 // Status flags

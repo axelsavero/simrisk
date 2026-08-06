@@ -271,6 +271,10 @@ class SipegProxyController extends Controller
             DB::beginTransaction();
 
             try {
+                // Hapus semua data unit lama sebelum sinkronisasi
+                \App\Models\Unit::query()->delete();
+                Log::info('All existing units deleted before sync');
+
                 foreach ($units as $unit) {
                     $unitData = [
                         'nama_unit' => $unit['ur_unit'] ?? null,
@@ -300,10 +304,7 @@ class SipegProxyController extends Controller
                         $unitData['kode_unit'] = 'UNIT-' . strtoupper(substr(md5($unitData['nama_unit']), 0, 8));
                     }
 
-                    $model = \App\Models\Unit::updateOrCreate(
-                        ['kode_unit' => $unitData['kode_unit']],
-                        $unitData
-                    );
+                    $model = \App\Models\Unit::create($unitData);
 
                     Log::info('Unit processed successfully', [
                         'id' => $model->id_unit,

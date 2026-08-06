@@ -300,11 +300,11 @@ export default function Dashboard({ riskMatrixData, mitigasiMatrixData, filterOp
                                         ':hover': { borderColor: '#9ca3af' },
                                     }),
                                 }}
-                                options={(filterOptions?.tahuns?.length ? filterOptions.tahuns : ['2024', '2025']).map((t) => ({
-                                    value: t,
-                                    label: t,
+                                options={(filterOptions?.tahuns?.length ? filterOptions.tahuns : ['2024', '2025', '2026']).map((t) => ({
+                                    value: String(t),
+                                    label: String(t),
                                 }))}
-                                value={tahun ? { value: tahun, label: tahun } : null}
+                                value={tahun ? { value: String(tahun), label: String(tahun) } : null}
                                 onChange={(selected) => setTahun(selected ? selected.value : '')}
                                 placeholder="Tahun"
                                 isClearable
@@ -394,7 +394,7 @@ export default function Dashboard({ riskMatrixData, mitigasiMatrixData, filterOp
                                                         <td className="border px-2 py-1 capitalize">{item.strategi_mitigasi}</td>
                                                     )}
                                                     {popupData.type === 'sesudah' && (
-                                                        <td className="border px-2 py-1 capitalize">{item.status_mitigasi}</td>
+                                                        <td className="border px-2 py-1 capitalize">{String(item.status_mitigasi || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}</td>
                                                     )}
                                                     {popupData.type === 'sesudah' && (
                                                         <td className="border px-2 py-1">

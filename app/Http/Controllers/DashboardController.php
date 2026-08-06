@@ -268,8 +268,7 @@ class DashboardController extends Controller
         return [
             'kategoris' => IdentifyRisk::distinct()
                 ->whereNotNull('risk_category')->pluck('risk_category')->sort()->values(),
-            'tahuns' => IdentifyRisk::distinct()
-                ->whereNotNull('tahun')->pluck('tahun')->sort()->values(),
+            'tahuns' => collect(range(date('Y'), date('Y') - 4))->values(),
             'status_mitigasi' => [
                 'belum_dimulai' => 'Belum Dimulai',
                 'sedang_berjalan' => 'Sedang Berjalan',

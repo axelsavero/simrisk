@@ -148,7 +148,9 @@ class MitigasiController extends Controller
             });
         }
 
-        $mitigasis = $query->orderBy('created_at', 'asc')->paginate(10);
+        $mitigasis = $query->orderByRaw("CASE WHEN validation_status IN ('pending', 'submitted') THEN 0 WHEN validation_status = 'draft' THEN 1 WHEN validation_status = 'rejected' THEN 2 ELSE 3 END")
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
 
         // Add permissions to each mitigasi
         $mitigasis->getCollection()->transform(function ($mitigasi) use ($user) {
