@@ -227,6 +227,11 @@ export default function Show() {
                                 <p className="text-gray-900">{identifyRisk.no_kontak}</p>
                             </div>
                         )}
+
+                        <div>
+                            <label className="mb-1 block text-sm font-medium text-gray-700">Unit Kerja</label>
+                            <p className="text-gray-900">{identifyRisk.unit_kerja || 'Tidak Diketahui'}</p>
+                        </div>
                     </div>
 
                     <div className="mt-6">

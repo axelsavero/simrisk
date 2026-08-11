@@ -1,7 +1,9 @@
 import AppLayout from '@/layouts/app-layout';
+import { DataTable } from '@/components/ui/data-table';
 import { BreadcrumbItem, Mitigasi, PaginatedData } from '@/types';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { ColumnDef } from '@tanstack/react-table';
 import {
     AlertTriangle,
     Calendar,
@@ -18,8 +20,9 @@ import {
     User,
     XCircle,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
+
 interface PageProps {
     mitigasis: PaginatedData<Mitigasi>;
     filters: {
@@ -31,8 +34,8 @@ interface PageProps {
     };
     statusOptions: Record<string, string>;
     validationStatusOptions: Record<string, string>;
-    strategiOptions: Record<string, string>; // Ensure this is always present
-    auth: any; // Add auth property
+    strategiOptions: Record<string, string>;
+    auth: any;
     identifyRisks: Array<{ id: number; id_identify: string; description: string }>;
 }
 
@@ -76,22 +79,22 @@ const Pagination = ({ links }: { links: Array<{ url: string | null; label: strin
 const getStatusIcon = (status: string) => {
     switch (status) {
         case 'belum_dimulai':
-            return <Clock className="h-4 w-4 text-gray-500" />;
+            return <Clock className="h-4 w-4 shrink-0 text-gray-500" />;
         case 'sedang_berjalan':
-            return <TrendingUp className="h-4 w-4 text-blue-500" />;
+            return <TrendingUp className="h-4 w-4 shrink-0 text-blue-500" />;
         case 'selesai':
-            return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+            return <CheckCircle2 className="h-4 w-4 shrink-0 text-green-500" />;
         case 'tertunda':
-            return <Pause className="h-4 w-4 text-yellow-500" />;
+            return <Pause className="h-4 w-4 shrink-0 text-yellow-500" />;
         case 'dibatalkan':
-            return <XCircle className="h-4 w-4 text-red-500" />;
+            return <XCircle className="h-4 w-4 shrink-0 text-red-500" />;
         default:
-            return <Clock className="h-4 w-4 text-gray-500" />;
+            return <Clock className="h-4 w-4 shrink-0 text-gray-500" />;
     }
 };
 
 const getStatusBadge = (status: string, label: string) => {
-    const baseClasses = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
+    const baseClasses = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap';
 
     switch (status) {
         case 'belum_dimulai':
@@ -110,7 +113,7 @@ const getStatusBadge = (status: string, label: string) => {
 };
 
 const getStrategiBadge = (strategi: string) => {
-    const baseClasses = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
+    const baseClasses = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap';
 
     switch (strategi) {
         case 'avoid':
@@ -127,7 +130,7 @@ const getStrategiBadge = (strategi: string) => {
 };
 
 const getValidationStatusBadge = (status: string) => {
-    const baseClasses = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
+    const baseClasses = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap';
 
     switch (status) {
         case 'draft':
@@ -172,12 +175,6 @@ export default function Index() {
     const [isLoading, setIsLoading] = useState(false);
 
     const filteredMitigasis = mitigasis.data.filter((mitigasi) => mitigasi.validation_status !== 'draft' || isOwnerRisk);
-
-    // Debug statusOptions
-    useEffect(() => {
-        console.log('statusOptions:', statusOptions);
-        console.log('filters:', filters);
-    }, [statusOptions, filters]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -370,6 +367,192 @@ export default function Index() {
         return new Date(targetDate) < new Date() && !['selesai', 'dibatalkan'].includes(status);
     };
 
+    const columns: ColumnDef<Mitigasi>[] = [
+        {
+            accessorKey: 'judul_mitigasi',
+            header: 'Mitigasi',
+            cell: ({ row }) => {
+                const item = row.original;
+                return (
+                    <div className="space-y-1">
+                        <div className="font-medium text-gray-900">{item.judul_mitigasi}</div>
+                        {item.biaya_mitigasi && (
+                            <div className="text-xs font-semibold text-green-600">
+                                {formatCurrency(item.biaya_mitigasi)}
+                            </div>
+                        )}
+                    </div>
+                );
+            },
+        },
+        {
+            id: 'risiko',
+            header: 'Risiko',
+            cell: ({ row }) => {
+                const item = row.original;
+                return (
+                    <div className="text-sm font-medium text-gray-900">
+                        {item.identify_risk?.id_identify || '-'}
+                    </div>
+                );
+            },
+        },
+        {
+            accessorKey: 'strategi_mitigasi',
+            header: 'Strategi',
+            cell: ({ row }) => {
+                const item = row.original;
+                return (
+                    <span className={getStrategiBadge(item.strategi_mitigasi)}>
+                        {item.strategi_label || strategiOptions?.[item.strategi_mitigasi] || 'Tidak Diketahui'}
+                    </span>
+                );
+            },
+        },
+        {
+            accessorKey: 'pic_mitigasi',
+            header: 'PIC',
+            cell: ({ row }) => {
+                const item = row.original;
+                return (
+                    <div className="flex items-center gap-1.5 whitespace-nowrap">
+                        <User className="h-4 w-4 shrink-0 text-gray-400" />
+                        <span className="text-sm text-gray-900">{item.pic_mitigasi}</span>
+                    </div>
+                );
+            },
+        },
+        {
+            accessorKey: 'target_selesai',
+            header: 'Target',
+            cell: ({ row }) => {
+                const item = row.original;
+                return (
+                    <div className="flex items-center gap-1.5 whitespace-nowrap">
+                        <Calendar className="h-4 w-4 shrink-0 text-gray-400" />
+                        <div>
+                            <div className={`text-sm ${isOverdue(item.target_selesai, item.status_mitigasi) ? 'font-medium text-red-600' : 'text-gray-900'}`}>
+                                {formatDate(item.target_selesai)}
+                            </div>
+                            {isOverdue(item.target_selesai, item.status_mitigasi) && (
+                                <div className="text-xs font-semibold text-red-500">Terlambat</div>
+                            )}
+                        </div>
+                    </div>
+                );
+            },
+        },
+        {
+            accessorKey: 'progress_percentage',
+            header: 'Progress',
+            cell: ({ row }) => {
+                const item = row.original;
+                return (
+                    <div className="min-w-[80px]">
+                        <div className="mb-1 text-xs font-semibold text-gray-600">{item.progress_percentage}%</div>
+                        <div className="h-2 w-full rounded-full bg-gray-200">
+                            <div
+                                className="h-2 rounded-full bg-[#006d77]"
+                                style={{ width: `${item.progress_percentage}%` }}
+                            ></div>
+                        </div>
+                    </div>
+                );
+            },
+        },
+        {
+            accessorKey: 'status_mitigasi',
+            header: 'Status',
+            cell: ({ row }) => {
+                const item = row.original;
+                return (
+                    <div className="flex items-center gap-1.5 whitespace-nowrap">
+                        {getStatusIcon(item.status_mitigasi)}
+                        <span className={getStatusBadge(item.status_mitigasi, item.status_label || statusOptions?.[item.status_mitigasi] || 'Tidak Diketahui')}>
+                            {item.status_label || statusOptions?.[item.status_mitigasi] || 'Tidak Diketahui'}
+                        </span>
+                    </div>
+                );
+            },
+        },
+        {
+            accessorKey: 'validation_status',
+            header: 'Validasi',
+            cell: ({ row }) => {
+                const item = row.original;
+                return (
+                    <span className={getValidationStatusBadge(item.validation_status || 'draft')}>
+                        {getValidationStatusLabel(item.validation_status || 'draft')}
+                    </span>
+                );
+            },
+        },
+        {
+            id: 'actions',
+            header: () => <div className="text-center">Aksi</div>,
+            cell: ({ row }) => {
+                const mitigasi = row.original;
+                return (
+                    <div className="flex items-center justify-center space-x-1">
+                        <Link
+                            href={`/mitigasi/${mitigasi.id}`}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-green-300 text-green-900 hover:bg-green-500 hover:text-white"
+                            title="Lihat Detail"
+                        >
+                            <Eye className="h-5 w-5" />
+                        </Link>
+                        {!isAdmin && (
+                            <>
+                                {isOwnerRisk && mitigasi.permissions?.canEdit && (
+                                    <Link
+                                        href={`/mitigasi/${mitigasi.id}/edit`}
+                                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-yellow-300 text-yellow-700 hover:bg-yellow-500 hover:text-white"
+                                        title="Edit"
+                                    >
+                                        <Edit className="h-5 w-5" />
+                                    </Link>
+                                )}
+                                {isOwnerRisk && mitigasi.permissions?.canSubmit && (
+                                    <button
+                                        onClick={() => handleSubmit(mitigasi)}
+                                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-sky-700 hover:bg-sky-500 hover:text-white"
+                                        title="Submit untuk Persetujuan"
+                                    >
+                                        <Send className="h-5 w-5" />
+                                    </button>
+                                )}
+                                {isSuperAdmin &&
+                                    mitigasi.validation_status &&
+                                    ['submitted', 'pending'].includes(mitigasi.validation_status) && (
+                                        <>
+                                            {mitigasi.permissions?.canApprove && (
+                                                <button
+                                                    onClick={() => handleApprove(mitigasi)}
+                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-teal-100 text-teal-700 hover:bg-teal-500 hover:text-white"
+                                                    title="Setujui"
+                                                >
+                                                    <CheckCircle className="h-5 w-5" />
+                                                </button>
+                                            )}
+                                            {mitigasi.permissions?.canReject && (
+                                                <button
+                                                    onClick={() => handleReject(mitigasi)}
+                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-rose-100 text-rose-700 hover:bg-rose-500 hover:text-white"
+                                                    title="Revisi"
+                                                >
+                                                    <XCircle className="h-5 w-5" />
+                                                </button>
+                                            )}
+                                        </>
+                                    )}
+                            </>
+                        )}
+                    </div>
+                );
+            },
+        },
+    ];
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Manajemen Mitigasi" />
@@ -476,190 +659,8 @@ export default function Index() {
                     )}
                 </div>
 
-                {/* Mitigasi List */}
-                <div className="overflow-hidden bg-white shadow">
-                    {filteredMitigasis.length === 0 ? (
-                        <div className="py-12 text-center">
-                            <AlertTriangle className="mx-auto h-12 w-12 text-gray-400" />
-                            <h3 className="mt-2 text-sm font-medium text-gray-900">Tidak ada mitigasi ditemukan</h3>
-                            <p className="mt-1 text-sm text-gray-500">
-                                {' '}
-                                {searchTerm || filters.status_mitigasi || filters.strategi_mitigasi || filters.validation_status
-                                    ? `Tidak ada mitigasi yang cocok dengan filter${filters.status_mitigasi ? ` status "${statusOptions[filters.status_mitigasi]}"` : ''}${filters.strategi_mitigasi ? ` strategi "${strategiOptions[filters.strategi_mitigasi]}"` : ''}${filters.validation_status ? ` validasi "${getValidationStatusLabel(filters.validation_status)}"` : ''}${searchTerm ? ` atau pencarian "${searchTerm}"` : ''}.`
-                                    : ''}
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="w-full overflow-x-auto">
-                            <table className="min-w-full table-fixed divide-y divide-gray-200 border border-black">
-                                <thead className="border border-black bg-gray-50">
-                                    <tr>
-                                        <th className="w-[25%] border border-black px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
-                                            Mitigasi
-                                        </th>
-                                        <th className="w-[25%] border border-black px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
-                                            Risiko
-                                        </th>
-                                        <th className="w-[8%] border border-black px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
-                                            Strategi
-                                        </th>
-                                        <th className="w-[8%] border border-black px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
-                                            PIC
-                                        </th>
-                                        <th className="w-[10%] border border-black px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
-                                            Target
-                                        </th>
-                                        <th className="w-[7%] border border-black px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
-                                            Progress
-                                        </th>
-                                        <th className="w-[7%] border border-black px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
-                                            Status
-                                        </th>
-                                        <th className="w-[8%] border border-black px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
-                                            Validasi
-                                        </th>
-                                        <th className="w-[12%] border border-black px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
-                                            Aksi
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200 bg-white">
-                                    {mitigasis.data.map((mitigasi) => (
-                                        <tr key={mitigasi.id} className="border border-black hover:bg-gray-50">
-                                            <td className="border border-black px-3 py-4 align-top">
-                                                <div>
-                                                    <div className="text-sm font-medium break-words text-gray-900">{mitigasi.judul_mitigasi}</div>
-                                                    {/* <div className="text-sm break-words text-gray-500">{mitigasi.deskripsi_mitigasi}</div> */}
-                                                    {mitigasi.biaya_mitigasi && (
-                                                        <div className="mt-1 text-xs font-medium text-green-600">
-                                                            {formatCurrency(mitigasi.biaya_mitigasi)}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className="border border-black px-3 py-4 align-top">
-                                                <div className="text-sm break-words text-gray-900">{mitigasi.identify_risk?.id_identify}</div>
-                                                {/* <div className="text-sm break-words text-gray-500">{mitigasi.identify_risk?.description}</div> */}
-                                            </td>
-                                            <td className="border border-black px-3 py-4 align-top">
-                                                <span className={getStrategiBadge(mitigasi.strategi_mitigasi)}>
-                                                    {mitigasi.strategi_label || strategiOptions?.[mitigasi.strategi_mitigasi] || 'Tidak Diketahui'}
-                                                </span>
-                                            </td>
-                                            <td className="border border-black px-3 py-4 align-top">
-                                                <div className="flex items-center">
-                                                    <User className="mr-2 h-4 w-4 flex-shrink-0 text-gray-400" />
-                                                    <span className="text-sm break-words text-gray-900">{mitigasi.pic_mitigasi}</span>
-                                                </div>
-                                            </td>
-                                            <td className="border border-black px-3 py-4 align-top">
-                                                <div className="flex items-center">
-                                                    <Calendar className="mr-2 h-4 w-4 flex-shrink-0 text-gray-400" />
-                                                    <div>
-                                                        <div
-                                                            className={`text-sm ${isOverdue(mitigasi.target_selesai, mitigasi.status_mitigasi) ? 'font-medium text-red-600' : 'text-gray-900'}`}
-                                                        >
-                                                            {formatDate(mitigasi.target_selesai)}
-                                                        </div>
-                                                        {isOverdue(mitigasi.target_selesai, mitigasi.status_mitigasi) && (
-                                                            <div className="text-xs text-red-500">Terlambat</div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="border border-black px-3 py-4 align-top">
-                                                <div className="w-full">
-                                                    <div className="mb-1 text-xs text-gray-600">{mitigasi.progress_percentage}%</div>
-                                                    <div className="h-2 w-full rounded-full bg-gray-200">
-                                                        <div
-                                                            className="h-2 rounded-full bg-[#006d77]"
-                                                            style={{ width: `${mitigasi.progress_percentage}%` }}
-                                                        ></div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="border border-black px-3 py-4 align-top">
-                                                <div className="flex items-center">
-                                                    {getStatusIcon(mitigasi.status_mitigasi)}
-                                                    <span
-                                                        className={`ml-2 ${getStatusBadge(mitigasi.status_mitigasi, mitigasi.status_label || statusOptions?.[mitigasi.status_mitigasi] || 'Tidak Diketahui')}`}
-                                                    >
-                                                        {mitigasi.status_label || statusOptions?.[mitigasi.status_mitigasi] || 'Tidak Diketahui'}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="border border-black px-3 py-4 align-top">
-                                                <div className="flex flex-col space-y-1">
-                                                    <span className={getValidationStatusBadge(mitigasi.validation_status || 'draft')}>
-                                                        {getValidationStatusLabel(mitigasi.validation_status || 'draft')}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="border border-black px-3 py-4 align-top">
-                                                <div className="flex items-center justify-center space-x-1">
-                                                    {' '}
-                                                    <Link
-                                                        href={`/mitigasi/${mitigasi.id}`}
-                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-green-300 text-green-900 hover:bg-green-500 hover:text-white"
-                                                        title="Lihat Detail"
-                                                    >
-                                                        <Eye className="h-5 w-5" />
-                                                    </Link>
-                                                    {!isAdmin && (
-                                                        <>
-                                                            {isOwnerRisk && mitigasi.permissions?.canEdit && (
-                                                                <Link
-                                                                    href={`/mitigasi/${mitigasi.id}/edit`}
-                                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-yellow-300 text-yellow-700 hover:bg-yellow-500 hover:text-white"
-                                                                    title="Edit"
-                                                                >
-                                                                    <Edit className="h-5 w-5" />
-                                                                </Link>
-                                                            )}
-                                                            {isOwnerRisk && mitigasi.permissions?.canSubmit && (
-                                                                <button
-                                                                    onClick={() => handleSubmit(mitigasi)}
-                                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-sky-700 hover:bg-sky-500 hover:text-white"
-                                                                    title="Submit untuk Persetujuan"
-                                                                >
-                                                                    <Send className="h-5 w-5" />
-                                                                </button>
-                                                            )}
-                                                            {isSuperAdmin &&
-                                                                mitigasi.validation_status &&
-                                                                ['submitted', 'pending'].includes(mitigasi.validation_status) && (
-                                                                    <>
-                                                                        {mitigasi.permissions?.canApprove && (
-                                                                            <button
-                                                                                onClick={() => handleApprove(mitigasi)}
-                                                                                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-teal-100 text-teal-700 hover:bg-teal-500 hover:text-white"
-                                                                                title="Setujui"
-                                                                            >
-                                                                                <CheckCircle className="h-5 w-5" />
-                                                                            </button>
-                                                                        )}
-                                                                        {mitigasi.permissions?.canReject && (
-                                                                            <button
-                                                                                onClick={() => handleReject(mitigasi)}
-                                                                                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-rose-100 text-rose-700 hover:bg-rose-500 hover:text-white"
-                                                                                title="Revisi"
-                                                                            >
-                                                                                <XCircle className="h-5 w-5" />
-                                                                            </button>
-                                                                        )}
-                                                                    </>
-                                                                )}
-                                                        </>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
+                {/* Mitigasi Table via Shadcn UI DataTable */}
+                <DataTable columns={columns} data={filteredMitigasis} />
 
                 {/* Pagination */}
                 {mitigasis.links && <Pagination links={mitigasis.links} />}

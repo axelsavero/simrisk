@@ -20,13 +20,13 @@ class UserManageController extends Controller
             abort(403, 'ANDA TIDAK MEMILIKI HAK AKSES UNTUK MELIHAT HALAMAN INI.');
         }
 
-        $users = User::with('roles')->get()->map(function ($user) {
+        $users = User::with(['roles', 'unit'])->get()->map(function ($user) {
             return [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
                 'unit_id' => $user->unit_id,
-                'unit' => $user->unit, // Tetap gunakan 'unit' jika ada di model
+                'unit' => is_object($user->unit) ? $user->unit->nama_unit : ($user->unit ?: '-'),
                 'kode_unit' => $user->kode_unit,
                 'roles' => $user->roles->pluck('name')->toArray(),
             ];
@@ -316,6 +316,7 @@ class UserManageController extends Controller
             $q->where('name', 'owner-risk');
         })
             ->where('unit_id', $user->unit_id)
+            ->with(['roles', 'unit'])
             ->get()
             ->map(function ($user) {
                 return [
@@ -323,7 +324,7 @@ class UserManageController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                     'unit_id' => $user->unit_id,
-                    'unit' => $user->unit, // Ganti unit_kerja dengan unit
+                    'unit' => is_object($user->unit) ? $user->unit->nama_unit : ($user->unit ?: '-'),
                     'kode_unit' => $user->kode_unit,
                     'roles' => $user->roles->pluck('name')->toArray(),
                 ];

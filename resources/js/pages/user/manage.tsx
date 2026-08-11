@@ -1,11 +1,13 @@
 // resources/js/Pages/User/Manage.tsx
 
 import { Button } from '@/components/ui/button';
+import { DataTable } from '@/components/ui/data-table';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, User } from '@/types';
 import { PageProps } from '@/types/page-props';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Pencil, Trash2, UserRoundPlus } from 'lucide-react';
+import { ColumnDef } from '@tanstack/react-table';
+import { Eye, Pencil, Trash2, UserRoundPlus } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 export default function Manage({ users }: PageProps<{ users: User[] }>) {
@@ -34,7 +36,82 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
         });
     }
 
-    const adminUsers = users.filter((user: { roles: string | string[]; }) => user.roles?.includes('admin'));
+    const adminUsers = users.filter((user: any) => user.roles?.includes('admin'));
+
+    const columns: ColumnDef<User>[] = [
+        {
+            id: 'no',
+            header: () => <div className="text-center">No</div>,
+            cell: ({ row }) => <div className="text-center">{row.index + 1}</div>,
+        },
+        {
+            accessorKey: 'unit',
+            header: 'Unit Kerja',
+            cell: ({ row }) => <div>{row.original.unit || '-'}</div>,
+        },
+        {
+            accessorKey: 'name',
+            header: 'User Admin',
+            cell: ({ row }) => <div className="font-medium">{row.original.name}</div>,
+        },
+        {
+            accessorKey: 'email',
+            header: 'Email',
+            cell: ({ row }) => <div>{row.original.email || '-'}</div>,
+        },
+        {
+            accessorKey: 'roles',
+            header: 'Role',
+            cell: ({ row }) => (
+                <div>
+                    {Array.isArray(row.original.roles) ? row.original.roles.join(', ') : row.original.roles || '-'}
+                </div>
+            ),
+        },
+        {
+            id: 'actions',
+            header: () => <div className="text-center">Aksi</div>,
+            cell: ({ row }) => {
+                const user = row.original;
+                return (
+                    <div className="flex items-center justify-center gap-1">
+                        <Button
+                            asChild
+                            variant="outline"
+                            size="icon"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-green-100 text-green-700 hover:bg-green-500 hover:text-white"
+                            title="Detail"
+                        >
+                            <Link href={`/user/manage/${user.id}/edit`}>
+                                <Eye size={20} />
+                            </Link>
+                        </Button>
+                        <Button
+                            asChild
+                            variant="outline"
+                            size="icon"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-700 hover:bg-blue-500 hover:text-white"
+                            title="Edit"
+                        >
+                            <Link href={`/user/manage/${user.id}/edit`}>
+                                <Pencil size={20} />
+                            </Link>
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-700 hover:bg-red-500 hover:text-white"
+                            onClick={() => deleteUser(user)}
+                            title="Hapus"
+                        >
+                            <Trash2 size={20} />
+                        </Button>
+                    </div>
+                );
+            },
+        },
+    ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -56,62 +133,7 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
                     )}
                 </div>
 
-                <div className="border-sidebar-border overflow-hidden rounded-xl border bg-white shadow-sm">
-                    <div className="overflow-x-auto p-4">
-                        <table className="min-w-full border border-gray-300 text-left text-sm">
-                            <thead className="bg-gray-100">
-                                <tr>
-                                    <th className="w-2 border px-2 py-2 text-center">No</th>
-                                    <th className="w-2/5 border px-4 py-2">Unit</th>
-                                    <th className="w-1/4 border px-2 py-2">User Admin</th>
-                                    <th className="w-2 border px-1 py-2 text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {adminUsers && adminUsers.length > 0 ? (
-                                    adminUsers.map((user: User, idx: number) => (
-                                        <tr key={user.id} className="hover:bg-gray-50">
-                                            <td className="border px-2 py-2 text-center">{idx + 1}</td>
-                                            <td className="border px-4 py-2">{user.unit}</td>
-                                            <td className="border px-2 py-2">{user.name}</td>
-                                            <td className="border px-1 py-2 text-center">
-                                                <div className="flex items-center justify-center gap-1">
-                                                    <Button
-                                                        asChild
-                                                        variant="outline"
-                                                        size="icon"
-                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-700 hover:bg-blue-500 hover:text-white"
-                                                        title="Edit"
-                                                    >
-                                                        <Link href={`/user/manage/${user.id}/edit`}>
-                                                            <Pencil size={20} />
-                                                        </Link>
-                                                    </Button>
-                                                    <Button
-                                                        type="button"
-                                                        variant="destructive"
-                                                        size="icon"
-                                                        className='className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-700 hover:bg-red-500 hover:text-white'
-                                                        onClick={() => deleteUser(user)}
-                                                        title="Hapus"
-                                                    >
-                                                        <Trash2 size={20} />
-                                                    </Button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan={5} className="py-8 text-center text-gray-500">
-                                            Tidak ada data user.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <DataTable columns={columns} data={adminUsers} />
             </div>
         </AppLayout>
     );

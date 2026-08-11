@@ -1,9 +1,11 @@
 import { Button } from '@/components/ui/button';
+import { DataTable } from '@/components/ui/data-table';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, User } from '@/types';
 import { PageProps } from '@/types/page-props';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Pencil, Trash2, UserRoundPlus } from 'lucide-react';
+import { ColumnDef } from '@tanstack/react-table';
+import { Eye, Pencil, Trash2, UserRoundPlus } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 export default function Operator({ users }: PageProps<{ users: User[] }>) {
@@ -32,6 +34,81 @@ export default function Operator({ users }: PageProps<{ users: User[] }>) {
         });
     }
 
+    const columns: ColumnDef<User>[] = [
+        {
+            id: 'no',
+            header: () => <div className="text-center">No</div>,
+            cell: ({ row }) => <div className="text-center">{row.index + 1}</div>,
+        },
+        {
+            accessorKey: 'unit',
+            header: 'Unit Kerja',
+            cell: ({ row }) => <div>{row.original.unit || '-'}</div>,
+        },
+        {
+            accessorKey: 'name',
+            header: 'User Operator',
+            cell: ({ row }) => <div className="font-medium">{row.original.name}</div>,
+        },
+        {
+            accessorKey: 'email',
+            header: 'Email',
+            cell: ({ row }) => <div>{row.original.email || '-'}</div>,
+        },
+        {
+            accessorKey: 'roles',
+            header: 'Role',
+            cell: ({ row }) => (
+                <div>
+                    {Array.isArray(row.original.roles) ? row.original.roles.join(', ') : row.original.roles || '-'}
+                </div>
+            ),
+        },
+        {
+            id: 'actions',
+            header: () => <div className="text-center">Aksi</div>,
+            cell: ({ row }) => {
+                const user = row.original;
+                return (
+                    <div className="flex items-center justify-center gap-1">
+                        <Button
+                            asChild
+                            variant="outline"
+                            size="icon"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-green-100 text-green-700 hover:bg-green-500 hover:text-white"
+                            title="Detail"
+                        >
+                            <Link href={`/user/operator/${user.id}/edit`}>
+                                <Eye size={20} />
+                            </Link>
+                        </Button>
+                        <Button
+                            asChild
+                            variant="outline"
+                            size="icon"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-700 hover:bg-blue-500 hover:text-white"
+                            title="Edit"
+                        >
+                            <Link href={`/user/operator/${user.id}/edit`}>
+                                <Pencil size={20} />
+                            </Link>
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-700 hover:bg-red-500 hover:text-white"
+                            onClick={() => deleteUser(user)}
+                            title="Hapus"
+                        >
+                            <Trash2 size={20} />
+                        </Button>
+                    </div>
+                );
+            },
+        },
+    ];
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="User Operator" />
@@ -52,60 +129,7 @@ export default function Operator({ users }: PageProps<{ users: User[] }>) {
                     )}
                 </div>
 
-                <div className="border-sidebar-border overflow-hidden rounded-xl border bg-white shadow-sm">
-                    <div className="overflow-x-auto p-4">
-                        <table className="min-w-full border border-gray-300 text-left text-sm">
-                            <thead className="bg-gray-100">
-                                <tr>
-                                    <th className="w-2 border px-2 py-2 text-center">No</th>
-                                    <th className="w-1/4 border px-2 py-2">User Operator</th>
-                                    <th className="w-2 border px-1 py-2 text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {users && users.length > 0 ? (
-                                    users.map((user: User, idx: number) => (
-                                        <tr key={user.id} className="hover:bg-gray-50">
-                                            <td className="border px-2 py-2 text-center">{idx + 1}</td>
-                                            <td className="border px-2 py-2">{user.name}</td>
-                                            <td className="border px-1 py-2 text-center">
-                                                <div className="flex items-center justify-center gap-1">
-                                                    <Button
-                                                        asChild
-                                                        variant="outline"
-                                                        size="icon"
-                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-700 hover:bg-blue-500 hover:text-white"
-                                                        title="Edit"
-                                                    >
-                                                        <Link href={`/user/operator/${user.id}/edit`}>
-                                                            <Pencil size={20} />
-                                                        </Link>
-                                                    </Button>
-                                                    <Button
-                                                        type="button"
-                                                        variant="destructive"
-                                                        size="icon"
-                                                        className='className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-700 hover:bg-red-500 hover:text-white'
-                                                        onClick={() => deleteUser(user)}
-                                                        title="Hapus"
-                                                    >
-                                                        <Trash2 size={20} />
-                                                    </Button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan={5} className="py-8 text-center text-gray-500">
-                                            Tidak ada data operator.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <DataTable columns={columns} data={users || []} />
             </div>
         </AppLayout>
     );
