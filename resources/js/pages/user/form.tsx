@@ -51,6 +51,19 @@ export default function AdminForm({ allRoles, user = null }: FormProps) {
         role: user?.roles?.[0]?.name || 'admin',
     });
 
+    const defaultRoles = ['admin', 'super-admin', 'owner-risk', 'pimpinan'];
+    const rolesList = allRoles && allRoles.length > 0 ? allRoles : defaultRoles;
+
+    const formatRoleLabel = (roleName: string) => {
+        if (roleName === 'owner-risk') return 'operator (owner-risk)';
+        return roleName;
+    };
+
+    const roleOptions = rolesList.map((r) => ({
+        value: r,
+        label: formatRoleLabel(r),
+    }));
+
     // ... (sisa fungsi apiCall, processApiData, fetchUnits, fetchPegawaiByUnit tetap sama) ...
 
     const apiCall = async (endpoint: string, options: RequestInit = {}) => {
@@ -99,8 +112,9 @@ export default function AdminForm({ allRoles, user = null }: FormProps) {
         console.debug('Raw API response:', d);
         if (!d) return [];
         if (Array.isArray(d)) return d;
-        if (d?.data && Array.isArray(d.data)) return d.data;
+        if (d?.homebases && Array.isArray(d.homebases)) return d.homebases;
         if (d?.pegawais && Array.isArray(d.pegawais)) return d.pegawais;
+        if (d?.data && Array.isArray(d.data)) return d.data;
         if (d?.result && Array.isArray(d.result)) return d.result;
         if (d?.units && Array.isArray(d.units)) return d.units;
         const arr = Object.values(d).find((v) => Array.isArray(v));
@@ -112,27 +126,29 @@ export default function AdminForm({ allRoles, user = null }: FormProps) {
         setApiError('');
 
         try {
-            const result = await apiCall('/allunit');
+            const result = await apiCall('/allhomebase');
             const unitsData = processApiData(result.data);
 
             if (!unitsData.length) {
-                throw new Error('Tidak ada data unit dari API SIPEG.');
+                throw new Error('Tidak ada data unit/homebase dari API SIPEG.');
             }
 
             const transformedUnits: Unit[] = unitsData
                 .filter((unit: any) => {
                     const id = parseInt(unit.id || unit.id_homebase || unit.kode_homebase || unit.kode_unit || unit.unit_id);
-                    const name = unit.nama_unit || unit.ur_unit || unit.name || unit.unit_name;
+                    const name = unit.ur_homebase || unit.nama_unit || unit.name || unit.unit_name;
                     return !isNaN(id) && name && name.trim();
                 })
                 .map((unit: any) => {
                     const originalId = parseInt(unit.id || unit.id_homebase || unit.kode_homebase || unit.kode_unit || unit.unit_id);
+                    const name = (unit.ur_homebase || unit.nama_unit || unit.name || unit.unit_name || '').trim();
                     return {
                         id: originalId,
-                        name: unit.nama_unit || unit.ur_unit || unit.name || unit.unit_name,
+                        name: name,
                         original_id: originalId,
                     };
-                });
+                })
+                .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
 
             setUnits(transformedUnits);
             setApiError(`✅ ${transformedUnits.length} unit berhasil dimuat.`);
@@ -141,13 +157,14 @@ export default function AdminForm({ allRoles, user = null }: FormProps) {
             const errorMessage = error.message.includes('429')
                 ? `❌ Terlalu banyak permintaan (HTTP 429). Tunggu beberapa saat.`
                 : error.message.includes('404')
-                    ? `❌ Endpoint /allunit tidak ditemukan. Silakan hubungi admin API SIPEG.`
+                    ? `❌ Endpoint /allhomebase tidak ditemukan. Silakan hubungi admin API SIPEG.`
                     : `❌ Gagal memuat unit: ${error.message}`;
             setApiError(errorMessage);
             if (process.env.NODE_ENV === 'development') {
                 setUnits([
-                    { id: 1, name: 'Subdit Sumber Daya Manusia', original_id: 1 },
-                    { id: 2, name: 'Kantor Tata Usaha, Layanan Umum, dan Rumah Tangga', original_id: 2 },
+                    { id: 1, name: 'Direktorat Akademik', original_id: 1 },
+                    { id: 3, name: 'Direktorat Sumber Daya Manusia', original_id: 3 },
+                    { id: 42, name: 'Perpustakaan dan Kearsipan', original_id: 42 },
                 ]);
                 setApiError(`${errorMessage} (Menggunakan data dummy untuk pengembangan)`);
             } else {
@@ -168,25 +185,21 @@ export default function AdminForm({ allRoles, user = null }: FormProps) {
         setLoading((prev) => ({ ...prev, pegawai: true }));
         setApiError('');
 
-        const encodedUnitName = encodeURIComponent(unitName);
+        const encodedUnitName = encodeURIComponent(unitName.trim());
         try {
-            const result = await apiCall(`/pegawai?unit_kerja=${encodedUnitName}`);
+            const result = await apiCall(`/homebase/${encodedUnitName}`);
 
             const pegawaiData = processApiData(result.data);
 
             const filtered = pegawaiData
-                .filter((p: any) => {
-                    const unitKerja = (p.unit_kerja || p.homebase || '').toString().trim().toLowerCase();
-                    return unitKerja && unitKerja === unitName.trim().toLowerCase();
-                })
                 .map((p: any) => {
-                    const unitId = units.find((u) => u.name.toLowerCase() === unitName.toLowerCase())?.id;
+                    const unitId = units.find((u) => u.name.toLowerCase() === unitName.trim().toLowerCase())?.id;
                     return {
                         id: p.id,
                         nama: p.nama || p.name || `Pegawai ${p.id}`,
                         email: p.email || '',
-                        unit_kerja: p.unit_kerja || p.homebase || '',
-                        homebase: p.homebase || p.unit_kerja || '',
+                        unit_kerja: p.homebase || p.unit_kerja || unitName,
+                        homebase: p.homebase || p.unit_kerja || unitName,
                         unit_id: unitId || null,
                     };
                 });
@@ -205,7 +218,7 @@ export default function AdminForm({ allRoles, user = null }: FormProps) {
                 : error.message.includes('400')
                     ? `❌ ${error.message}`
                     : error.message.includes('404')
-                        ? `❌ Endpoint /pegawai?unit_kerja=${encodedUnitName} tidak ditemukan. Silakan hubungi admin API SIPEG.`
+                        ? `❌ Endpoint /homebase/${encodedUnitName} tidak ditemukan. Silakan hubungi admin API SIPEG.`
                         : `❌ Gagal memuat pegawai: ${error.message}`;
             setApiError(errorMessage);
             if (process.env.NODE_ENV === 'development') {
@@ -387,11 +400,16 @@ export default function AdminForm({ allRoles, user = null }: FormProps) {
                     <div>
                         <label className="mb-1 block font-medium">Role</label>
                         <Select
-                            options={[{ value: 'admin', label: 'admin' }, { value: 'super-admin', label: 'super-admin' }]}
-                            value={{ value: data.role, label: data.role }}
+                            options={roleOptions}
+                            value={
+                                data.role
+                                    ? { value: data.role, label: formatRoleLabel(data.role) }
+                                    : null
+                            }
                             onChange={(selected) => selected && setData('role', selected.value)}
-                            isDisabled={false}
+                            isDisabled={isThrottled}
                             placeholder="-- Pilih Role --"
+                            classNamePrefix="react-select"
                         />
                         {errors.role && <div className="text-sm text-red-500">{errors.role}</div>}
                     </div>

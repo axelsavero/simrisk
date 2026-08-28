@@ -82,24 +82,20 @@ export default function OperatorForm({ user = null }: { user?: any }) {
         setApiError('');
 
         try {
-            const encodedUnitName = encodeURIComponent(unitName);
-            const result = await apiCall(`/pegawai?unit_kerja=${encodedUnitName}`);
+            const encodedUnitName = encodeURIComponent(unitName.trim());
+            const result = await apiCall(`/homebase/${encodedUnitName}`);
 
-            const pegawaiData = result.data?.data || result.data || [];
+            const pegawaiData = result.data?.pegawais || result.data?.data || result.data || [];
 
             const filtered = pegawaiData
-                .filter((p: any) => {
-                    const unitField = (p.unit || p.homebase || '').toString().trim().toLowerCase();
-                    return unitField && unitField === unitName.trim().toLowerCase();
-                })
                 .map((p: any) => {
-                    const unitId = units.find((u) => u.name.toLowerCase() === unitName.toLowerCase())?.id;
+                    const unitId = units.find((u) => u.name.toLowerCase() === unitName.trim().toLowerCase())?.id;
                     return {
                         id: p.id,
                         nama: p.nama || p.name || `Pegawai ${p.id}`,
                         email: p.email || '',
-                        unit: p.unit || p.homebase || '',
-                        homebase: p.homebase || p.unit || '',
+                        unit: p.homebase || p.unit || unitName,
+                        homebase: p.homebase || p.unit || unitName,
                         unit_id: unitId || null,
                     };
                 });
@@ -116,7 +112,7 @@ export default function OperatorForm({ user = null }: { user?: any }) {
             const errorMessage = error.message.includes('429')
                 ? `❌ Terlalu banyak permintaan (HTTP 429).`
                 : error.message.includes('404')
-                    ? `❌ Endpoint /pegawai?unit_kerja=${unitName} tidak ditemukan. Silakan hubungi admin API SIPEG.`
+                    ? `❌ Endpoint /homebase/${unitName} tidak ditemukan. Silakan hubungi admin API SIPEG.`
                     : `❌ Gagal memuat pegawai: ${error.message}`;
             setApiError(errorMessage);
             if (process.env.NODE_ENV === 'development') {

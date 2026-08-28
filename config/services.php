@@ -18,6 +18,7 @@ return [
         'base_url' => env('SIPEG_API_URL', 'http://10.255.0.143/apisipeg/api'),
         'token' => env('SIPEG_API_TOKEN'),
         'verify_ssl' => env('SIPEG_VERIFY_SSL', false),
+        'timeout' => env('SIPEG_API_TIMEOUT', 10),
     ],
 
     'postmark' => [

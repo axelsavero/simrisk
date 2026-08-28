@@ -9,8 +9,10 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-// Route untuk unit dan pegawai
+// Route untuk homebase dan pegawai
+Route::get('/sipegproxy/allhomebase', [SipegProxyController::class, 'allhomebase']);
 Route::get('/sipegproxy/allunit', [SipegProxyController::class, 'allunit']);
+Route::get('/sipegproxy/homebase/{ur_homebase?}', [SipegProxyController::class, 'homebase']);
 Route::get('/sipegproxy/pegawai', [SipegProxyController::class, 'pegawai']);
 
 // Route dinamis untuk endpoint SIPEG lain

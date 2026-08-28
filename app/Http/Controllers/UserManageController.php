@@ -204,7 +204,7 @@ class UserManageController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'role' => 'required|string|in:admin,super-admin',
+            'role' => 'required|string|exists:roles,name',
         ], [
             'unit_id.exists' => 'Unit ID yang dipilih tidak valid. Pastikan unit ada di database. Unit ID diterima: :input',
         ]);
