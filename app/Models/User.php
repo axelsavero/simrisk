@@ -123,4 +123,28 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Unit::class, 'unit_id', 'id_unit');
     }
+
+    /**
+     * Accessor untuk unit_name secara konsisten (relasi unit, raw unit column, atau kode_unit)
+     */
+    public function getUnitNameAttribute(): string
+    {
+        if ($this->unit_id) {
+            $unitRel = $this->unit;
+            if ($unitRel && is_object($unitRel) && !empty($unitRel->nama_unit)) {
+                return $unitRel->nama_unit;
+            }
+        }
+
+        $rawUnit = $this->getRawOriginal('unit');
+        if (!empty($rawUnit) && is_string($rawUnit)) {
+            return $rawUnit;
+        }
+
+        if (!empty($this->kode_unit)) {
+            return $this->kode_unit;
+        }
+
+        return 'Tidak Diketahui';
+    }
 }

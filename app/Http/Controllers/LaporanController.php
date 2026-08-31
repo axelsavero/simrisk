@@ -97,7 +97,7 @@ class LaporanController extends Controller
                 'varian' => $varian,
                 'status' => $mitigasi ? $mitigasi->status_label : 'Belum ada mitigasi',
                 'pemilik' => $risk->user?->name ?? 'Tidak diketahui',
-                'unit' => $risk->user?->unit?->nama_unit ?? $risk->user?->unit ?? $risk->unit_kerja ?? 'Tidak Diketahui',
+                'unit' => $risk->unit_kerja,
                 'rekomendasi' => $mitigasi ? $mitigasi->rekomendasi_lanjutan : '-',
                 // Kolom-kolom lain dari frontend yang mungkin belum ter-map
                 'kode' => $risk->id_identify,
@@ -293,7 +293,7 @@ class LaporanController extends Controller
                 'varian' => $varian,
                 'status' => $mitigasi ? $mitigasi->status_label : 'Belum ada mitigasi',
                 'pemilik' => $risk->user?->name ?? 'N/A',
-                'unit' => $risk->user?->unit?->nama_unit ?? $risk->user?->unit ?? $risk->unit_kerja ?? 'N/A',
+                'unit' => $risk->unit_kerja,
                 'rekomendasi' => $mitigasi ? $mitigasi->rekomendasi_lanjutan : '-',
             ];
         });

@@ -583,6 +583,14 @@ class IdentifyRisk extends Model
             if (!$model->status_mitigasi) {
                 $model->status_mitigasi = 'belum_dimulai';
             }
+
+            // Auto-fill unit_kerja dari user jika kosong
+            if (empty($model->unit_kerja) || $model->unit_kerja === 'Tidak Diketahui') {
+                $user = $model->user ?? \Illuminate\Support\Facades\Auth::user();
+                if ($user && isset($user->unit_name) && $user->unit_name !== 'Tidak Diketahui') {
+                    $model->unit_kerja = $user->unit_name;
+                }
+            }
         });
 
         static::updating(function ($model) {
@@ -597,6 +605,42 @@ class IdentifyRisk extends Model
                     $model->level_residual = $model->probability_residual * $model->impact_residual;
                 }
             }
+
+            // Fallback unit_kerja jika kosong saat update
+            if (empty($model->unit_kerja) || $model->unit_kerja === 'Tidak Diketahui') {
+                $user = $model->user ?? \Illuminate\Support\Facades\Auth::user();
+                if ($user && isset($user->unit_name) && $user->unit_name !== 'Tidak Diketahui') {
+                    $model->unit_kerja = $user->unit_name;
+                }
+            }
         });
+    }
+
+    /**
+     * Accessor untuk unit_kerja: mengambil kolom unit_kerja, atau fallback ke unit milik user pembuat
+     */
+    public function getUnitKerjaAttribute(): string
+    {
+        $unit = $this->attributes['unit_kerja'] ?? null;
+        if (!empty($unit) && $unit !== 'Tidak Diketahui' && $unit !== '-') {
+            return $unit;
+        }
+
+        if ($this->relationLoaded('user') && $this->user) {
+            $userUnit = $this->user->unit_name;
+            if ($userUnit && $userUnit !== 'Tidak Diketahui') {
+                return $userUnit;
+            }
+        } elseif ($this->user_id) {
+            $user = $this->user;
+            if ($user) {
+                $userUnit = $user->unit_name;
+                if ($userUnit && $userUnit !== 'Tidak Diketahui') {
+                    return $userUnit;
+                }
+            }
+        }
+
+        return !empty($unit) ? $unit : '-';
     }
 }

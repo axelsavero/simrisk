@@ -51,7 +51,7 @@ class IdentifyRiskController extends Controller
                 'no' => $paginatedRisks->firstItem() + $key,
                 'id' => $risk->id,
                 'id_identify' => $risk->id_identify,
-                'unit_kerja' => $risk->unit_kerja ?? $risk->user?->unit?->nama_unit ?? (is_string($risk->user?->unit) ? $risk->user?->unit : null) ?? '-',
+                'unit_kerja' => $risk->unit_kerja,
                 'status' => $risk->status,
                 'is_active' => $risk->is_active,
                 'risk_category' => $risk->risk_category,
@@ -166,8 +166,14 @@ class IdentifyRiskController extends Controller
             'bukti_risiko_file', 'bukti_risiko_nama'
         ])->toArray();
 
-        // Tambahkan user_id
+        // Tambahkan user_id & unit_kerja fallback dari user jika kosong
         $identifyRiskData['user_id'] = Auth::id();
+        if (empty($identifyRiskData['unit_kerja']) || $identifyRiskData['unit_kerja'] === 'Tidak Diketahui') {
+            $user = Auth::user();
+            if ($user && isset($user->unit_name) && $user->unit_name !== 'Tidak Diketahui') {
+                $identifyRiskData['unit_kerja'] = $user->unit_name;
+            }
+        }
 
         // Buat IdentifyRisk
         $identifyRisk = IdentifyRisk::create($identifyRiskData);
@@ -253,7 +259,7 @@ class IdentifyRiskController extends Controller
                 'created_at' => $identifyRisk->created_at->format('Y-m-d H:i'),
                 'updated_at' => $identifyRisk->updated_at->format('Y-m-d H:i'),
 
-                'unit_kerja' => $identifyRisk->unit_kerja ?? $identifyRisk->user?->unit?->nama_unit ?? $identifyRisk->user?->unit ?? 'Tidak Diketahui',
+                'unit_kerja' => $identifyRisk->unit_kerja,
                 'bukti_files' => $identifyRisk->bukti_files ?? [],
 
                 // Status flags

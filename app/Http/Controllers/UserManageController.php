@@ -27,7 +27,7 @@ class UserManageController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'unit_id' => $user->unit_id,
-                'unit' => is_object($user->unit) ? $user->unit->nama_unit : ($user->unit ?: '-'),
+                'unit' => $user->unit_name,
                 'kode_unit' => $user->kode_unit,
                 'roles' => $user->roles->pluck('name')->toArray(),
             ];
@@ -325,7 +325,7 @@ class UserManageController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                     'unit_id' => $user->unit_id,
-                    'unit' => is_object($user->unit) ? $user->unit->nama_unit : ($user->unit ?: '-'),
+                    'unit' => $user->unit_name,
                     'kode_unit' => $user->kode_unit,
                     'roles' => $user->roles->pluck('name')->toArray(),
                 ];

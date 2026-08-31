@@ -90,7 +90,7 @@ class DashboardController extends Controller
                     'label' => $risk->id,
                     'kode_risiko' => $risk->id_identify,
                     'nama_risiko' => $risk->description,
-                    'unit_kerja' => $risk->user?->unit?->nama_unit ?? $risk->user?->unit ?? $risk->unit_kerja ?? 'Tidak Diketahui',
+                    'unit_kerja' => $risk->unit_kerja,
                     'validation_status' => $risk->validation_status,
                 ];
             }
@@ -130,7 +130,7 @@ class DashboardController extends Controller
                 'progress_percentage' => $mitigasi->progress_percentage,
                 'pic_mitigasi' => $mitigasi->pic_mitigasi,
                 'target_selesai' => $mitigasi->target_selesai?->format('Y-m-d'),
-                'unit_kerja' => $risk->user?->unit?->nama_unit ?? $risk->user?->unit ?? $risk->unit_kerja ?? 'Tidak Diketahui',
+                'unit_kerja' => $risk->unit_kerja,
                 'level' => $level,
                 'level_text' => $levelText,
                 'validation_status' => $mitigasi->validation_status,
