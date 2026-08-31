@@ -64,7 +64,7 @@ export function DataTable<TData, TValue>({
     });
 
     return (
-        <div className="space-y-4">
+        <div className="w-full space-y-4">
             {searchKey && (
                 <div className="flex items-center py-2">
                     <input
@@ -75,14 +75,14 @@ export function DataTable<TData, TValue>({
                     />
                 </div>
             )}
-            <div className={`border-sidebar-border overflow-hidden rounded-xl border bg-white shadow-sm ${className || ''}`}>
-                <Table className="min-w-full border border-gray-300 text-left text-sm">
-                    <TableHeader className="bg-gray-100">
+            <div className={`w-full overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm ${className || ''}`}>
+                <Table className="w-full text-left text-sm border-collapse">
+                    <TableHeader className="bg-gray-50/90 border-b border-gray-200">
                         {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
+                            <TableRow key={headerGroup.id} className="border-b border-gray-200">
                                 {headerGroup.headers.map((header) => {
                                     return (
-                                        <TableHead key={header.id} className="border border-gray-300 px-3 py-2 font-semibold">
+                                        <TableHead key={header.id} className="border-r border-gray-200 last:border-r-0 px-3 py-3 font-semibold text-gray-700">
                                             {header.isPlaceholder
                                                 ? null
                                                 : flexRender(
@@ -101,10 +101,10 @@ export function DataTable<TData, TValue>({
                                 <TableRow
                                     key={row.id}
                                     data-state={row.getIsSelected() && 'selected'}
-                                    className="hover:bg-gray-50 border-b border-gray-200"
+                                    className="hover:bg-gray-50/70 border-b border-gray-200 transition-colors"
                                 >
                                     {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id} className="border border-gray-300 px-3 py-2">
+                                        <TableCell key={cell.id} className="border-r border-gray-200 last:border-r-0 px-3 py-3">
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                         </TableCell>
                                     ))}
@@ -112,7 +112,7 @@ export function DataTable<TData, TValue>({
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={columns.length} className="h-24 text-center text-gray-500">
+                                <TableCell colSpan={columns.length} className="h-28 text-center text-gray-500">
                                     Tidak ada data.
                                 </TableCell>
                             </TableRow>
