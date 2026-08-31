@@ -79,7 +79,7 @@ class UserManageController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'unit_id' => $user->unit_id,
-            'unit' => $user->unit, // Ganti unit_kerja dengan unit jika ada
+            'unit' => $user->unit_name,
             'kode_unit' => $user->kode_unit,
             'roles' => $user->roles->pluck('name')->toArray(),
         ];
@@ -89,6 +89,53 @@ class UserManageController extends Controller
             'user' => $userData,
             'allRoles' => ['owner-risk'],
         ]);
+    }
+
+    private function resolveUnit(Request $request): array
+    {
+        $inputUnitName = trim((string)$request->input('unit', ''));
+        $inputUnitId = $request->input('unit_id');
+
+        $unit = null;
+
+        // 1. Cari berdasarkan nama unit (exact match)
+        if (!empty($inputUnitName)) {
+            $unit = Unit::where('nama_unit', $inputUnitName)->first();
+        }
+
+        // 2. Cari berdasarkan kode_unit dari unit_id yang dikirim
+        if (!$unit && !empty($inputUnitId)) {
+            $unit = Unit::where('kode_unit', (string)$inputUnitId)->first();
+        }
+
+        // 3. Cari berdasarkan id_unit primary key
+        if (!$unit && !empty($inputUnitId) && is_numeric($inputUnitId)) {
+            $unit = Unit::find((int)$inputUnitId);
+        }
+
+        // 4. Jika unit belum ada di database lokal tapi nama unit dikirim, buat record unit baru
+        if (!$unit && !empty($inputUnitName)) {
+            $kodeUnit = (!empty($inputUnitId) && is_string($inputUnitId))
+                ? (string)$inputUnitId
+                : 'UNIT-' . strtoupper(substr(md5($inputUnitName), 0, 8));
+
+            $unit = Unit::create([
+                'nama_unit' => $inputUnitName,
+                'jenis_unit' => 'Homebase',
+                'level_unit' => 'Unit Kerja',
+                'kode_unit' => $kodeUnit,
+                'status' => 'aktif',
+            ]);
+        }
+
+        $unitId = $unit ? $unit->id_unit : null;
+        $unitName = !empty($inputUnitName) ? $inputUnitName : ($unit ? $unit->nama_unit : 'Tidak Diketahui');
+
+        return [
+            'unit_id' => $unitId,
+            'unit' => $unitName,
+            'kode_unit' => $unit ? $unit->kode_unit : null,
+        ];
     }
 
     public function updateOperator(Request $request, User $user)
@@ -104,19 +151,22 @@ class UserManageController extends Controller
         \Log::info('Update operator request: ', $request->all());
 
         $validated = $request->validate([
-            'unit_id' => 'required|integer|exists:unit,id_unit',
+            'unit_id' => 'nullable',
+            'unit' => 'nullable|string',
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8',
             'role' => 'required|string|in:owner-risk',
         ]);
 
+        $unitData = $this->resolveUnit($request);
+
         $user->name = $validated['name'];
         $user->email = $validated['email'];
-        $user->unit_id = $validated['unit_id'];
-        // Hapus unit_kerja, gunakan unit jika ada, atau abaikan jika tidak relevan
-        if (isset($user->unit)) {
-            $user->unit = Unit::find($validated['unit_id'])->nama_unit ?? $user->unit;
+        $user->unit_id = $unitData['unit_id'];
+        $user->unit = $unitData['unit'];
+        if ($unitData['kode_unit']) {
+            $user->kode_unit = $unitData['kode_unit'];
         }
         if ($validated['password']) {
             $user->password = Hash::make($validated['password']);
@@ -145,21 +195,23 @@ class UserManageController extends Controller
         \Log::info('Store operator request: ', $request->all());
 
         $validated = $request->validate([
-            'unit_id' => 'required|integer|exists:unit,id_unit',
+            'unit_id' => 'nullable',
+            'unit' => 'nullable|string',
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
             'role' => 'required|string|in:owner-risk',
         ]);
 
-        $unitName = Unit::find($validated['unit_id'])->nama_unit ?? 'Unit Tidak Diketahui'; // Ambil nama_unit dari unit_id
+        $unitData = $this->resolveUnit($request);
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'unit_id' => $validated['unit_id'],
-            'unit' => $unitName, // Ganti unit_kerja dengan nama_unit dari tabel unit
+            'unit_id' => $unitData['unit_id'],
+            'unit' => $unitData['unit'],
+            'kode_unit' => $unitData['kode_unit'],
         ]);
 
         \Log::info('Created user with unit_id: ' . $user->unit_id);
@@ -201,23 +253,23 @@ class UserManageController extends Controller
         \Log::info('Store request data: ', $request->all());
 
         $validated = $request->validate([
-            'unit_id' => 'required|integer|exists:unit,id_unit',
+            'unit_id' => 'nullable',
+            'unit' => 'nullable|string',
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
             'role' => 'required|string|exists:roles,name',
-        ], [
-            'unit_id.exists' => 'Unit ID yang dipilih tidak valid. Pastikan unit ada di database. Unit ID diterima: :input',
         ]);
 
-        $unitName = Unit::find($validated['unit_id'])->nama_unit ?? 'Unit Tidak Diketahui'; // Ambil nama_unit
+        $unitData = $this->resolveUnit($request);
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'unit_id' => $validated['unit_id'],
-            'unit' => $unitName, // Ganti unit_kerja dengan nama_unit
+            'unit_id' => $unitData['unit_id'],
+            'unit' => $unitData['unit'],
+            'kode_unit' => $unitData['kode_unit'],
         ]);
 
         \Log::info('Created user with unit_id: ' . $user->unit_id);
@@ -242,7 +294,7 @@ class UserManageController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'unit_id' => $user->unit_id,
-            'unit' => $user->unit, // Ganti unit_kerja dengan unit jika ada
+            'unit' => $user->unit_name,
             'kode_unit' => $user->kode_unit,
             'roles' => $user->roles->pluck('name')->toArray(),
         ];
@@ -262,19 +314,23 @@ class UserManageController extends Controller
         \Log::info('Update request data: ', $request->all());
 
         $validated = $request->validate([
-            'unit_id' => 'required|integer|exists:unit,id_unit',
+            'unit_id' => 'nullable',
+            'unit' => 'nullable|string',
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8',
             'role' => 'required|string',
         ]);
 
-        $unitName = Unit::find($validated['unit_id'])->nama_unit ?? $user->unit; // Ambil nama_unit
+        $unitData = $this->resolveUnit($request);
 
         $user->name = $validated['name'];
         $user->email = $validated['email'];
-        $user->unit_id = $validated['unit_id'];
-        $user->unit = $unitName; // Ganti unit_kerja dengan nama_unit
+        $user->unit_id = $unitData['unit_id'];
+        $user->unit = $unitData['unit'];
+        if ($unitData['kode_unit']) {
+            $user->kode_unit = $unitData['kode_unit'];
+        }
         if ($validated['password']) {
             $user->password = Hash::make($validated['password']);
         }
