@@ -3,8 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem, User } from '@/types';
-import { PageProps } from '@/types/page-props';
+import { BreadcrumbItem, User, SharedPageProps as PageProps } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Eye, Pencil, Trash2, UserRoundPlus } from 'lucide-react';
@@ -36,7 +35,11 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
         });
     }
 
-    const adminUsers = users.filter((user: any) => user.roles?.includes('admin'));
+    const displayUsers = isSuperAdmin
+        ? users
+        : (users || []).filter((user: any) =>
+              Array.isArray(user.roles) ? user.roles.includes('admin') : user.roles === 'admin'
+          );
 
     const columns: ColumnDef<User>[] = [
         {
@@ -51,7 +54,7 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
         },
         {
             accessorKey: 'name',
-            header: 'User Admin',
+            header: isSuperAdmin ? 'Nama User' : 'User Admin',
             cell: ({ row }) => <div className="font-medium">{row.original.name}</div>,
         },
         {
@@ -62,11 +65,14 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
         {
             accessorKey: 'roles',
             header: 'Role',
-            cell: ({ row }) => (
-                <div>
-                    {Array.isArray(row.original.roles) ? row.original.roles.join(', ') : row.original.roles || '-'}
-                </div>
-            ),
+            cell: ({ row }) => {
+                const rawRoles = row.original.roles;
+                const rolesArray = Array.isArray(rawRoles) ? rawRoles : rawRoles ? [rawRoles] : [];
+                const formatted = rolesArray
+                    .map((role: any) => (role === 'owner-risk' ? 'operator' : role))
+                    .join(', ');
+                return <div>{formatted || '-'}</div>;
+            },
         },
         {
             id: 'actions',
@@ -127,13 +133,13 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
                         <Button asChild className="rounded-lg border bg-[#006d77] px-4 py-2 font-medium text-white">
                             <Link href="/user/manage/create">
                                 <UserRoundPlus />
-                                Tambah Admin
+                                Tambah User
                             </Link>
                         </Button>
                     )}
                 </div>
 
-                <DataTable columns={columns} data={adminUsers} />
+                <DataTable columns={columns} data={displayUsers || []} />
             </div>
         </AppLayout>
     );

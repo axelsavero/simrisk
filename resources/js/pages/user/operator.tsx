@@ -58,11 +58,14 @@ export default function Operator({ users }: PageProps<{ users: User[] }>) {
         {
             accessorKey: 'roles',
             header: 'Role',
-            cell: ({ row }) => (
-                <div>
-                    {Array.isArray(row.original.roles) ? row.original.roles.join(', ') : row.original.roles || '-'}
-                </div>
-            ),
+            cell: ({ row }) => {
+                const rawRoles = row.original.roles;
+                const rolesArray = Array.isArray(rawRoles) ? rawRoles : rawRoles ? [rawRoles] : [];
+                const formatted = rolesArray
+                    .map((role: any) => (role === 'owner-risk' ? 'operator' : role))
+                    .join(', ');
+                return <div>{formatted || '-'}</div>;
+            },
         },
         {
             id: 'actions',

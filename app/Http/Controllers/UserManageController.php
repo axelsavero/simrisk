@@ -16,7 +16,8 @@ class UserManageController extends Controller
 {
     public function index()
     {
-        if (!Auth::user()->hasRole('super-admin')) {
+        $authUser = Auth::user();
+        if (!$authUser || (!$authUser->hasRole('super-admin') && !$authUser->hasRole('admin'))) {
             abort(403, 'ANDA TIDAK MEMILIKI HAK AKSES UNTUK MELIHAT HALAMAN INI.');
         }
 
