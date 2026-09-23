@@ -30,21 +30,64 @@ class IdentifyRiskController extends Controller
         */
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $query = IdentifyRisk::with(['user.unit', 'penyebab', 'dampakKualitatif', 'penangananRisiko'])
-            ->orderByRaw("CASE WHEN validation_status IN ('pending', 'submitted') THEN 0 WHEN validation_status = 'draft' THEN 1 WHEN validation_status = 'rejected' THEN 2 ELSE 3 END")
-            ->oldest('id');
+        $user = Auth::user();
 
-        // Terapkan scope akses data
-        $query = $this->applyRoleScope($query, [
+        // Hanya owner-risk yang boleh melihat draft (miliknya sendiri). Role lain
+        // (super-admin, admin, pimpinan) hanya melihat risiko yang SUDAH dikirim.
+        $canSeeDraft = $this->isOwnerRisk($user);
+
+        // Base query: scope akses data per role, belum termasuk filter UI.
+        // Dipakai untuk menghitung kartu statistik agar angkanya lintas-halaman,
+        // bukan hanya data yang tampil di halaman pagination saat ini.
+        $baseQuery = $this->applyRoleScope(IdentifyRisk::query(), [
             'userColumn' => 'user_id',
             'unitColumn' => null,
             'unitViaUser' => true,
             'userRelation' => 'user',
         ])->where('is_active', true);
 
-        $paginatedRisks = $query->paginate(10);
+        if (!$canSeeDraft) {
+            $baseQuery->where('validation_status', '!=', IdentifyRisk::STATUS_DRAFT);
+        }
+
+        $totalStats = [
+            // "Total Risiko" hanya menghitung risiko yang sudah dikirim operator (bukan draft).
+            'total' => (clone $baseQuery)->where('validation_status', '!=', IdentifyRisk::STATUS_DRAFT)->count(),
+            'draft' => (clone $baseQuery)->where('validation_status', IdentifyRisk::STATUS_DRAFT)->count(),
+            'pending' => (clone $baseQuery)->whereIn('validation_status', [IdentifyRisk::STATUS_PENDING, IdentifyRisk::STATUS_SUBMITTED])->count(),
+            'approved' => (clone $baseQuery)->where('validation_status', IdentifyRisk::STATUS_APPROVED)->count(),
+            'rejected' => (clone $baseQuery)->where('validation_status', IdentifyRisk::STATUS_REJECTED)->count(),
+        ];
+
+        // Query daftar: base query + filter & pencarian dari UI (server-side agar
+        // filter bekerja pada seluruh data, bukan hanya baris yang sedang tampil).
+        $listQuery = (clone $baseQuery)
+            ->with(['user.unit', 'penyebab', 'dampakKualitatif', 'penangananRisiko'])
+            ->orderByRaw("CASE WHEN validation_status IN ('pending', 'submitted') THEN 0 WHEN validation_status = 'draft' THEN 1 WHEN validation_status = 'rejected' THEN 2 ELSE 3 END")
+            ->oldest('id');
+
+        $status = $request->input('status');
+        if ($status && $status !== 'all') {
+            if ($status === IdentifyRisk::STATUS_PENDING) {
+                $listQuery->whereIn('validation_status', [IdentifyRisk::STATUS_PENDING, IdentifyRisk::STATUS_SUBMITTED]);
+            } else {
+                $listQuery->where('validation_status', $status);
+            }
+        }
+
+        if ($request->filled('search')) {
+            $searchTerm = $request->input('search');
+            $listQuery->where(function ($q) use ($searchTerm) {
+                $q->where('id_identify', 'like', "%{$searchTerm}%")
+                    ->orWhere('risk_category', 'like', "%{$searchTerm}%")
+                    ->orWhere('description', 'like', "%{$searchTerm}%")
+                    ->orWhere('unit_kerja', 'like', "%{$searchTerm}%");
+            });
+        }
+
+        $paginatedRisks = $listQuery->paginate(10)->withQueryString();
 
         $identifyRisks = $paginatedRisks->through(function ($risk, $key) use ($paginatedRisks) {
             return [
@@ -85,23 +128,21 @@ class IdentifyRiskController extends Controller
 
         return Inertia::render('identifyrisk/index', [
             'identifyRisks' => $identifyRisks,
+            'filters' => [
+                'status' => $status ?: 'all',
+                'search' => $request->input('search', ''),
+            ],
             'permissions' => [
-                'canCreate' => Auth::user()->hasAnyRole(['super-admin', 'owner-risk']),
-                'canEdit' => Auth::user()->hasAnyRole(['super-admin', 'owner-risk']),
-                'canDelete' => Auth::user()->hasAnyRole(['super-admin', 'owner-risk']),
-                'canSubmit' => Auth::user()->hasRole('owner-risk'),
-                'canValidate' => Auth::user()->hasRole('super-admin'),
-                'canApprove' => Auth::user()->hasRole('super-admin'),
-                'canReject' => Auth::user()->hasRole('super-admin'),
+                'canCreate' => Auth::user()->hasAnyActiveRole(['super-admin', 'owner-risk']),
+                'canEdit' => Auth::user()->hasAnyActiveRole(['super-admin', 'owner-risk']),
+                'canDelete' => Auth::user()->hasAnyActiveRole(['super-admin', 'owner-risk']),
+                'canSubmit' => Auth::user()->hasActiveRole('owner-risk'),
+                'canValidate' => Auth::user()->hasActiveRole('super-admin'),
+                'canApprove' => Auth::user()->hasActiveRole('super-admin'),
+                'canReject' => Auth::user()->hasActiveRole('super-admin'),
             ],
             'userRole' => Auth::user()->getRoleNames(),
-            'totalStats' => [
-                'total' => $paginatedRisks->total(),
-                'draft' => (clone $query)->where('validation_status', 'draft')->count(),
-                'pending' => (clone $query)->whereIn('validation_status', ['pending', 'submitted'])->count(),
-                'approved' => (clone $query)->where('validation_status', 'approved')->count(),
-                'rejected' => (clone $query)->where('validation_status', 'rejected')->count(),
-            ],
+            'totalStats' => $totalStats,
         ]);
     }
 
@@ -149,7 +190,7 @@ class IdentifyRiskController extends Controller
         $validated['level'] = (int)$validated['probability'] * (int)$validated['impact'];
 
         // Set status berdasarkan role dengan logic yang tepat
-        if (Auth::user()->hasRole('owner-risk')) {
+        if (Auth::user()->hasActiveRole('owner-risk')) {
             $validated['validation_status'] = IdentifyRisk::STATUS_DRAFT; // Draft untuk owner-risk
         } else {
             $validated['validation_status'] = IdentifyRisk::STATUS_SUBMITTED; // Langsung submitted untuk super-admin
@@ -223,7 +264,7 @@ class IdentifyRiskController extends Controller
         }
 
         // Message sesuai role dan status
-        $message = Auth::user()->hasRole('owner-risk')
+        $message = Auth::user()->hasActiveRole('owner-risk')
             ? 'Risiko berhasil disimpan sebagai draft. Klik "Kirim" untuk mengirim ke validator.'
             : 'Identifikasi Risiko berhasil dibuat dan menunggu validasi.';
 
@@ -481,7 +522,7 @@ class IdentifyRiskController extends Controller
     public function submit(IdentifyRisk $identifyRisk)
     {
         // Cek permission sesuai kontrol akses yang tepat
-        if (!Auth::user()->hasRole('owner-risk') && !Auth::user()->hasRole('super-admin')) {
+        if (!Auth::user()->hasAnyActiveRole(['owner-risk', 'super-admin'])) {
             abort(403, 'Anda tidak memiliki izin untuk mengirim risiko.');
         }
 
@@ -506,7 +547,7 @@ class IdentifyRiskController extends Controller
     public function approve(Request $request, IdentifyRisk $identifyRisk)
     {
         // Cek permission super-admin
-        if (!Auth::user()->hasRole('super-admin')) {
+        if (!Auth::user()->hasActiveRole('super-admin')) {
             abort(403, 'Hanya Super Admin yang dapat menyetujui risiko.');
         }
 
@@ -543,7 +584,7 @@ class IdentifyRiskController extends Controller
     public function reject(Request $request, IdentifyRisk $identifyRisk)
     {
         // Cek permission super-admin
-        if (!Auth::user()->hasRole('super-admin')) {
+        if (!Auth::user()->hasActiveRole('super-admin')) {
             abort(403, 'Hanya Super Admin yang dapat menolak risiko.');
         }
 

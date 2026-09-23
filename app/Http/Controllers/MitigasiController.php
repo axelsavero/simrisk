@@ -26,7 +26,9 @@ class MitigasiController extends Controller
     private const VALIDATION_STATUS_REJECTED = 'rejected';
 
     /**
-     * Check if user has specific role
+     * Check if user's ACTIVE role (bukan sekadar salah satu role yang dimiliki) sama dengan $role.
+     * Untuk akun multi-role, ini memastikan hak akses hanya berlaku sesuai role yang sedang
+     * dipakai (lihat User::hasActiveRole() dan toggle role di dashboard).
      */
     protected function hasRole($user, $role): bool
     {
@@ -34,21 +36,11 @@ class MitigasiController extends Controller
             return false;
         }
 
-        // Ensure roles are loaded
         if (!$user->relationLoaded('roles')) {
             $user->load('roles');
         }
 
-        if (!$user->roles) {
-            return false;
-        }
-
-        // If roles is a Collection, convert it to array
-        $roles = $user->roles instanceof \Illuminate\Support\Collection
-            ? $user->roles->pluck('name')->toArray()
-            : (is_array($user->roles) ? $user->roles : []);
-
-        return in_array($role, $roles);
+        return $user->hasActiveRole($role);
     }
 
     /**
@@ -93,36 +85,54 @@ class MitigasiController extends Controller
             $user->load('roles');
         }
 
-        $query = Mitigasi::with(['identifyRisk.user', 'validationProcessor']);
+        // Base query: hanya scope akses data per role, TANPA filter dari UI.
+        // Dipakai untuk kartu statistik agar angkanya dihitung dari seluruh data
+        // (lintas halaman), bukan hanya baris yang tampil di halaman saat ini.
+        $baseQuery = Mitigasi::query();
 
         if ($this->isOwnerRisk($user)) {
             // Owner Risk melihat semua mitigasi dari risiko yang ia buat.
-            $query->whereHas('identifyRisk', function ($q) use ($user) {
+            $baseQuery->whereHas('identifyRisk', function ($q) use ($user) {
                 $q->where('user_id', $user->id);
             });
         } else {
             // Role lain (Super Admin, Admin, Pimpinan) hanya melihat yang BUKAN draft.
-            $query->where('validation_status', '!=', self::VALIDATION_STATUS_DRAFT);
+            $baseQuery->where('validation_status', '!=', self::VALIDATION_STATUS_DRAFT);
 
             // Admin dan Pimpinan hanya melihat mitigasi dari unit mereka.
             if (($this->isAdmin($user) || $this->isPimpinan($user)) && $user->unit_id) {
-                // INI PERBAIKAN UTAMA:
                 // Filter mitigasi berdasarkan unit_id dari USER yang membuat risiko.
-                $query->whereHas('identifyRisk.user', function ($userQuery) use ($user) {
+                $baseQuery->whereHas('identifyRisk.user', function ($userQuery) use ($user) {
                     $userQuery->where('unit_id', $user->unit_id);
                 });
             }
             // Super Admin tidak memerlukan filter unit tambahan, bisa melihat semua.
         }
 
+        $totalStats = [
+            // "Total Mitigasi" hanya menghitung yang sudah dikirim (bukan draft).
+            'total' => (clone $baseQuery)->where('validation_status', '!=', self::VALIDATION_STATUS_DRAFT)->count(),
+            'draft' => (clone $baseQuery)->where('validation_status', self::VALIDATION_STATUS_DRAFT)->count(),
+            'pending' => (clone $baseQuery)->whereIn('validation_status', [self::VALIDATION_STATUS_PENDING, self::VALIDATION_STATUS_SUBMITTED])->count(),
+            'approved' => (clone $baseQuery)->where('validation_status', self::VALIDATION_STATUS_APPROVED)->count(),
+            'rejected' => (clone $baseQuery)->where('validation_status', self::VALIDATION_STATUS_REJECTED)->count(),
+        ];
+
+        $query = (clone $baseQuery)->with(['identifyRisk.user', 'validationProcessor']);
+
         // Filter berdasarkan status
-        if ($request->filled('status_mitigasi')) { // <--- BENAR
+        if ($request->filled('status_mitigasi')) {
             $query->where('status_mitigasi', $request->status_mitigasi);
         }
 
-        // Filter berdasarkan validation status
+        // Filter berdasarkan validation status.
+        // 'pending' mencakup data lama yang masih berstatus 'submitted'.
         if ($request->filled('validation_status')) {
-            $query->where('validation_status', $request->validation_status);
+            if ($request->validation_status === self::VALIDATION_STATUS_PENDING) {
+                $query->whereIn('validation_status', [self::VALIDATION_STATUS_PENDING, self::VALIDATION_STATUS_SUBMITTED]);
+            } else {
+                $query->where('validation_status', $request->validation_status);
+            }
         }
 
         // Filter berdasarkan strategi mitigasi
@@ -143,14 +153,16 @@ class MitigasiController extends Controller
                     ->orWhere('deskripsi_mitigasi', 'like', "%{$searchTerm}%")
                     ->orWhere('strategi_mitigasi', 'like', "%{$searchTerm}%")
                     ->orWhereHas('identifyRisk', function ($subQ) use ($searchTerm) {
-                        $subQ->where('description', 'like', "%{$searchTerm}%"); // C  hanged from judul_risiko to description
+                        $subQ->where('description', 'like', "%{$searchTerm}%")
+                            ->orWhere('id_identify', 'like', "%{$searchTerm}%");
                     });
             });
         }
 
         $mitigasis = $query->orderByRaw("CASE WHEN validation_status IN ('pending', 'submitted') THEN 0 WHEN validation_status = 'draft' THEN 1 WHEN validation_status = 'rejected' THEN 2 ELSE 3 END")
             ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
         // Add permissions to each mitigasi
         $mitigasis->getCollection()->transform(function ($mitigasi) use ($user) {
@@ -169,6 +181,11 @@ class MitigasiController extends Controller
         $validationStatusOptions = Mitigasi::getValidationStatusOptions();
         $strategiOptions = Mitigasi::getStrategiOptions();
 
+        // Opsi "Draft" hanya relevan untuk owner-risk; role lain tidak melihat draft.
+        if (!$this->isOwnerRisk($user)) {
+            unset($validationStatusOptions[self::VALIDATION_STATUS_DRAFT]);
+        }
+
         // Get identify risks for filter (based on user role)
         $identifyRisksQuery = IdentifyRisk::select('id', 'id_identify', 'description');
         if ($this->isAdmin($user)) {
@@ -184,6 +201,8 @@ class MitigasiController extends Controller
             'statusOptions' => $statusOptions,
             'validationStatusOptions' => $validationStatusOptions,
             'strategiOptions' => $strategiOptions,
+            'identifyRisks' => $identifyRisks,
+            'totalStats' => $totalStats,
         ]);
     }
 

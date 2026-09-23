@@ -3,8 +3,9 @@
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, IdentifyRisk } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { Hourglass, Lightbulb, Paperclip, Save, SquarePen, Wallet, X } from 'lucide-react';
-import React from 'react';
+import { FileClock, Hourglass, Lightbulb, Paperclip, Save, SquarePen, Trash2, Wallet, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { identifyRiskFormSchema } from '@/lib/validations/identify-risk';
 
 interface FormProps {
     identifyRisk?: IdentifyRisk | null;
@@ -34,8 +35,41 @@ interface FormData {
     bukti_risiko_file: File | null;
 }
 
+const DRAFT_FIELDS: Array<keyof FormData> = [
+    'id_identify',
+    'is_active',
+    'risk_category',
+    'identification_date_start',
+    'identification_date_end',
+    'description',
+    'nama_risiko',
+    'jabatan_risiko',
+    'no_kontak',
+    'strategi',
+    'pengendalian_internal',
+    'biaya_penangan',
+    'probability',
+    'impact',
+    'penyebab',
+    'dampak_kualitatif',
+    'penanganan_risiko',
+    'bukti_risiko_nama',
+];
+
 export default function Form({ identifyRisk = null }: FormProps) {
-    const { data, setData, post, put, processing, errors } = useForm<FormData>({
+    // Bukti_risiko_file (objek File) sengaja tidak disertakan karena tidak bisa disimpan ke localStorage.
+    const draftKey = identifyRisk ? `identifyrisk-draft-edit-${identifyRisk.id}` : 'identifyrisk-draft-new';
+
+    const [pendingDraft, setPendingDraft] = useState<Partial<FormData> | null>(() => {
+        try {
+            const saved = localStorage.getItem(draftKey);
+            return saved ? JSON.parse(saved) : null;
+        } catch {
+            return null;
+        }
+    });
+
+    const { data, setData, post, put, processing, errors, setError, clearErrors, transform } = useForm<FormData>({
         // Existing fields
         id_identify: identifyRisk?.id_identify || '',
         is_active: identifyRisk?.is_active ?? true,
@@ -59,6 +93,41 @@ export default function Form({ identifyRisk = null }: FormProps) {
         bukti_risiko_nama: '',
         bukti_risiko_file: null,
     });
+
+    // Autosave draft ke localStorage setiap kali data berubah, kecuali saat menunggu keputusan pengguna atas draft yang ditemukan.
+    useEffect(() => {
+        if (pendingDraft) return;
+        try {
+            const draftData = Object.fromEntries(DRAFT_FIELDS.map((field) => [field, data[field]]));
+            localStorage.setItem(draftKey, JSON.stringify(draftData));
+        } catch {
+            // Abaikan (mis. localStorage penuh/tidak tersedia)
+        }
+    }, [data, pendingDraft, draftKey]);
+
+    function loadDraft() {
+        if (pendingDraft) {
+            setData((current) => ({ ...current, ...pendingDraft }));
+        }
+        setPendingDraft(null);
+    }
+
+    function discardDraft() {
+        try {
+            localStorage.removeItem(draftKey);
+        } catch {
+            // Abaikan
+        }
+        setPendingDraft(null);
+    }
+
+    function clearDraft() {
+        try {
+            localStorage.removeItem(draftKey);
+        } catch {
+            // Abaikan
+        }
+    }
 
     // Dynamic field functions for Penyebab
     function addPenyebab() {
@@ -123,23 +192,38 @@ export default function Form({ identifyRisk = null }: FormProps) {
     // 🔥 UPDATED: Submit function dengan file upload support
     function submit(e: React.FormEvent) {
         e.preventDefault();
+        clearErrors();
 
         // Filter empty descriptions
-        const submitData = {
+        const filteredData = {
             ...data,
             penyebab: data.penyebab.filter((p) => p.description.trim() !== ''),
             dampak_kualitatif: data.dampak_kualitatif.filter((d) => d.description.trim() !== ''),
             penanganan_risiko: data.penanganan_risiko.filter((p) => p.description.trim() !== ''),
-            biaya_penangan: data.biaya_penangan ? parseFloat(data.biaya_penangan) : null,
         };
 
+        const result = identifyRiskFormSchema.safeParse(filteredData);
+        if (!result.success) {
+            result.error.issues.forEach((issue) => {
+                setError(issue.path[0] as keyof FormData, issue.message);
+            });
+            return;
+        }
+
+        transform(() => ({
+            ...filteredData,
+            biaya_penangan: filteredData.biaya_penangan ? parseFloat(filteredData.biaya_penangan) : null,
+        }));
+
         if (identifyRisk && identifyRisk.id) {
-            put(route('identify-risk.update', identifyRisk.id), submitData, {
+            put(route('identify-risk.update', identifyRisk.id), {
                 forceFormData: true,
+                onSuccess: clearDraft,
             });
         } else {
-            post(route('identify-risk.store'), submitData, {
+            post(route('identify-risk.store'), {
                 forceFormData: true,
+                onSuccess: clearDraft,
             });
         }
     }
@@ -206,6 +290,40 @@ export default function Form({ identifyRisk = null }: FormProps) {
                                     untuk mengirimkannya ke validator.
                                 </p>
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Banner draft otomatis: muncul jika ada isian form yang belum sempat disimpan */}
+                {pendingDraft && (
+                    <div className="mb-6 flex items-center justify-between gap-4 rounded-lg border-l-4 border-blue-400 bg-blue-50 p-4">
+                        <div className="flex items-start">
+                            <div className="flex-shrink-0">
+                                <FileClock size={20} className="text-blue-600" />
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm text-blue-700">
+                                    <strong>Draft ditemukan:</strong> Ada isian sebelumnya yang belum tersimpan. Lanjutkan mengisi dari draft
+                                    tersebut atau buang draft dan mulai dari awal.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex flex-shrink-0 gap-2">
+                            <button
+                                type="button"
+                                onClick={loadDraft}
+                                className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-blue-700"
+                            >
+                                Lanjutkan Draft
+                            </button>
+                            <button
+                                type="button"
+                                onClick={discardDraft}
+                                className="flex items-center gap-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-600 transition hover:bg-gray-100"
+                            >
+                                <Trash2 size={14} />
+                                Buang Draft
+                            </button>
                         </div>
                     </div>
                 )}

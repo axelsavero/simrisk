@@ -10,6 +10,7 @@ import HeadingSmall from '@/components/heading-small';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { passwordFormSchema } from '@/lib/validations/settings';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -22,7 +23,7 @@ export default function Password() {
     const passwordInput = useRef<HTMLInputElement>(null);
     const currentPasswordInput = useRef<HTMLInputElement>(null);
 
-    const { data, setData, errors, put, reset, processing, recentlySuccessful } = useForm({
+    const { data, setData, errors, put, reset, processing, recentlySuccessful, setError, clearErrors } = useForm({
         current_password: '',
         password: '',
         password_confirmation: '',
@@ -30,6 +31,15 @@ export default function Password() {
 
     const updatePassword: FormEventHandler = (e) => {
         e.preventDefault();
+        clearErrors();
+
+        const result = passwordFormSchema.safeParse(data);
+        if (!result.success) {
+            result.error.issues.forEach((issue) => {
+                setError(issue.path[0] as 'current_password' | 'password' | 'password_confirmation', issue.message);
+            });
+            return;
+        }
 
         put(route('password.update'), {
             preserveScroll: true,

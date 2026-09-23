@@ -10,7 +10,7 @@ import Swal from 'sweetalert2';
 
 export default function Operator({ users }: PageProps<{ users: User[] }>) {
     const { auth, flash } = usePage<PageProps>().props;
-    const isAdmin = auth.user?.roles?.includes('admin');
+    const isAdmin = auth.user?.active_role === 'admin';
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },

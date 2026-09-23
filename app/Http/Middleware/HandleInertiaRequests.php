@@ -50,6 +50,8 @@ class HandleInertiaRequests extends Middleware
                 'name' => $request->user()->name,
                 'email' => $request->user()->email,
                 'roles' => $request->user()->roles->pluck('name'),
+                // Role yang sedang aktif dipakai (menentukan menu & akses modul saat multi-role)
+                'active_role' => $request->user()->activeRole(),
             ] : null, // Jika tidak ada user (guest), kirim null
         ],
 

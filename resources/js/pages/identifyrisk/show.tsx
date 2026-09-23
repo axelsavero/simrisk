@@ -42,10 +42,10 @@ interface ShowProps {
 
 export default function Show() {
     const { identifyRisk, auth }: any = usePage<any>().props;
-    const roles: string[] = auth?.user?.roles || [];
-    const isSuperAdmin = roles.includes('super-admin');
-    const isAdmin = roles.includes('admin');
-    const isOwnerRisk = roles.includes('owner-risk');
+    const activeRole = auth?.user?.active_role;
+    const isSuperAdmin = activeRole === 'super-admin';
+    const isAdmin = activeRole === 'admin';
+    const isOwnerRisk = activeRole === 'owner-risk';
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },

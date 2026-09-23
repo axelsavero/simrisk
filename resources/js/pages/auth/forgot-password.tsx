@@ -9,14 +9,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
+import { forgotPasswordFormSchema } from '@/lib/validations/auth';
 
 export default function ForgotPassword({ status }: { status?: string }) {
-    const { data, setData, post, processing, errors } = useForm<Required<{ email: string }>>({
+    const { data, setData, post, processing, errors, setError, clearErrors } = useForm<Required<{ email: string }>>({
         email: '',
     });
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
+        clearErrors();
+
+        const result = forgotPasswordFormSchema.safeParse(data);
+        if (!result.success) {
+            result.error.issues.forEach((issue) => {
+                setError(issue.path[0] as 'email', issue.message);
+            });
+            return;
+        }
 
         post(route('password.email'));
     };

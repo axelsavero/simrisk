@@ -8,14 +8,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
+import { confirmPasswordFormSchema } from '@/lib/validations/auth';
 
 export default function ConfirmPassword() {
-    const { data, setData, post, processing, errors, reset } = useForm<Required<{ password: string }>>({
+    const { data, setData, post, processing, errors, reset, setError, clearErrors } = useForm<Required<{ password: string }>>({
         password: '',
     });
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
+        clearErrors();
+
+        const result = confirmPasswordFormSchema.safeParse(data);
+        if (!result.success) {
+            result.error.issues.forEach((issue) => {
+                setError(issue.path[0] as 'password', issue.message);
+            });
+            return;
+        }
 
         post(route('password.confirm'), {
             onFinish: () => reset('password'),

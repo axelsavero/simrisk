@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Auth;
 
 class User extends Authenticatable
 {
@@ -105,6 +106,48 @@ class User extends Authenticatable
     public function getRoleNames(): array
     {
         return $this->roles->pluck('name')->toArray();
+    }
+
+    /**
+     * Role yang sedang "dipakai" (aktif) oleh user pada sesi login saat ini.
+     * Untuk akun multi-role, ini menentukan modul/menu apa yang muncul serta
+     * bisa diakses selama role tersebut aktif. Bisa diubah lewat toggle role
+     * di dashboard (lihat ActiveRoleController).
+     */
+    public function activeRole(): ?string
+    {
+        $assignedRoles = $this->getRoleNames();
+
+        if (empty($assignedRoles)) {
+            return null;
+        }
+
+        if (Auth::check() && Auth::id() === $this->id) {
+            $sessionRole = session('active_role');
+            if ($sessionRole && in_array($sessionRole, $assignedRoles, true)) {
+                return $sessionRole;
+            }
+        }
+
+        return $assignedRoles[0];
+    }
+
+    /**
+     * Cek apakah role yang diberikan adalah role AKTIF user saat ini.
+     * Berbeda dengan hasRole(), yang hanya mengecek kepemilikan role
+     * tanpa memperhatikan role mana yang sedang aktif dipakai.
+     */
+    public function hasActiveRole(string $roleName): bool
+    {
+        return $this->activeRole() === $roleName;
+    }
+
+    /**
+     * Cek apakah role aktif user termasuk dalam daftar role yang diberikan.
+     */
+    public function hasAnyActiveRole(array $roleNames): bool
+    {
+        return in_array($this->activeRole(), $roleNames, true);
     }
 
     public function canManageRisks(): bool

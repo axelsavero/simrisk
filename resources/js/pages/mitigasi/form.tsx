@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
+import { mitigasiFormSchema } from '@/lib/validations/mitigasi';
 
 interface PageProps {
     identifyRisks: IdentifyRisk[];
@@ -92,7 +93,7 @@ export default function Create() {
     const { identifyRisks, selectedRiskId, statusOptions, strategiOptions, mitigasi } = usePage<PageProps>().props;
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
-    const { data, setData, processing, errors } = useForm<MitigasiFormData>({
+    const { data, setData, processing, errors, setError, clearErrors } = useForm<MitigasiFormData>({
         id: mitigasi?.id,
         identify_risk_id: mitigasi?.identify_risk_id || selectedRiskId || '',
         judul_mitigasi: mitigasi?.judul_mitigasi || '',
@@ -140,6 +141,15 @@ export default function Create() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        clearErrors();
+
+        const result = mitigasiFormSchema.safeParse(data);
+        if (!result.success) {
+            result.error.issues.forEach((issue) => {
+                setError(issue.path[0] as keyof MitigasiFormData, issue.message);
+            });
+            return;
+        }
 
         const formData = new FormData();
 

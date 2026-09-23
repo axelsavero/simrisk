@@ -127,8 +127,7 @@ export default function Dashboard({ riskMatrixData, mitigasiMatrixData, filterOp
     ];
 
     const { auth } = usePage().props as any;
-    const roles: string[] = auth?.user?.roles || [];
-    const isSuperAdmin = roles.includes('super-admin');
+    const isSuperAdmin = auth?.user?.active_role === 'super-admin';
 
     // Utility function to process API data, adapted from form.tsx
     // We no longer need processApiData since we're using a simpler API response structure

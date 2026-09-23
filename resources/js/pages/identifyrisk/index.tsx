@@ -49,6 +49,10 @@ type PageProps = {
         approved: number;
         rejected: number;
     };
+    filters?: {
+        status?: string;
+        search?: string;
+    };
 };
 
 const Pagination = ({ links }: { links: Array<{ url: string | null; label: string; active: boolean }> }) => {
@@ -84,18 +88,39 @@ const Pagination = ({ links }: { links: Array<{ url: string | null; label: strin
 };
 
 export default function Index() {
-    const { identifyRisks, flash, auth, permissions, totalStats } = usePage<PageProps>().props;
-    const roles: string[] = auth?.user?.roles || [];
-    const isSuperAdmin = roles.includes('super-admin');
-    const isAdmin = roles.includes('admin');
-    const isOwnerRisk = roles.includes('owner-risk');
-    const [filterStatus, setFilterStatus] = useState<string>('all');
-    const [searchTerm, setSearchTerm] = useState<string>('');
+    const { identifyRisks, flash, auth, permissions, totalStats, filters } = usePage<PageProps>().props;
+    // Gunakan role AKTIF (bukan semua role yang dimiliki) agar untuk akun multi-role,
+    // hanya aksi dari role yang sedang dipakai yang muncul.
+    const activeRole = auth?.user?.active_role;
+    const isSuperAdmin = activeRole === 'super-admin';
+    const isAdmin = activeRole === 'admin';
+    const isOwnerRisk = activeRole === 'owner-risk';
+    // Filter & pencarian diproses di server supaya bekerja pada SELURUH data,
+    // bukan hanya baris yang kebetulan tampil di halaman pagination saat ini.
+    const filterStatus = filters?.status || 'all';
+    const [searchTerm, setSearchTerm] = useState<string>(filters?.search || '');
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
     useEffect(() => {
         if (identifyRisks) setIsLoading(false);
     }, [identifyRisks]);
+
+    const applyQuery = (next: { status?: string; search?: string }) =>
+        router.get(
+            route('identify-risk.index'),
+            {
+                status: next.status ?? filterStatus,
+                search: next.search ?? searchTerm,
+            },
+            { preserveState: true, preserveScroll: true, replace: true },
+        );
+
+    // Debounce pencarian agar tidak request setiap ketikan.
+    useEffect(() => {
+        if (searchTerm === (filters?.search || '')) return;
+        const timer = setTimeout(() => applyQuery({ search: searchTerm }), 400);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
     if (isLoading) {
         return (
@@ -183,7 +208,7 @@ export default function Index() {
         );
 
     const canShowEdit = (item: IdentifyRisk) =>
-        auth?.user?.roles?.includes('super-admin')
+        isSuperAdmin
             ? item.validation_status === 'draft' || item.validation_status === 'rejected'
             : item.validation_status === 'draft' || item.validation_status === 'rejected';
     const canShowSubmit = (item: IdentifyRisk) => item.validation_status === 'draft' || item.validation_status === 'rejected';
@@ -209,19 +234,8 @@ export default function Index() {
             default: { label: 'Unknown', color: 'secondary', icon: <CircleHelp className="h-4 w-4 inline mr-1" /> },
         })[status] || { label: 'Unknown', color: 'secondary', icon: <CircleHelp className="h-4 w-4 inline mr-1" /> };
 
-    const filteredRisks = identifyRisks.data.filter((item: IdentifyRisk) => {
-        if ((isSuperAdmin || isAdmin) && item.validation_status === 'draft') {
-            return false;
-        }
-        const matchesSearch = [item.id_identify, item.risk_category, item.description, (item as any).unit_kerja || ''].some((field) =>
-            field.toLowerCase().includes(searchTerm.toLowerCase()),
-        );
-        const matchesFilter =
-            filterStatus === 'all' ||
-            (filterStatus === 'pending' && (item.validation_status === 'pending' || item.validation_status === 'submitted')) ||
-            (filterStatus !== 'pending' && item.validation_status === filterStatus);
-        return matchesSearch && matchesFilter;
-    });
+    // Data sudah difilter & dipaginasi di server.
+    const filteredRisks = identifyRisks.data;
 
     const showValidationActions = permissions?.canValidate;
 
@@ -432,17 +446,17 @@ export default function Index() {
                 <div className="stat-card flex items-center rounded-xl bg-white p-3.5 md:p-4 border border-gray-100 shadow-sm">
                     <ChartColumnIncreasing size={36} className="stat-icon text-blue-600 shrink-0" />
                     <div className="stat-content ml-3 min-w-0">
-                        <span className="stat-number block text-xl md:text-2xl font-bold text-gray-900">{totalStats?.total ?? identifyRisks.data.length}</span>
+                        <span className="stat-number block text-xl md:text-2xl font-bold text-gray-900">{totalStats?.total ?? 0}</span>
                         <span className="stat-label block text-xs md:text-sm text-gray-500 truncate">Total Risiko</span>
                     </div>
                 </div>
-                {!auth?.user?.roles?.includes('super-admin') && (
+                {!isSuperAdmin && (
                     <>
                         <div className="stat-card flex items-center rounded-xl bg-white p-3.5 md:p-4 border border-gray-100 shadow-sm">
                             <SquarePen size={36} className="stat-icon text-amber-500 shrink-0" />
                             <div className="stat-content ml-3 min-w-0">
                                 <span className="stat-number block text-xl md:text-2xl font-bold text-gray-900">
-                                    {totalStats?.draft ?? identifyRisks.data.filter((item) => item.validation_status === 'draft').length}
+                                    {totalStats?.draft ?? 0}
                                 </span>
                                 <span className="stat-label block text-xs md:text-sm text-gray-500 truncate">Draft</span>
                             </div>
@@ -452,9 +466,7 @@ export default function Index() {
                             <div className="stat-content ml-3 min-w-0">
                                 <span className="stat-number block text-xl md:text-2xl font-bold text-gray-900">
                                     {
-                                        totalStats?.pending ?? identifyRisks.data.filter(
-                                            (item) => item.validation_status === 'pending' || item.validation_status === 'submitted',
-                                        ).length
+                                        totalStats?.pending ?? 0
                                     }
                                 </span>
                                 <span className="stat-label block text-xs md:text-sm text-gray-500 truncate">Pending</span>
@@ -467,7 +479,7 @@ export default function Index() {
                     <CircleCheck size={36} className="stat-icon text-emerald-600 shrink-0" />
                     <div className="stat-content ml-3 min-w-0">
                         <span className="stat-number block text-xl md:text-2xl font-bold text-gray-900">
-                            {totalStats?.approved ?? identifyRisks.data.filter((item) => item.validation_status === 'approved').length}
+                            {totalStats?.approved ?? 0}
                         </span>
                         <span className="stat-label block text-xs md:text-sm text-gray-500 truncate">Disetujui</span>
                     </div>
@@ -476,7 +488,7 @@ export default function Index() {
                     <Cog size={36} className="stat-icon text-rose-600 shrink-0" />
                     <div className="stat-content ml-3 min-w-0">
                         <span className="stat-number block text-xl md:text-2xl font-bold text-gray-900">
-                            {totalStats?.rejected ?? identifyRisks.data.filter((item) => item.validation_status === 'rejected').length}
+                            {totalStats?.rejected ?? 0}
                         </span>
                         <span className="stat-label block text-xs md:text-sm text-gray-500 truncate">Butuh Perbaikan</span>
                     </div>
@@ -498,8 +510,13 @@ export default function Index() {
                 <div className="filter-tabs flex gap-2 overflow-x-auto pb-1 max-w-full shrink-0">
                     {['all', 'draft', 'pending', 'approved', 'rejected']
                         .filter((status) => {
-                            if (auth?.user?.roles?.includes('super-admin')) {
+                            // Super-admin & admin tidak pernah melihat draft orang lain,
+                            // jadi tab-nya tidak relevan untuk mereka.
+                            if (isSuperAdmin) {
                                 return !['draft', 'pending'].includes(status);
+                            }
+                            if (isAdmin) {
+                                return status !== 'draft';
                             }
                             return true;
                         })
@@ -511,7 +528,7 @@ export default function Index() {
                                         ? 'bg-[#006d77] text-white shadow-sm'
                                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
-                                onClick={() => setFilterStatus(status)}
+                                onClick={() => applyQuery({ status })}
                             >
                                 {status === 'all' ? 'Semua' : status === 'pending' ? 'Pending' : status.charAt(0).toUpperCase() + status.slice(1)}
                             </button>

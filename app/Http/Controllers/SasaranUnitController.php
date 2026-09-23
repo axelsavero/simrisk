@@ -16,7 +16,7 @@ class SasaranUnitController extends Controller
 	public function index()
 	{
 		$user = auth()->user();
-		if (!$user || !$user->hasRole('admin')) {
+		if (!$user || !$user->hasActiveRole('admin')) {
 			return redirect()->route('home');
 		}
 
@@ -32,7 +32,7 @@ class SasaranUnitController extends Controller
 	public function create()
 	{
 		$user = auth()->user();
-		if (!$user || !$user->hasRole('admin')) {
+		if (!$user || !$user->hasActiveRole('admin')) {
 			return redirect()->route('home');
 		}
 
@@ -48,7 +48,7 @@ class SasaranUnitController extends Controller
 	public function store(Request $request)
 	{
 		$user = auth()->user();
-		if (!$user || !$user->hasRole('admin')) {
+		if (!$user || !$user->hasActiveRole('admin')) {
 			return redirect()->route('home');
 		}
 
@@ -89,7 +89,7 @@ class SasaranUnitController extends Controller
 	public function show(SasaranUnit $sasaranUnit)
 	{
 		$user = auth()->user();
-		if (!$user || !$user->hasRole('admin')) {
+		if (!$user || !$user->hasActiveRole('admin')) {
 			return redirect()->route('home');
 		}
 
@@ -105,7 +105,7 @@ class SasaranUnitController extends Controller
 	public function edit(SasaranUnit $sasaranUnit)
 	{
 		$user = auth()->user();
-		if (!$user || !$user->hasRole('admin')) {
+		if (!$user || !$user->hasActiveRole('admin')) {
 			return redirect()->route('home');
 		}
 
@@ -136,7 +136,7 @@ class SasaranUnitController extends Controller
 	{
 		try {
 			$user = auth()->user();
-			if (!$user || !$user->hasRole('admin')) {
+			if (!$user || !$user->hasActiveRole('admin')) {
 				return redirect()->route('home');
 			}
 
@@ -192,7 +192,7 @@ class SasaranUnitController extends Controller
 	public function destroy(SasaranUnit $sasaranUnit)
 	{
 		$user = auth()->user();
-		if (!$user || !$user->hasRole('admin')) {
+		if (!$user || !$user->hasActiveRole('admin')) {
 			return redirect()->route('home');
 		}
 

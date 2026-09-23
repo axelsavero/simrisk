@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
+import { registerFormSchema } from '@/lib/validations/auth';
 
 type RegisterForm = {
     name: string;
@@ -17,7 +18,7 @@ type RegisterForm = {
 };
 
 export default function Register() {
-    const { data, setData, post, processing, errors, reset } = useForm<Required<RegisterForm>>({
+    const { data, setData, post, processing, errors, reset, setError, clearErrors } = useForm<Required<RegisterForm>>({
         name: '',
         email: '',
         password: '',
@@ -26,6 +27,16 @@ export default function Register() {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
+        clearErrors();
+
+        const result = registerFormSchema.safeParse(data);
+        if (!result.success) {
+            result.error.issues.forEach((issue) => {
+                setError(issue.path[0] as keyof RegisterForm, issue.message);
+            });
+            return;
+        }
+
         post(route('register'), {
             onFinish: () => reset('password', 'password_confirmation'),
         });

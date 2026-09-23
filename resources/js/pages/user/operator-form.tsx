@@ -5,6 +5,7 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
+import { operatorCreateFormSchema, operatorFormSchema } from '@/lib/validations/user';
 
 interface Unit {
     id: number;
@@ -23,18 +24,15 @@ interface Pegawai {
 export default function OperatorForm({ user = null }: { user?: any }) {
     const { props } = usePage();
     const auth = props.auth || {};
-    const currentUser = auth.user || {};
-    const roles = currentUser?.roles || currentUser?.role;
-    const isAdmin = Array.isArray(roles)
-        ? roles.some((r: any) => (r?.name ? r.name === 'admin' : r === 'admin'))
-        : roles === 'admin';
+    const currentUser: any = auth.user || {};
+    const isAdmin = currentUser?.active_role === 'admin';
 
     const [units, setUnits] = useState<Unit[]>(currentUser?.unit_id && currentUser?.unit ? [{ id: currentUser.unit_id, name: currentUser.unit }] : []);
     const [pegawaiUnit, setPegawaiUnit] = useState<Pegawai[]>([]);
     const [loading, setLoading] = useState({ units: false, pegawai: false });
     const [apiError, setApiError] = useState<string>('');
 
-    const { data, setData, post, put, processing, errors } = useForm({
+    const { data, setData, post, put, processing, errors, setError, clearErrors } = useForm({
         unit_id: user?.unit_id?.toString() || (currentUser?.unit_id?.toString() || ''),
         unit: user?.unit || currentUser?.unit || '',
         name: user?.name || '',
@@ -149,26 +147,23 @@ export default function OperatorForm({ user = null }: { user?: any }) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setApiError(''); // Bersihkan error sebelumnya
+        setApiError('');
+        clearErrors();
 
         if (!isAdmin) {
             setApiError('Akses ditolak: hanya admin yang dapat menambahkan operator.');
             return;
         }
 
-        // Validasi 1: Kelengkapan data
-        if (!data.unit_id || !data.unit || !data.name || !data.email) {
-            setApiError('❌ Unit, nama, dan email harus diisi.');
+        const schema = user ? operatorFormSchema : operatorCreateFormSchema;
+        const result = schema.safeParse(data);
+        if (!result.success) {
+            result.error.issues.forEach((issue) => {
+                setError(issue.path[0] as keyof typeof data, issue.message);
+            });
             return;
         }
 
-        // Validasi 2: Domain email
-        if (!data.email.endsWith('@unj.ac.id')) {
-            setApiError('❌ Domain email harus @unj.ac.id');
-            return;
-        }
-
-        // Jika lolos validasi, lanjutkan submit
         if (user) {
             put(`/user/operator/${user.id}`);
         } else {
@@ -191,7 +186,15 @@ export default function OperatorForm({ user = null }: { user?: any }) {
                     <h2 className="mb-6 text-2xl font-semibold">Akses Ditolak</h2>
                     <div className="rounded-md border p-6 bg-white shadow">
                         <p className="mb-4">Halaman ini hanya dapat diakses oleh pengguna dengan peran <strong>admin</strong>.</p>
-                        <p className="mb-4">Anda login sebagai: {currentUser?.name || '–'} ({Array.isArray(roles) ? roles.map((r: any) => r?.name || r).join(', ') : roles})</p>
+                        <p className="mb-4">
+                            Anda login sebagai: {currentUser?.name || '–'} (role aktif: {currentUser?.active_role || '-'})
+                        </p>
+                        {Array.isArray(currentUser?.roles) && currentUser.roles.length > 1 && (
+                            <p className="mb-4 text-sm text-gray-500">
+                                Akun Anda memiliki beberapa role. Ganti role aktif ke <strong>admin</strong> lewat menu user di sidebar untuk
+                                mengakses halaman ini.
+                            </p>
+                        )}
                         <Button asChild variant="outline">
                             <Link href="/dashboard">Kembali ke Dashboard</Link>
                         </Button>

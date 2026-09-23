@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
+import { resetPasswordFormSchema } from '@/lib/validations/auth';
 
 interface ResetPasswordProps {
     token: string;
@@ -21,7 +22,7 @@ type ResetPasswordForm = {
 };
 
 export default function ResetPassword({ token, email }: ResetPasswordProps) {
-    const { data, setData, post, processing, errors, reset } = useForm<Required<ResetPasswordForm>>({
+    const { data, setData, post, processing, errors, reset, setError, clearErrors } = useForm<Required<ResetPasswordForm>>({
         token: token,
         email: email,
         password: '',
@@ -30,6 +31,16 @@ export default function ResetPassword({ token, email }: ResetPasswordProps) {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
+        clearErrors();
+
+        const result = resetPasswordFormSchema.safeParse(data);
+        if (!result.success) {
+            result.error.issues.forEach((issue) => {
+                setError(issue.path[0] as keyof ResetPasswordForm, issue.message);
+            });
+            return;
+        }
+
         post(route('password.store'), {
             onFinish: () => reset('password', 'password_confirmation'),
         });

@@ -2,9 +2,10 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, User } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
+import { userCreateFormSchema, userFormSchema } from '@/lib/validations/user';
 
 interface Unit {
     id: number;
@@ -26,13 +27,14 @@ interface FormProps {
     user?: User | null;
 }
 
-interface FormData {
+interface UserFormData {
     unit_id: string;
     unit: string;
     name: string;
     email: string;
     password: string;
-    role: string;
+    roles: string[];
+    [key: string]: string | string[];
 }
 
 export default function AdminForm({ allRoles, user = null }: FormProps) {
@@ -42,13 +44,13 @@ export default function AdminForm({ allRoles, user = null }: FormProps) {
     const [apiError, setApiError] = useState<string>('');
     const [throttleUntil, setThrottleUntil] = useState<number>(0);
 
-    const { data, setData, post, put, processing, errors } = useForm<FormData>({
+    const { data, setData, post, put, processing, errors, setError, clearErrors } = useForm<UserFormData>({
         unit_id: user?.unit_id?.toString() || '',
         unit: user?.unit?.toString() || '',
         name: user?.name || '',
         email: user?.email || '',
         password: '',
-        role: user?.roles?.[0]?.name || 'admin',
+        roles: (user?.roles || []).map((r: any) => (typeof r === 'string' ? r : r?.name)).filter(Boolean),
     });
 
     const defaultRoles = ['admin', 'super-admin', 'owner-risk', 'pimpinan'];
@@ -241,7 +243,16 @@ export default function AdminForm({ allRoles, user = null }: FormProps) {
         fetchUnits();
     }, []);
 
+    const isFirstRender = useRef(true);
     useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            if (data.unit) {
+                fetchPegawaiByUnit(data.unit);
+            }
+            return;
+        }
+
         if (data.unit) {
             fetchPegawaiByUnit(data.unit);
             setData('name', '');
@@ -255,21 +266,18 @@ export default function AdminForm({ allRoles, user = null }: FormProps) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setApiError(''); // Bersihkan error sebelumnya
+        setApiError('');
+        clearErrors();
 
-        // Validasi 1: Kelengkapan data
-        if (!data.name || !data.email || !data.unit_id) {
-            setApiError('❌ Unit, nama, dan email harus diisi.');
+        const schema = user ? userFormSchema : userCreateFormSchema;
+        const result = schema.safeParse(data);
+        if (!result.success) {
+            result.error.issues.forEach((issue) => {
+                setError(issue.path[0] as keyof UserFormData, issue.message);
+            });
             return;
         }
 
-        // Validasi 2: Domain email
-        if (!data.email.endsWith('@unj.ac.id')) {
-            setApiError('❌ Domain email harus @unj.ac.id');
-            return;
-        }
-
-        // Jika lolos validasi, lanjutkan submit
         if (user) {
             put(`/user/manage/${user.id}`);
         } else {
@@ -400,18 +408,15 @@ export default function AdminForm({ allRoles, user = null }: FormProps) {
                     <div>
                         <label className="mb-1 block font-medium">Role</label>
                         <Select
+                            isMulti
                             options={roleOptions}
-                            value={
-                                data.role
-                                    ? { value: data.role, label: formatRoleLabel(data.role) }
-                                    : null
-                            }
-                            onChange={(selected) => selected && setData('role', selected.value)}
+                            value={roleOptions.filter((opt) => data.roles.includes(opt.value))}
+                            onChange={(selected) => setData('roles', (selected ? selected.map((opt) => opt.value) : []) as UserFormData['roles'])}
                             isDisabled={isThrottled}
-                            placeholder="-- Pilih Role --"
+                            placeholder="-- Pilih Role (bisa lebih dari satu) --"
                             classNamePrefix="react-select"
                         />
-                        {errors.role && <div className="text-sm text-red-500">{errors.role}</div>}
+                        {errors.roles && <div className="text-sm text-red-500">{errors.roles}</div>}
                     </div>
 
                     <div className="mt-6 flex justify-between">

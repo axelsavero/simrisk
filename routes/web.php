@@ -13,15 +13,18 @@ use App\Http\Controllers\ReferensiController;
 use App\Http\Controllers\SasaranUnitController;
 use App\Http\Controllers\SSO\SSOController;
 use App\Http\Controllers\WelcomeController;
+use App\Http\Controllers\ActiveRoleController;
 
 Route::get('/', [WelcomeController::class, 'index'])->name('home');
 
 Route::middleware(['auth'])->group(function () {
+    Route::post('/active-role', [ActiveRoleController::class, 'update'])->name('active-role.update');
     Route::get('/user/manage', [UserManageController::class, 'index'])->name('user.manage.index');
     Route::get('/user/manage/create', [UserManageController::class, 'create'])->name('user.manage.create');
     Route::post('/user/manage', [UserManageController::class, 'store'])->name('user.manage.store');
     Route::get('/user/manage/{user}/edit', [UserManageController::class, 'edit'])->name('user.manage.edit');
     Route::put('/user/manage/{user}', [UserManageController::class, 'update'])->name('user.manage.update');
+    Route::patch('/user/manage/{user}/roles', [UserManageController::class, 'updateRoles'])->name('user.manage.updateRoles');
     Route::delete('/user/manage/{user}', [UserManageController::class, 'destroy'])->name('user.manage.destroy');
     Route::get('/api/sipeg/{any}', [SipegProxyController::class, 'proxy'])->where('any', '.*');
 });

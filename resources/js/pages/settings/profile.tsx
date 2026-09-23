@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import { profileFormSchema } from '@/lib/validations/settings';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -27,13 +28,22 @@ type ProfileForm = {
 export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
     const { auth } = usePage<SharedData>().props;
 
-    const { data, setData, patch, errors, processing, recentlySuccessful } = useForm<Required<ProfileForm>>({
+    const { data, setData, patch, errors, processing, recentlySuccessful, setError, clearErrors } = useForm<Required<ProfileForm>>({
         name: auth.user.name,
         email: auth.user.email,
     });
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
+        clearErrors();
+
+        const result = profileFormSchema.safeParse(data);
+        if (!result.success) {
+            result.error.issues.forEach((issue) => {
+                setError(issue.path[0] as keyof ProfileForm, issue.message);
+            });
+            return;
+        }
 
         patch(route('profile.update'), {
             preserveScroll: true,

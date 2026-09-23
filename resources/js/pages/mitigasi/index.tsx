@@ -37,6 +37,13 @@ interface PageProps {
     strategiOptions: Record<string, string>;
     auth: any;
     identifyRisks: Array<{ id: number; id_identify: string; description: string }>;
+    totalStats?: {
+        total: number;
+        draft: number;
+        pending: number;
+        approved: number;
+        rejected: number;
+    };
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -164,17 +171,20 @@ const getValidationStatusLabel = (status: string) => {
 };
 
 export default function Index() {
-    const { mitigasis, filters, statusOptions, strategiOptions, validationStatusOptions, auth }: PageProps = usePage<InertiaPageProps & PageProps>()
-        .props;
-    const roles: string[] = auth?.user?.roles || [];
-    const isSuperAdmin = roles.includes('super-admin');
-    const isAdmin = roles.includes('admin');
-    const isOwnerRisk = roles.includes('owner-risk');
+    const { mitigasis, filters, statusOptions, strategiOptions, validationStatusOptions, auth, totalStats }: PageProps = usePage<
+        InertiaPageProps & PageProps
+    >().props;
+    const activeRole = auth?.user?.active_role;
+    const isSuperAdmin = activeRole === 'super-admin';
+    const isAdmin = activeRole === 'admin';
+    const isOwnerRisk = activeRole === 'owner-risk';
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const [showFilters, setShowFilters] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    const filteredMitigasis = mitigasis.data.filter((mitigasi) => mitigasi.validation_status !== 'draft' || isOwnerRisk);
+    // Penyaringan draft & filter lain sudah dilakukan di server (lihat MitigasiController::index),
+    // jadi baris yang diterima di sini tinggal ditampilkan apa adanya.
+    const filteredMitigasis = mitigasis.data;
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -195,7 +205,7 @@ export default function Index() {
         );
     };
 
-    const handleFilter = (key: string, value: string) => {
+    const handleFilter = (key: keyof PageProps['filters'], value: string) => {
         setIsLoading(true);
         const newFilters = { ...filters, [key]: value };
         if (!value) {
@@ -563,6 +573,47 @@ export default function Index() {
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Manajemen Mitigasi</h1>
                         <p className="mt-1 text-sm text-gray-600">Kelola rencana mitigasi risiko dan pantau progress implementasi</p>
+                    </div>
+                </div>
+
+                {/* Stats Cards - angka dihitung server-side dari seluruh data, bukan per halaman */}
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 md:gap-4">
+                    <div className="flex items-center rounded-xl border border-gray-100 bg-white p-3.5 shadow-sm md:p-4">
+                        <TrendingUp size={36} className="shrink-0 text-blue-600" />
+                        <div className="ml-3 min-w-0">
+                            <span className="block text-xl font-bold text-gray-900 md:text-2xl">{totalStats?.total ?? 0}</span>
+                            <span className="block truncate text-xs text-gray-500 md:text-sm">Total Mitigasi</span>
+                        </div>
+                    </div>
+                    {isOwnerRisk && (
+                        <div className="flex items-center rounded-xl border border-gray-100 bg-white p-3.5 shadow-sm md:p-4">
+                            <Edit size={36} className="shrink-0 text-amber-500" />
+                            <div className="ml-3 min-w-0">
+                                <span className="block text-xl font-bold text-gray-900 md:text-2xl">{totalStats?.draft ?? 0}</span>
+                                <span className="block truncate text-xs text-gray-500 md:text-sm">Draft</span>
+                            </div>
+                        </div>
+                    )}
+                    <div className="flex items-center rounded-xl border border-gray-100 bg-white p-3.5 shadow-sm md:p-4">
+                        <Clock size={36} className="shrink-0 text-amber-500" />
+                        <div className="ml-3 min-w-0">
+                            <span className="block text-xl font-bold text-gray-900 md:text-2xl">{totalStats?.pending ?? 0}</span>
+                            <span className="block truncate text-xs text-gray-500 md:text-sm">Menunggu Persetujuan</span>
+                        </div>
+                    </div>
+                    <div className="flex items-center rounded-xl border border-gray-100 bg-white p-3.5 shadow-sm md:p-4">
+                        <CheckCircle2 size={36} className="shrink-0 text-emerald-600" />
+                        <div className="ml-3 min-w-0">
+                            <span className="block text-xl font-bold text-gray-900 md:text-2xl">{totalStats?.approved ?? 0}</span>
+                            <span className="block truncate text-xs text-gray-500 md:text-sm">Disetujui</span>
+                        </div>
+                    </div>
+                    <div className="flex items-center rounded-xl border border-gray-100 bg-white p-3.5 shadow-sm md:p-4">
+                        <AlertTriangle size={36} className="shrink-0 text-rose-600" />
+                        <div className="ml-3 min-w-0">
+                            <span className="block text-xl font-bold text-gray-900 md:text-2xl">{totalStats?.rejected ?? 0}</span>
+                            <span className="block truncate text-xs text-gray-500 md:text-sm">Butuh Revisi</span>
+                        </div>
                     </div>
                 </div>
 

@@ -26,9 +26,9 @@ class DashboardController extends Controller
             ->where('validation_status', 'approved');
 
 
-        if ($user->hasRole('owner-risk')) {
+        if ($user->hasActiveRole('owner-risk')) {
             $riskQuery->where('user_id', $user->id);
-        } elseif ($user->hasAnyRole(['admin', 'pimpinan'])) {
+        } elseif ($user->hasAnyActiveRole(['admin', 'pimpinan'])) {
             $riskQuery->whereHas('user', fn($q) => $q->where('unit_id', $user->unit_id));
         }
 
@@ -43,9 +43,9 @@ class DashboardController extends Controller
         $mitigasiQuery = Mitigasi::with(['identifyRisk.user.unit']) // <-- UBAH INI
             ->where('validation_status', Mitigasi::VALIDATION_STATUS_APPROVED);
 
-        if ($user->hasRole('owner-risk')) {
+        if ($user->hasActiveRole('owner-risk')) {
             $mitigasiQuery->whereHas('identifyRisk', fn($q) => $q->where('user_id', $user->id));
-        } elseif ($user->hasAnyRole(['admin', 'pimpinan'])) {
+        } elseif ($user->hasAnyActiveRole(['admin', 'pimpinan'])) {
             $mitigasiQuery->whereHas('identifyRisk.user', fn($q) => $q->where('unit_id', $user->unit_id));
         }
 
@@ -282,13 +282,13 @@ class DashboardController extends Controller
         $user = Auth::user();
 
         return [
-            'canViewAll' => $user->hasRole('super-admin'),
-            'canViewDraft' => $user->hasRole('owner-risk'),
-            'canExport' => $user->hasAnyRole(['super-admin', 'pimpinan']),
-            'canManageRisk' => $user->hasAnyRole(['super-admin', 'owner-risk']),
-            'canApproveRisk' => $user->hasRole('super-admin'),
-            'canSubmitRisk' => $user->hasAnyRole(['owner-risk', 'super-admin']),
-            'canViewReports' => $user->hasAnyRole(['super-admin', 'pimpinan', 'owner-risk'])
+            'canViewAll' => $user->hasActiveRole('super-admin'),
+            'canViewDraft' => $user->hasActiveRole('owner-risk'),
+            'canExport' => $user->hasAnyActiveRole(['super-admin', 'pimpinan']),
+            'canManageRisk' => $user->hasAnyActiveRole(['super-admin', 'owner-risk']),
+            'canApproveRisk' => $user->hasActiveRole('super-admin'),
+            'canSubmitRisk' => $user->hasAnyActiveRole(['owner-risk', 'super-admin']),
+            'canViewReports' => $user->hasAnyActiveRole(['super-admin', 'pimpinan', 'owner-risk'])
         ];
     }
 

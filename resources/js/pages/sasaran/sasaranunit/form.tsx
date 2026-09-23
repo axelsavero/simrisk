@@ -3,6 +3,7 @@ import { BreadcrumbItem, SasaranUniv } from '@/types';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import React from 'react';
 import { CircleCheck, FileText, Hourglass, Lightbulb, Paperclip, Save, X } from 'lucide-react';
+import { sasaranUnitFormSchema } from '@/lib/validations/sasaran';
 
 interface FormProps {
     sasaranUnit?: any | null;
@@ -22,7 +23,7 @@ interface FormData {
 
 export default function Form({ sasaranUnit = null, sasaranUnivs = [] }: FormProps) {
     const { flash } = usePage().props as any;
-    const { data, setData, post, processing, errors } = useForm<FormData>({
+    const { data, setData, post, processing, errors, setError, clearErrors } = useForm<FormData>({
         id_sasaran_univ: (sasaranUnit as any)?.id_sasaran_univ ?? '',
         kategori: sasaranUnit?.kategori || '',
         nama_dokumen: sasaranUnit?.nama_dokumen || '',
@@ -34,6 +35,15 @@ export default function Form({ sasaranUnit = null, sasaranUnivs = [] }: FormProp
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
+        clearErrors();
+
+        const result = sasaranUnitFormSchema.safeParse(data);
+        if (!result.success) {
+            result.error.issues.forEach((issue) => {
+                setError(issue.path[0] as keyof FormData, issue.message);
+            });
+            return;
+        }
 
         console.log('Submitting data:', {
             ...data,

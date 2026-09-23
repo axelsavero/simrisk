@@ -23,6 +23,8 @@ export interface User {
         guard_name: string;
         description?: string;
     }>;
+    // Role yang sedang aktif dipakai (menentukan menu & akses modul untuk akun multi-role)
+    active_role?: string | null;
     [key: string]: unknown;
 }
 

@@ -17,7 +17,7 @@ class UserManageController extends Controller
     public function index()
     {
         $authUser = Auth::user();
-        if (!$authUser || (!$authUser->hasRole('super-admin') && !$authUser->hasRole('admin'))) {
+        if (!$authUser || (!$authUser->hasActiveRole('super-admin') && !$authUser->hasActiveRole('admin'))) {
             abort(403, 'ANDA TIDAK MEMILIKI HAK AKSES UNTUK MELIHAT HALAMAN INI.');
         }
 
@@ -35,13 +35,31 @@ class UserManageController extends Controller
 
         return Inertia::render('user/manage', [
             'users' => $users,
+            'allRoles' => Role::all()->pluck('name'),
         ]);
+    }
+
+    public function updateRoles(Request $request, User $user)
+    {
+        if (!Auth::user()->hasActiveRole('super-admin')) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'roles' => 'required|array|min:1',
+            'roles.*' => 'string|exists:roles,name',
+        ]);
+
+        $roleIds = Role::whereIn('name', $validated['roles'])->pluck('id');
+        $user->roles()->sync($roleIds);
+
+        return back()->with('success', 'Role user berhasil diperbarui.');
     }
 
     public function createOperator()
     {
         $authUser = Auth::user();
-        if (!$authUser || !$authUser->hasRole('admin')) {
+        if (!$authUser || !$authUser->hasActiveRole('admin')) {
             abort(403);
         }
 
@@ -54,7 +72,7 @@ class UserManageController extends Controller
 
     public function create()
     {
-        if (!Auth::user()->hasRole('super-admin')) {
+        if (!Auth::user()->hasActiveRole('super-admin')) {
             abort(403);
         }
 
@@ -66,7 +84,7 @@ class UserManageController extends Controller
     public function editOperator(User $user)
     {
         $authUser = Auth::user();
-        if (!$authUser || !$authUser->hasRole('admin')) {
+        if (!$authUser || !$authUser->hasActiveRole('admin')) {
             abort(403);
         }
         if ($user->unit_id !== $authUser->unit_id || !$user->hasRole('owner-risk')) {
@@ -141,7 +159,7 @@ class UserManageController extends Controller
     public function updateOperator(Request $request, User $user)
     {
         $authUser = Auth::user();
-        if (!$authUser || !$authUser->hasRole('admin')) {
+        if (!$authUser || !$authUser->hasActiveRole('admin')) {
             abort(403);
         }
         if ($user->unit_id !== $authUser->unit_id || !$user->hasRole('owner-risk')) {
@@ -188,7 +206,7 @@ class UserManageController extends Controller
     public function storeOperator(Request $request)
     {
         $authUser = Auth::user();
-        if (!$authUser || !$authUser->hasRole('admin')) {
+        if (!$authUser || !$authUser->hasActiveRole('admin')) {
             abort(403);
         }
 
@@ -229,7 +247,7 @@ class UserManageController extends Controller
     public function destroyOperator(User $user)
     {
         $authUser = Auth::user();
-        if (!$authUser || !$authUser->hasRole('admin')) {
+        if (!$authUser || !$authUser->hasActiveRole('admin')) {
             abort(403);
         }
         if ($user->unit_id !== $authUser->unit_id || !$user->hasRole('owner-risk')) {
@@ -246,7 +264,7 @@ class UserManageController extends Controller
 
     public function store(Request $request)
     {
-        if (!Auth::user()->hasRole('super-admin')) {
+        if (!Auth::user()->hasActiveRole('super-admin')) {
             abort(403);
         }
 
@@ -258,7 +276,8 @@ class UserManageController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'role' => 'required|string|exists:roles,name',
+            'roles' => 'required|array|min:1',
+            'roles.*' => 'string|exists:roles,name',
         ]);
 
         $unitData = $this->resolveUnit($request);
@@ -274,17 +293,15 @@ class UserManageController extends Controller
 
         \Log::info('Created user with unit_id: ' . $user->unit_id);
 
-        $roleId = Role::where('name', $validated['role'])->first()?->id;
-        if ($roleId) {
-            $user->roles()->sync([$roleId]);
-        }
+        $roleIds = Role::whereIn('name', $validated['roles'])->pluck('id');
+        $user->roles()->sync($roleIds);
 
         return Redirect::route('user.manage.index')->with('success', 'User berhasil dibuat.');
     }
 
     public function edit(User $user)
     {
-        if (!Auth::user()->hasRole('super-admin')) {
+        if (!Auth::user()->hasActiveRole('super-admin')) {
             abort(403);
         }
 
@@ -307,7 +324,7 @@ class UserManageController extends Controller
 
     public function update(Request $request, User $user)
     {
-        if (!Auth::user()->hasRole('super-admin')) {
+        if (!Auth::user()->hasActiveRole('super-admin')) {
             abort(403);
         }
 
@@ -319,7 +336,8 @@ class UserManageController extends Controller
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8',
-            'role' => 'required|string',
+            'roles' => 'required|array|min:1',
+            'roles.*' => 'string|exists:roles,name',
         ]);
 
         $unitData = $this->resolveUnit($request);
@@ -338,17 +356,15 @@ class UserManageController extends Controller
 
         \Log::info('Updated user with unit_id: ' . $user->unit_id);
 
-        $roleId = Role::where('name', $validated['role'])->first()?->id;
-        if ($roleId) {
-            $user->roles()->sync([$roleId]);
-        }
+        $roleIds = Role::whereIn('name', $validated['roles'])->pluck('id');
+        $user->roles()->sync($roleIds);
 
         return Redirect::route('user.manage.index')->with('success', 'User berhasil diperbarui.');
     }
 
     public function destroy(User $user)
     {
-        if (!Auth::user()->hasRole('super-admin')) {
+        if (!Auth::user()->hasActiveRole('super-admin')) {
             abort(403);
         }
 
@@ -365,7 +381,7 @@ class UserManageController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user || !$user->hasRole('admin')) {
+        if (!$user || !$user->hasActiveRole('admin')) {
             abort(403);
         }
 

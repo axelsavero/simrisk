@@ -58,16 +58,16 @@ abstract class Controller
 
     protected function isSuperOrPimpinan($user): bool
     {
-        return $user && ($user->hasRole('super-admin') || $user->hasRole('pimpinan') || $user->hasRole('super admin'));
+        return $user && ($user->hasActiveRole('super-admin') || $user->hasActiveRole('pimpinan') || $user->hasActiveRole('super admin'));
     }
 
     protected function isAdmin($user): bool
     {
-        return $user && $user->hasRole('admin');
+        return $user && $user->hasActiveRole('admin');
     }
 
     protected function isOwnerRisk($user): bool
     {
-        return $user && ($user->hasRole('owner-risk') || $user->hasRole('ownerrisk'));
+        return $user && ($user->hasActiveRole('owner-risk') || $user->hasActiveRole('ownerrisk'));
     }
 }

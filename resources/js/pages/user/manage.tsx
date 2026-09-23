@@ -7,11 +7,39 @@ import { BreadcrumbItem, User, SharedPageProps as PageProps } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Eye, Pencil, Trash2, UserRoundPlus } from 'lucide-react';
+import Select from 'react-select';
 import Swal from 'sweetalert2';
 
-export default function Manage({ users }: PageProps<{ users: User[] }>) {
+function formatRoleLabel(role: string) {
+    return role === 'owner-risk' ? 'operator' : role;
+}
+
+function toRoleNames(rawRoles: unknown): string[] {
+    if (!rawRoles) return [];
+    const list = Array.isArray(rawRoles) ? rawRoles : [rawRoles];
+    return list.map((r: any) => (typeof r === 'string' ? r : r?.name)).filter(Boolean);
+}
+
+export default function Manage({ users, allRoles = [] }: { users: User[]; allRoles?: string[] }) {
     const { auth, flash } = usePage<PageProps>().props;
-    const isSuperAdmin = auth.user?.roles?.includes('super-admin');
+    const isSuperAdmin = auth.user?.active_role === 'super-admin';
+
+    function updateUserRoles(user: User, newRoles: string[]) {
+        if (newRoles.length === 0) {
+            Swal.fire('Role tidak boleh kosong', 'Pilih minimal satu role untuk user ini.', 'warning');
+            return;
+        }
+        router.patch(
+            `/user/manage/${user.id}/roles`,
+            { roles: newRoles },
+            {
+                preserveScroll: true,
+                onError: () => {
+                    Swal.fire('Gagal', 'Gagal memperbarui role user.', 'error');
+                },
+            },
+        );
+    }
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
@@ -66,12 +94,27 @@ export default function Manage({ users }: PageProps<{ users: User[] }>) {
             accessorKey: 'roles',
             header: 'Role',
             cell: ({ row }) => {
-                const rawRoles = row.original.roles;
-                const rolesArray = Array.isArray(rawRoles) ? rawRoles : rawRoles ? [rawRoles] : [];
-                const formatted = rolesArray
-                    .map((role: any) => (role === 'owner-risk' ? 'operator' : role))
-                    .join(', ');
-                return <div>{formatted || '-'}</div>;
+                const rolesArray = toRoleNames(row.original.roles);
+
+                if (!isSuperAdmin) {
+                    const formatted = rolesArray.map(formatRoleLabel).join(', ');
+                    return <div>{formatted || '-'}</div>;
+                }
+
+                const options = allRoles.map((r) => ({ value: r, label: formatRoleLabel(r) }));
+
+                return (
+                    <div className="min-w-[220px]">
+                        <Select
+                            isMulti
+                            options={options}
+                            value={options.filter((opt) => rolesArray.includes(opt.value))}
+                            onChange={(selected) => updateUserRoles(row.original, selected ? selected.map((opt) => opt.value) : [])}
+                            classNamePrefix="react-select"
+                            placeholder="Pilih role..."
+                        />
+                    </div>
+                );
             },
         },
         {

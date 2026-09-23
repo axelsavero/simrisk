@@ -37,6 +37,8 @@ type PageProps = {
         user?: {
             // 'roles' bisa berupa array objek atau array string
             roles?: Array<{ name: string; [key: string]: any } | string>;
+            // Role yang sedang aktif dipakai; menentukan menu apa yang tampil untuk akun multi-role
+            active_role?: string | null;
         };
     };
 };
@@ -122,31 +124,20 @@ export function AppSidebar() {
     },
   ];
 
-  // 4. Filter berdasarkan role user
+  // 4. Filter berdasarkan role AKTIF user (bukan semua role yang dimiliki).
+  // Untuk akun multi-role, hanya modul dari role yang sedang aktif yang tampil di sini;
+  // toggle role aktif dilakukan lewat menu user di sidebar (lihat NavUser/UserMenuContent).
   const mainNavItems = allNavItems.filter((item) => {
-        // Jika item tidak butuh role, selalu tampilkan
         if (!item.role) {
             return true;
         }
 
-        const roles = auth.user?.roles;
-
-        // Jika user tidak punya role, jangan tampilkan item
-        if (!roles || !Array.isArray(roles) || roles.length === 0) {
+        const activeRole = auth.user?.active_role;
+        if (!activeRole) {
             return false;
         }
 
-        // Cek format 'roles'. Jika elemen pertama adalah objek dengan properti 'name',
-        // maka ini adalah array objek. Jika tidak, anggap sebagai array string.
-        const isObjectRoles = typeof roles[0] === 'object' && roles[0] !== null && 'name' in roles[0];
-
-        // Normalisasi data 'roles' menjadi array string sederhana
-        const userRoleNames: string[] = isObjectRoles
-            ? (roles as { name: string }[]).map((role) => role.name)
-            : (roles as string[]);
-
-        // Lakukan perbandingan yang aman
-        return item.role.some((requiredRole) => userRoleNames.includes(requiredRole));
+        return item.role.includes(activeRole);
     });
 
   return (

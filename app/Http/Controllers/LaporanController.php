@@ -37,13 +37,13 @@ class LaporanController extends Controller
             }
         ])->where('validation_status', 'approved');
 
-        if ($user->hasAnyRole(['admin', 'pimpinan'])) {
+        if ($user->hasAnyActiveRole(['admin', 'pimpinan'])) {
             $risksQuery->whereHas('user', function ($q) use ($user) {
                 $q->where('unit_id', $user->unit_id);
             });
         }
         // Jika user adalah super-admin, terapkan filter dari UI
-        elseif ($user->hasRole('super-admin')) {
+        elseif ($user->hasActiveRole('super-admin')) {
             $unitFilter = $request->query('unit');
             $kategoriFilter = $request->query('kategori');
             $tahunFilter = $request->query('tahun');
@@ -120,7 +120,7 @@ class LaporanController extends Controller
                 'generated_at' => now()->isoFormat('D MMMM YYYY, HH:mm:ss'),
                 'generated_by' => auth()->user()->name,
             ],
-            'isSuperAdmin' => $user->hasRole('super-admin'),
+            'isSuperAdmin' => $user->hasActiveRole('super-admin'),
         ]);
     }
 
@@ -193,7 +193,7 @@ class LaporanController extends Controller
     private function getUnitNameForFilename(Request $request, $user)
     {
         // Untuk super-admin, gunakan filter unit dari request
-        if ($user->hasRole('super-admin')) {
+        if ($user->hasActiveRole('super-admin')) {
             $unitFromFilter = $request->query('unit') ?? $request->input('data.unit');
             if ($unitFromFilter) {
                 return $unitFromFilter;
@@ -202,7 +202,7 @@ class LaporanController extends Controller
         }
 
         // Untuk admin dan pimpinan, gunakan unit mereka
-        if ($user->hasAnyRole(['admin', 'pimpinan'])) {
+        if ($user->hasAnyActiveRole(['admin', 'pimpinan'])) {
             // Jika relasi unit null, coba ambil manual dari database
             if (!$user->unit) {
                 $user->load('unit'); // Reload jika belum ter-load
@@ -247,13 +247,13 @@ class LaporanController extends Controller
             ->when($kategoriFilter, fn($q, $kategori) => $q->where('risk_category', $kategori))
             ->when($tahunFilter, fn($q, $tahun) => $q->where('tahun', $tahun));
 
-        if ($user->hasAnyRole(['admin', 'pimpinan'])) {
+        if ($user->hasAnyActiveRole(['admin', 'pimpinan'])) {
             $risksQuery->whereHas('user', function ($q) use ($user) {
                 $q->where('unit_id', $user->unit_id);
             });
         }
         // Jika user adalah super-admin, terapkan filter dari UI yang dikirim saat ekspor
-        elseif ($user->hasRole('super-admin')) {
+        elseif ($user->hasActiveRole('super-admin')) {
             $unitFilter = $requestData['unit'] ?? null;
             $kategoriFilter = $requestData['kategori'] ?? null;
             $tahunFilter = $requestData['tahun'] ?? null;

@@ -117,8 +117,7 @@ const getRiskLevelColor = (level: number) => {
 
 export default function Show() {
     const { mitigasi, statusOptions = {}, strategiOptions = {}, auth }: any = usePage<any>().props;
-    const roles: string[] = auth?.user?.roles || [];
-    const isOwnerRisk = roles.includes('owner-risk');
+    const isOwnerRisk = auth?.user?.active_role === 'owner-risk';
 
     if (!mitigasi) {
         return (

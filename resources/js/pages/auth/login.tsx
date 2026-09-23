@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthSplitLayout from '@/layouts/auth-layout';
+import { loginFormSchema } from '@/lib/validations/auth';
 
 type LoginForm = {
     email: string;
@@ -25,7 +26,7 @@ interface LoginProps {
 
 // 2. Terima 'public_key' di parameter fungsi
 export default function Login({ status, canResetPassword, public_key }: LoginProps) {
-    const { data, setData, post, processing, errors, reset } = useForm<Required<LoginForm>>({
+    const { data, setData, post, processing, errors, reset, setError, clearErrors } = useForm<Required<LoginForm>>({
         email: '',
         password: '',
         remember: false,
@@ -33,6 +34,16 @@ export default function Login({ status, canResetPassword, public_key }: LoginPro
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
+        clearErrors();
+
+        const result = loginFormSchema.safeParse(data);
+        if (!result.success) {
+            result.error.issues.forEach((issue) => {
+                setError(issue.path[0] as keyof LoginForm, issue.message);
+            });
+            return;
+        }
+
         post(route('login'), {
             onFinish: () => reset('password'),
         });
